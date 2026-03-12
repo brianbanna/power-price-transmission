@@ -1,59 +1,38 @@
-# Project of Data Visualization (COM-480)
+# Renewable supply shocks and electricity price volatility in Europe
 
-| Student's name | SCIPER |
-| -------------- | ------ |
-| | |
-| | |
-| | |
+## Course
 
-[Milestone 1](#milestone-1) • [Milestone 2](#milestone-2) • [Milestone 3](#milestone-3)
+COM-480 - Data Visualization  
+EPFL
 
-## Milestone 1 (20th March, 5pm)
+## Team Members
 
-**10% of the final grade**
+Lê Thào Huyèn - 355566  
+Banna Brian - 356437  
+Hajj Hannah - 346545
 
-This is a preliminary milestone to let you set up goals for your final project and assess the feasibility of your ideas.
-Please, fill the following sections about your project.
+## Project Description
 
-*(max. 2000 characters per section)*
+This project explores how fluctuations in renewable electricity generation influence electricity price dynamics in European power markets. The analysis focuses on Switzerland and its neighboring markets (Germany, France, Italy and Austria), which form a highly interconnected electricity trading region.
 
-### Dataset
+Using hourly electricity market data from the ENTSO-E Transparency Platform, the project investigates the relationship between renewable generation levels and electricity price behavior. The final outcome will be an interactive visualization allowing users to explore price dynamics, renewable production patterns and cross-market relationships.
 
-> Find a dataset (or multiple) that you will explore. Assess the quality of the data it contains and how much preprocessing / data-cleaning it will require before tackling visualization. We recommend using a standard dataset as this course is not about scraping nor data processing.
->
-> Hint: some good pointers for finding quality publicly available datasets ([Google dataset search](https://datasetsearch.research.google.com/), [Kaggle](https://www.kaggle.com/datasets), [OpenSwissData](https://opendata.swiss/en/), [SNAP](https://snap.stanford.edu/data/) and [FiveThirtyEight](https://data.fivethirtyeight.com/)).
+## Dataset
 
-### Problematic
+The dataset used in this project is the European Electricity Price and Generation 2024-2025 dataset, which contains hourly electricity prices and generation mix information for more than twenty European markets between January 2024 and June 2025.
 
-> Frame the general topic of your visualization and the main axis that you want to develop.
-> - What am I trying to show with my visualization?
-> - Think of an overview for the project, your motivation, and the target audience.
+The dataset is stored in:
 
-### Exploratory Data Analysis
+```text
+data/entsoe_data_2024_2025.csv
+```
 
-> Pre-processing of the data set you chose
-> - Show some basic statistics and get insights about the data
+## Milestones
 
-### Related work
+Milestone 1 focuses on defining the dataset, the research question, preliminary exploratory analysis and related work.
 
+The Milestone 1 document can be found in:
 
-> - What others have already done with the data?
-> - Why is your approach original?
-> - What source of inspiration do you take? Visualizations that you found on other websites or magazines (might be unrelated to your data).
-> - In case you are using a dataset that you have already explored in another context (ML or ADA course, semester project...), you are required to share the report of that work to outline the differences with the submission for this class.
-
-## Milestone 2 (17th April, 5pm)
-
-**10% of the final grade**
-
-
-## Milestone 3 (29th May, 5pm)
-
-**80% of the final grade**
-
-
-## Late policy
-
-- < 24h: 80% of the grade for the milestone
-- < 48h: 70% of the grade for the milestone
-
+```text
+milestone_1/milestone1.pdf
+```
