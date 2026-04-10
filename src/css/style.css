@@ -962,6 +962,73 @@ body.is-zero-crossing .scrollytelling__map svg {
     fill: var(--bg-elevated);
 }
 
+/* ---------- Map — labels (ISO code + live price per country) ----------
+ *
+ * Two text elements per country, grouped:
+ *   .label__code   — two-letter ISO code, small tracked mono uppercase
+ *   .label__price  — current price at the active hour, mono tabular
+ *
+ * Default state: invisible (countries don't have labels until a
+ * narrative step activates the map).
+ * is-visible: labels fade in with the step.
+ * is-focus: labels of the card's target country get the hero treatment —
+ *   larger, ice-white, with a glow filter.
+ */
+
+.label {
+    pointer-events: none;
+    text-anchor: middle;
+    opacity: 0;
+    transition: opacity var(--dur-default) var(--ease-default);
+}
+
+.label.is-visible {
+    opacity: 1;
+}
+
+.label__code {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    fill: color-mix(in srgb, var(--text-primary) 60%, transparent);
+    /* Tight dark stroke for legibility against any country fill color */
+    paint-order: stroke;
+    stroke: var(--bg-base);
+    stroke-width: 2.5;
+    stroke-linejoin: round;
+}
+
+.label__price {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "zero", "ss02";
+    font-size: 14px;
+    font-weight: 500;
+    fill: var(--text-primary);
+    paint-order: stroke;
+    stroke: var(--bg-base);
+    stroke-width: 3;
+    stroke-linejoin: round;
+    transition:
+        font-size var(--dur-default) var(--ease-overshoot),
+        fill var(--dur-default) var(--ease-default);
+}
+
+/* Focus country — the card's target. Label grows and glows. */
+.label.is-focus .label__code {
+    fill: var(--accent-glow);
+}
+
+.label.is-focus .label__price {
+    fill: var(--accent-glow);
+    font-size: 20px;
+    font-weight: 700;
+    filter: drop-shadow(0 0 8px color-mix(in srgb, var(--accent) 60%, transparent))
+            drop-shadow(0 0 2px var(--accent-glow));
+}
+
 /* ---------- Narrative column ---------- */
 
 .scrollytelling__narrative {

@@ -129,24 +129,28 @@ export function initNarrative(selector, config) {
                 leaderCtl.show(element);
             }
 
-            // Push state to the map so colors / arrows / labels can react.
+            // Push state to the map: fill each country with its price
+            // color at this hour and set the focus country (the card's
+            // target) to receive the large glowing label treatment.
             if (config.map && typeof config.map.update === "function") {
+                const hour = Number(element.dataset.hour);
+                const focusCountry = element.dataset.country || null;
                 config.map.update({
-                    activeStep: Number(element.dataset.step) || index + 1,
-                    timestamp: element.dataset.timestamp,
+                    hour: Number.isFinite(hour) ? hour : null,
+                    focusCountry,
                 });
             }
         })
         .onStepExit(({ element, direction }) => {
             // When scrolling UP past the first step, hide the HUD again
-            // and re-saturate the map.
+            // and reset the map to base state (no colors, no labels).
             if (direction === "up" && element === steps[0]) {
                 element.classList.remove("is-active");
                 document.body.classList.remove(NARRATIVE_ACTIVE_CLASS);
                 if (hud) hud.classList.remove("is-visible");
                 if (leaderCtl) leaderCtl.hide();
                 if (config.map && typeof config.map.update === "function") {
-                    config.map.update({ activeStep: null });
+                    config.map.update({ hour: null, focusCountry: null });
                 }
             }
 

@@ -12,7 +12,7 @@ async function init() {
         loadJSON("showcase_day.json"),
     ]);
 
-    const map = createMap("#map-container", { topology });
+    const map = createMap("#map-container", { topology, showcase });
     initNarrative("#narrative", { map, showcase });
 
     setupHeroParallax();

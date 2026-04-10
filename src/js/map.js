@@ -9,6 +9,8 @@
 import * as d3 from "d3";
 import * as topojson from "topojson-client";
 
+import { priceColor } from "./utils/colors.js";
+
 // Conic conformal centered on central Europe (see design_system.md §Map
 // projection). Tuned so the five focus countries fill the viewport with
 // Switzerland slightly above visual center.
@@ -30,14 +32,28 @@ const GRATICULE_MERIDIANS = [0, 5, 10, 15, 20];
 const GRATICULE_PARALLELS = [40, 45, 50, 55];
 const EARTH_KM_PER_DEGREE = 111.32;
 
+// Per-country label position overrides (added to the geometric centroid).
+// CH and AT are small and their centroids land awkwardly on borders; we
+// nudge in whichever direction gives the cleanest placement. Values are
+// in projected pixel space (post-fitExtent), roughly in the 0..~1440 range.
+const LABEL_NUDGE_PX = {
+    CH: [-4, 4],
+    AT: [4, 6],
+    DE: [0, -4],
+    FR: [-30, 30],
+    IT: [-14, 10],
+};
+
 export function createMap(selector, config) {
     const container = document.querySelector(selector);
     if (!container) {
         throw new Error(`createMap: no element matches ${selector}`);
     }
 
-    const { topology } = config;
+    const { topology, showcase } = config;
     const countries = topojson.feature(topology, topology.objects.countries);
+    // Stable ISO → feature map for fast lookups.
+    const featureByIso = new Map(countries.features.map((f) => [f.id, f]));
 
     const svg = d3
         .select(container)
@@ -54,10 +70,11 @@ export function createMap(selector, config) {
 
     const pathGen = d3.geoPath(projection);
 
-    // Layer order matters: graticule first so countries paint on top.
+    // Layer order matters: graticule → countries → labels, top to bottom.
     const gGraticule = svg.append("g").attr("class", "graticule");
     const gRings = svg.append("g").attr("class", "graticule__rings");
     const gCountries = svg.append("g").attr("class", "countries");
+    const gLabels = svg.append("g").attr("class", "labels");
 
     // Meridians + parallels — thin dashed hairlines covering the region.
     const meridianLines = gGraticule
@@ -91,6 +108,24 @@ export function createMap(selector, config) {
         .join("path")
         .attr("class", "country")
         .attr("data-iso", (d) => d.id);
+
+    // Label groups — one per country. Each group holds two <text> nodes
+    // (ISO code above, price below) plus an invisible halo rect that we
+    // can show behind the label on the peak moment.
+    const labelGroups = gLabels
+        .selectAll("g.label")
+        .data(countries.features)
+        .join("g")
+        .attr("class", "label")
+        .attr("data-iso", (d) => d.id);
+
+    labelGroups.append("text")
+        .attr("class", "label__code")
+        .text((d) => d.id);
+
+    labelGroups.append("text")
+        .attr("class", "label__price")
+        .text("—");
 
     function resize() {
         const { clientWidth, clientHeight } = container;
@@ -145,6 +180,17 @@ export function createMap(selector, config) {
         ch.filter((_, i) => i === 1)
             .attr("x1", anchorXY[0]).attr("y1", anchorXY[1] - 6)
             .attr("x2", anchorXY[0]).attr("y2", anchorXY[1] + 6);
+
+        // Position label groups at each country's centroid + nudge.
+        labelGroups.attr("transform", (d) => {
+            const [lon, lat] = d3.geoCentroid(d);
+            const [px, py] = projection([lon, lat]);
+            const [nx, ny] = LABEL_NUDGE_PX[d.id] || [0, 0];
+            return `translate(${px + nx}, ${py + ny})`;
+        });
+
+        labelGroups.select(".label__code").attr("y", -8);
+        labelGroups.select(".label__price").attr("y", 10);
     }
 
     resize();
@@ -152,13 +198,54 @@ export function createMap(selector, config) {
 
     // Controller surface used by narrative.js and explorer.js.
     const state = {
-        currentHour: null,
-        showcase: null,
+        hour: null,
+        focusCountry: null,
     };
 
+    /**
+     * Update the map state to a specific hour on the showcase day,
+     * optionally with a "focus country" that receives a larger,
+     * glowing label treatment (the card's target country).
+     *
+     * Accepts:
+     *   { hour: 13, focusCountry: "CH" }   — apply prices + focus
+     *   { hour: null }                      — reset to base (dark) state
+     */
     function update(next) {
         Object.assign(state, next);
-        // Color fills, flow arrows, and labels land in Tasks 3.3–3.9.
+
+        // Fill each country with its price color at the current hour.
+        if (state.hour == null || !showcase) {
+            // Reset — base state, no colors, no labels.
+            // Kill any in-flight color transition and clear the
+            // presentation attribute so the CSS default fill wins.
+            countryPaths.interrupt().attr("fill", null);
+            labelGroups.classed("is-visible", false).classed("is-focus", false);
+            return;
+        }
+
+        labelGroups.classed("is-visible", true);
+
+        countryPaths
+            .transition()
+            .duration(800)
+            .attr("fill", (d) => {
+                const entry = showcase.countries?.[d.id]?.[state.hour];
+                return entry ? priceColor(entry.price) : null;
+            });
+
+        // Update label text + focus state. The focus country gets the
+        // large "hero number" treatment — other countries stay compact.
+        labelGroups.each(function (d) {
+            const entry = showcase.countries?.[d.id]?.[state.hour];
+            const g = d3.select(this);
+            g.classed("is-focus", d.id === state.focusCountry);
+            if (!entry) {
+                g.select(".label__price").text("—");
+                return;
+            }
+            g.select(".label__price").text(formatPrice(entry.price));
+        });
     }
 
     /**
@@ -184,4 +271,18 @@ export function createMap(selector, config) {
     }
 
     return { update, destroy, getCountryCentroidPx };
+}
+
+/**
+ * Format a price as a JetBrains Mono-friendly string with a true
+ * Unicode minus (U+2212) for negatives. Produces compact values like
+ * "€45" for positives, "−€145" for negatives.
+ */
+function formatPrice(value) {
+    if (value == null || Number.isNaN(value)) return "—";
+    const rounded = Math.round(value);
+    if (rounded < 0) {
+        return `\u2212€${Math.abs(rounded)}`;
+    }
+    return `€${rounded}`;
 }
