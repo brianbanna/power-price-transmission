@@ -24,39 +24,76 @@
 </head>
 <body>
     <header class="hero">
-        <p class="hero__eyebrow">A data story about European electricity markets</p>
-        <h1 class="hero__title">The Price of Wind and Sun</h1>
-        <p class="hero__lede">
-            Switzerland produces almost no solar power. Yet on a spring Sunday in 2024,
-            its electricity price dropped lower than Germany's. This is how one country's
-            renewable revolution is rewiring the economics of its neighbours.
-        </p>
-        <p class="hero__scroll-hint" aria-hidden="true">Scroll to begin</p>
+        <div class="hero__inner">
+            <p class="hero__eyebrow">A data story about European electricity markets</p>
+            <h1 class="hero__title">The Price of Wind and Sun</h1>
+            <p class="hero__lede">
+                Switzerland produces almost no solar power. Yet on a spring Sunday in 2024,
+                its electricity price dropped lower than Germany's. This is how one country's
+                renewable revolution is rewiring the economics of its neighbours.
+            </p>
+            <p class="hero__scroll-hint" aria-hidden="true">Scroll to begin</p>
+        </div>
     </header>
 
     <div class="scrollytelling">
         <aside class="scrollytelling__map" id="map-container" aria-label="Map of central European electricity prices">
-            <!-- The sticky map canvas. Populated by js/map.js. -->
+            <!-- Map canvas. Populated by js/map.js. -->
         </aside>
 
         <main class="scrollytelling__narrative" id="narrative">
-            <!-- Narrative step cards are rendered here by js/narrative.js. -->
+            <!--
+                Narrative step cards. Task 2.6 will populate this from a
+                single source-of-truth content file; for now one card is
+                hand-authored so the layout can be verified visually.
+            -->
+            <article class="step is-active">
+                <p class="step__eyebrow">Step 1 · 2024-05-12 · 00:00 CET</p>
+                <h2 class="step__headline">A Sunday in spring.</h2>
+                <p class="step__body">
+                    At midnight, electricity costs roughly the same across central Europe.
+                    Around <strong>forty-five euros per megawatt-hour</strong>. The grid is calm.
+                </p>
+            </article>
+
+            <article class="step">
+                <p class="step__eyebrow">Step 2 · 06:00 → 12:00</p>
+                <h2 class="step__headline">Then the sun rises.</h2>
+                <p class="step__body">
+                    Germany has forty-two gigawatts of solar capacity. On a clear spring
+                    Sunday, there is more electricity than anyone needs.
+                </p>
+            </article>
+
+            <article class="step">
+                <p class="step__eyebrow">Step 3 · 13:00 CET</p>
+                <h2 class="step__headline">Negative.</h2>
+                <p class="step__body">
+                    Switzerland produces almost no solar power. But on this Sunday, its
+                    electricity price dropped <strong>lower than Germany's</strong>. The
+                    grid doesn't respect borders.
+                </p>
+            </article>
         </main>
     </div>
 
     <section class="explorer" id="explorer" aria-label="Interactive explorer">
-        <!-- Placeholder for the Phase 7 interactive explorer. -->
+        <div class="explorer__inner">
+            <!-- Placeholder for the Phase 7 interactive explorer. -->
+        </div>
     </section>
 
     <footer class="site-footer">
-        <p>
-            Data: <a href="https://transparency.entsoe.eu/">ENTSO-E Transparency Platform</a>,
-            January 2024 — June 2025. Map geometry adapted from Natural Earth.
-        </p>
-        <p>
-            COM-480 Data Visualization · EPFL ·
-            HSquareB: Brian Banna, Lê Thào Huyèn, Hajj Hannah
-        </p>
+        <div class="site-footer__inner">
+            <p>
+                Data: <a href="https://transparency.entsoe.eu/">ENTSO-E Transparency Platform</a>,
+                January 2024 — June 2025. Map geometry adapted from Natural Earth.
+            </p>
+            <p>
+                COM-480 Data Visualization · EPFL ·
+                HSquareB: Brian Banna, Lê Thào Huyèn, Hajj Hannah
+            </p>
+        </div>
     </footer>
 
     <script type="module" src="js/main.js"></script>

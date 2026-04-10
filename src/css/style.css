@@ -113,13 +113,20 @@ a:focus-visible {
 /* ---------- Hero ---------- */
 
 .hero {
+    position: relative;
+    z-index: 2;
     min-height: 100vh;
-    max-width: var(--content-max);
-    margin: 0 auto;
     padding: clamp(80px, 12vh, 160px) var(--gutter) 64px;
+    background: var(--bg-base);
     display: flex;
     flex-direction: column;
     justify-content: center;
+}
+
+.hero__inner {
+    max-width: var(--content-max);
+    margin: 0 auto;
+    width: 100%;
 }
 
 .hero__eyebrow {
@@ -164,56 +171,91 @@ a:focus-visible {
     50%      { opacity: 1; }
 }
 
-/* ---------- Scrollytelling ---------- */
+/* ---------- Scrollytelling (map-dominant) ---------- */
+
+/*
+ * The map owns the viewport. Narrative cards float above it as
+ * glass panels, appearing one at a time as the reader scrolls.
+ *
+ * Layout model:
+ * - `.scrollytelling` is a tall container that defines the scroll track.
+ * - `#map-container` is position:fixed, covering the whole viewport,
+ *   so the map is the background for every scroll step.
+ * - `#narrative` is a transparent column sitting inside the scroll
+ *   track; its step cards act as scrollama triggers.
+ */
 
 .scrollytelling {
-    display: grid;
-    grid-template-columns: var(--narrative-col) 1fr;
-    gap: var(--gutter);
-    max-width: var(--content-max);
-    margin: 0 auto;
-    padding: 0 var(--gutter);
     position: relative;
+    width: 100%;
 }
 
 .scrollytelling__map {
-    position: sticky;
-    top: 0;
-    height: 100vh;
-    grid-column: 2;
-    grid-row: 1;
+    position: fixed;
+    inset: 0;
+    z-index: 0;
     background: var(--bg-base);
-    border-left: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
     overflow: hidden;
 }
 
-.scrollytelling__map::before {
-    /* Temporary placeholder until Task 3.1 renders the real map */
-    content: "Map loads here in Task 3.1";
-    font-family: var(--font-mono);
-    font-size: 13px;
-    color: var(--text-muted);
+.scrollytelling__map svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* ---------- Map — countries (base state, no price colors yet) ---------- */
+
+.country {
+    fill: var(--bg-surface);
+    stroke: var(--border-strong);
+    stroke-width: 1;
+    stroke-linejoin: round;
+    transition: fill var(--dur-default) var(--ease-default);
 }
 
 .scrollytelling__narrative {
-    grid-column: 1;
-    grid-row: 1;
-    padding-block: 40vh;
+    position: relative;
+    z-index: 1;
+    pointer-events: none;  /* Cards re-enable pointer events themselves. */
+    max-width: var(--narrative-col);
+    margin-left: var(--gutter);
+    padding-block: 50vh 100vh;
     display: flex;
     flex-direction: column;
-    gap: 70vh;
+    gap: 60vh;
 }
 
-/* Narrative step card. Populated by narrative.js in Task 2.6. */
+/* Glass panel: a narrative beat floating over the map. */
 .step {
-    background: var(--bg-surface);
-    border: 1px solid var(--border);
-    border-radius: 2px;
+    pointer-events: auto;
+    background: color-mix(in srgb, var(--bg-surface) 84%, transparent);
+    backdrop-filter: blur(24px) saturate(1.4);
+    -webkit-backdrop-filter: blur(24px) saturate(1.4);
+    border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+    border-radius: 4px;
     padding: 32px 36px;
     max-width: var(--narrative-col);
+    box-shadow: 0 20px 40px -24px rgba(0, 0, 0, 0.6),
+                0 1px 0 0 color-mix(in srgb, var(--text-primary) 4%, transparent) inset;
+    opacity: 0.35;
+    transform: translateY(8px);
+    transition: opacity var(--dur-default) var(--ease-default),
+                transform var(--dur-default) var(--ease-default);
+}
+
+.step.is-active {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.step__eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    margin-bottom: 12px;
 }
 
 .step__headline {
@@ -223,6 +265,7 @@ a:focus-visible {
     line-height: 1.1;
     margin-bottom: 16px;
     color: var(--text-primary);
+    text-wrap: balance;
 }
 
 .step__body {
@@ -238,12 +281,22 @@ a:focus-visible {
 
 /* ---------- Explorer placeholder ---------- */
 
+/* The explorer and footer sit in normal flow below the scrollytelling
+ * column. Because the map is position:fixed, they need a solid
+ * background to occlude it once the reader scrolls past the last
+ * narrative step. */
 .explorer {
+    position: relative;
+    z-index: 2;
     min-height: 60vh;
-    max-width: var(--content-max);
-    margin: 160px auto 0;
-    padding: 64px var(--gutter);
+    padding: 96px var(--gutter) 64px;
+    background: var(--bg-base);
     border-top: 1px solid var(--border);
+}
+
+.explorer__inner {
+    max-width: var(--content-max);
+    margin: 0 auto;
 }
 
 .explorer:empty::before {
@@ -258,13 +311,19 @@ a:focus-visible {
 /* ---------- Footer ---------- */
 
 .site-footer {
-    max-width: var(--content-max);
-    margin: 120px auto 0;
+    position: relative;
+    z-index: 2;
     padding: 48px var(--gutter) 64px;
+    background: var(--bg-base);
     border-top: 1px solid var(--border);
     font-size: 13px;
     color: var(--text-muted);
     line-height: 1.7;
+}
+
+.site-footer__inner {
+    max-width: var(--content-max);
+    margin: 0 auto;
 }
 
 .site-footer p + p {
@@ -275,29 +334,21 @@ a:focus-visible {
 
 @media (max-width: 900px) {
     :root {
-        --narrative-col: 360px;
-    }
-
-    .scrollytelling {
-        grid-template-columns: 1fr;
-    }
-
-    .scrollytelling__map {
-        position: sticky;
-        top: 0;
-        height: 60vh;
-        grid-column: 1;
-        border-left: none;
-        border-bottom: 1px solid var(--border);
+        --narrative-col: min(360px, calc(100vw - 32px));
     }
 
     .scrollytelling__narrative {
-        grid-column: 1;
-        padding-block: 10vh;
+        margin-inline: 16px;
+        padding-block: 30vh 60vh;
+        gap: 50vh;
     }
 
     .step {
-        max-width: none;
+        padding: 24px 24px;
+    }
+
+    .step__headline {
+        font-size: 26px;
     }
 }
 
