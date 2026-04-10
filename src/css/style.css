@@ -715,6 +715,20 @@ strong {
     overflow: hidden;
 }
 
+/* Circadian tint layer — a soft-light color wash driven by scroll
+ * position via the --atmos-tint custom property. Sits above the map
+ * SVG but below the vignette + grain, so it colors the countries
+ * without ever competing with the price colors that land in Phase 3. */
+.scrollytelling__map .circadian {
+    position: absolute;
+    inset: 0;
+    background: var(--atmos-tint, transparent);
+    mix-blend-mode: soft-light;
+    pointer-events: none;
+    z-index: 3;
+    transition: background 700ms var(--ease-default);
+}
+
 .scrollytelling__map svg {
     display: block;
     width: 100%;
@@ -731,19 +745,38 @@ body.is-narrative-active .scrollytelling__map svg {
 }
 
 /* Vignette — subtle radial darken at the edges. Draws the eye
- * to the center where the action happens. */
+ * to the center where the action happens. The --vignette-size
+ * and --grain-intensity variables are modulated during the iris
+ * wipe animation that fires once on hero exit. */
+:root {
+    --vignette-size: 80%;
+    --grain-intensity: 0.035;
+}
+
 .scrollytelling__map::before {
     content: "";
     position: absolute;
     inset: 0;
     background:
         radial-gradient(
-            ellipse 80% 70% at 50% 50%,
+            ellipse var(--vignette-size) calc(var(--vignette-size) - 10%) at 50% 50%,
             transparent 40%,
             color-mix(in srgb, var(--bg-base) 75%, transparent) 100%
         );
     pointer-events: none;
     z-index: 1;
+    transition: background 1400ms var(--ease-cinematic);
+}
+
+/* Iris wipe — when body.is-iris-firing, vignette contracts sharply
+ * and the grain intensifies, mimicking a CRT news-broadcast on-air cue. */
+body.is-iris-firing {
+    --vignette-size: 55%;
+    --grain-intensity: 0.09;
+}
+
+body.is-iris-firing .scrollytelling__map::before {
+    transition: background 700ms cubic-bezier(0.65, 0, 0.35, 1);
 }
 
 /* Top-of-viewport scrim — a soft fade from the bg color so the HUD
@@ -771,10 +804,55 @@ body.is-narrative-active .scrollytelling__map svg {
     position: absolute;
     inset: 0;
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.4 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
-    opacity: 0.035;
+    opacity: var(--grain-intensity, 0.035);
     mix-blend-mode: overlay;
     pointer-events: none;
     z-index: 2;
+    transition: opacity 700ms cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* ---------- Zero-crossing sweep ----------
+ * Fires once when the reader reaches Step 3 — the moment the story
+ * crosses from positive to negative prices. A thin warm-gold line
+ * sweeps across the viewport like a trading-floor "limit broken"
+ * indicator, while the map briefly gains a 6° hue rotation. The
+ * warm gold is thematically precise: the SUN is what caused this
+ * price crash, so the broadcast cue carries its color. */
+
+.zero-cross-sweep {
+    position: fixed;
+    left: 0;
+    top: 50%;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        color-mix(in srgb, var(--gen-solar) 80%, transparent) 20%,
+        var(--accent-glow) 50%,
+        color-mix(in srgb, var(--gen-solar) 80%, transparent) 80%,
+        transparent 100%
+    );
+    box-shadow:
+        0 0 16px color-mix(in srgb, var(--gen-solar) 55%, transparent),
+        0 0 40px color-mix(in srgb, var(--gen-solar) 25%, transparent);
+    pointer-events: none;
+    z-index: 9999;
+    transform: translateX(-100%);
+    opacity: 0;
+    animation: zeroCrossSweep 1100ms cubic-bezier(0.19, 1, 0.22, 1) forwards;
+}
+
+@keyframes zeroCrossSweep {
+    0%   { transform: translateX(-100%); opacity: 0; }
+    15%  { opacity: 1; }
+    85%  { opacity: 1; }
+    100% { transform: translateX(100%); opacity: 0; }
+}
+
+body.is-zero-crossing .scrollytelling__map svg {
+    transition: filter 1100ms cubic-bezier(0.19, 1, 0.22, 1);
+    filter: saturate(0.6) brightness(0.85) hue-rotate(-8deg);
 }
 
 /* ---------- Leader-line overlay (card → country) ----------

@@ -18,8 +18,100 @@ async function init() {
     setupHeroParallax();
     setupCursorLight();
     setupSpotTape(showcase);
+    setupCircadianTint();
+    setupIrisWipe();
 
     console.info("HSquareB initialized");
+}
+
+/**
+ * Iris wipe — the map's vignette briefly contracts then expands as
+ * the reader leaves the hero for the first time, with the grain
+ * overlay flashing up simultaneously. An old news-broadcast "on-air"
+ * cue signalling "the story begins now."
+ *
+ * Fires exactly once per page load, at ~25% of viewport scrolled.
+ */
+const IRIS_THRESHOLD = 0.25;
+const IRIS_DURATION_MS = 700;
+
+function setupIrisWipe() {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let fired = false;
+    const onScroll = () => {
+        if (fired) return;
+        const p = window.scrollY / window.innerHeight;
+        if (p < IRIS_THRESHOLD) return;
+        fired = true;
+        document.body.classList.add("is-iris-firing");
+        setTimeout(() => {
+            document.body.classList.remove("is-iris-firing");
+        }, IRIS_DURATION_MS);
+        window.removeEventListener("scroll", onScroll);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+}
+
+/**
+ * Map vertical scroll position to a subtle circadian color wash on the
+ * map. The tint never fights the palette — it only interpolates between
+ * very low-opacity versions of colors already in the design system:
+ *
+ *   top      → cold dawn (accent-dim)
+ *   middle   → neutral calm
+ *   lower    → warm solar (gen-solar, low opacity)
+ *   near end → ice-cold (accent-glow, the shock)
+ *
+ * Written to `--atmos-tint` on :root and picked up by a CSS layer on
+ * the map. Uses a single rAF loop shared with other scroll hooks.
+ */
+function setupCircadianTint() {
+    const root = document.documentElement;
+    const stops = [
+        { at: 0.00, color: "rgba(14, 116, 144, 0.12)" },   // accent-dim
+        { at: 0.30, color: "rgba(71, 85, 105, 0.08)" },    // slate neutral
+        { at: 0.55, color: "rgba(251, 191, 36, 0.07)" },   // muted solar gold
+        { at: 0.80, color: "rgba(34, 211, 238, 0.10)" },   // cold cyan
+        { at: 1.00, color: "rgba(224, 247, 255, 0.06)" },  // ice-white shock
+    ];
+
+    const parseRGBA = (s) => {
+        const m = s.match(/rgba?\(([^)]+)\)/);
+        if (!m) return [0, 0, 0, 0];
+        return m[1].split(",").map(Number);
+    };
+    const lerp = (a, b, t) => a + (b - a) * t;
+    const sample = (p) => {
+        for (let i = 0; i < stops.length - 1; i++) {
+            const a = stops[i];
+            const b = stops[i + 1];
+            if (p >= a.at && p <= b.at) {
+                const t = (p - a.at) / (b.at - a.at);
+                const ca = parseRGBA(a.color);
+                const cb = parseRGBA(b.color);
+                const r = Math.round(lerp(ca[0], cb[0], t));
+                const g = Math.round(lerp(ca[1], cb[1], t));
+                const bl = Math.round(lerp(ca[2], cb[2], t));
+                const al = (lerp(ca[3], cb[3], t)).toFixed(3);
+                return `rgba(${r}, ${g}, ${bl}, ${al})`;
+            }
+        }
+        return stops[stops.length - 1].color;
+    };
+
+    let ticking = false;
+    const update = () => {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(() => {
+            const max = document.documentElement.scrollHeight - window.innerHeight;
+            const p = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
+            root.style.setProperty("--atmos-tint", sample(p));
+            ticking = false;
+        });
+    };
+    update();
+    window.addEventListener("scroll", update, { passive: true });
 }
 
 /**
