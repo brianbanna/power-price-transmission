@@ -331,6 +331,60 @@ strong {
     z-index: 1;
 }
 
+/* Thin warm-gold vertical rule down the left edge of the hero interior.
+ * The muted --gen-solar color visually ties to "sun" without being
+ * literal. Rises on page load like a curtain pull. */
+.hero__rail {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: clamp(24px, 4vw, 80px);
+    width: 1px;
+    background: linear-gradient(
+        180deg,
+        transparent 0%,
+        color-mix(in srgb, var(--gen-solar) 32%, transparent) 18%,
+        color-mix(in srgb, var(--gen-solar) 18%, transparent) 80%,
+        transparent 100%
+    );
+    transform-origin: top;
+    transform: scaleY(0);
+    animation: heroRailReveal 1600ms var(--ease-cinematic) 300ms forwards;
+    z-index: 1;
+    pointer-events: none;
+}
+
+@keyframes heroRailReveal {
+    to { transform: scaleY(1); }
+}
+
+/* Masthead — reads like a newspaper dispatch header. Hairlines between
+ * fields, tracked small-caps mono, low-contrast on the warm side. */
+.hero__masthead {
+    display: inline-flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 28px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid color-mix(in srgb, var(--gen-solar) 18%, transparent);
+    opacity: 0;
+    animation: fadeUp 1000ms var(--ease-cinematic) 100ms forwards;
+}
+
+.hero__masthead-item {
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: color-mix(in srgb, var(--gen-solar) 60%, var(--text-secondary));
+}
+
+.hero__masthead-rule {
+    width: 6px;
+    height: 1px;
+    background: color-mix(in srgb, var(--gen-solar) 40%, transparent);
+}
+
 .hero__eyebrow {
     display: flex;
     align-items: center;
@@ -342,7 +396,7 @@ strong {
     color: var(--accent);
     margin-bottom: 48px;
     opacity: 0;
-    animation: fadeUp 1000ms var(--ease-cinematic) 200ms forwards;
+    animation: fadeUp 1000ms var(--ease-cinematic) 250ms forwards;
 }
 
 .hero__eyebrow-dot {
@@ -383,6 +437,26 @@ strong {
     font-style: italic;
     color: var(--accent-bright);
     font-variation-settings: "opsz" 144, "SOFT" 50;
+    /* Nudge the italic down a hair to optically center it against the
+     * surrounding roman — Fraunces italic rises slightly on the baseline. */
+    display: inline-block;
+    transform: translateY(0.015em);
+    letter-spacing: -0.01em;
+    padding-right: 0.02em;
+}
+
+/* Decorative terminal mark at the end of the title. Replaces the bare
+ * full stop with a small accent-colored point — an editorial flourish
+ * borrowed from FT and economist long-form headlines. */
+.hero__title-mark {
+    display: inline-block;
+    margin-left: 0.08em;
+    color: var(--accent);
+    font-size: 0.55em;
+    vertical-align: 0.55em;
+    font-variation-settings: "opsz" 144, "wght" 700;
+    transform: translateY(0);
+    text-shadow: 0 0 16px color-mix(in srgb, var(--accent) 40%, transparent);
 }
 
 .hero__lede {
@@ -394,6 +468,12 @@ strong {
     font-variation-settings: "opsz" 24, "SOFT" 20;
     opacity: 0;
     animation: fadeUp 1200ms var(--ease-cinematic) 1100ms forwards;
+}
+
+.hero__lede em {
+    font-style: italic;
+    color: var(--accent-bright);
+    font-variation-settings: "opsz" 24, "SOFT" 40;
 }
 
 .hero__signature {
