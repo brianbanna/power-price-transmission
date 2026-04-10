@@ -8,7 +8,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="css/style.css">
 
@@ -23,16 +23,37 @@
     </script>
 </head>
 <body>
+    <div class="scroll-progress" aria-hidden="true">
+        <div class="scroll-progress__bar"></div>
+    </div>
+
+    <div class="hud" aria-hidden="true">
+        <div class="hud__label">Current moment</div>
+        <div class="hud__value mono" data-hud-timestamp>—</div>
+        <div class="hud__meta mono" data-hud-meta>Scroll to begin</div>
+    </div>
+
     <header class="hero">
         <div class="hero__inner">
-            <p class="hero__eyebrow">A data story about European electricity markets</p>
-            <h1 class="hero__title">The Price of Wind and Sun</h1>
-            <p class="hero__lede">
+            <p class="hero__eyebrow mono"><span class="hero__eyebrow-dot" aria-hidden="true"></span>A dispatch from the European grid</p>
+            <h1 class="hero__title">
+                <span class="hero__title-line" data-reveal="1">The Price</span>
+                <span class="hero__title-line" data-reveal="2">of <em>Wind</em></span>
+                <span class="hero__title-line" data-reveal="3">and <em>Sun</em>.</span>
+            </h1>
+            <p class="hero__lede" data-reveal="4">
                 Switzerland produces almost no solar power. Yet on a spring Sunday in 2024,
                 its electricity price dropped lower than Germany's. This is how one country's
                 renewable revolution is rewiring the economics of its neighbours.
             </p>
-            <p class="hero__scroll-hint" aria-hidden="true">Scroll to begin</p>
+            <div class="hero__signature" data-reveal="5">
+                <div class="hero__byline mono">Brian Banna · Lê Thào Huyèn · Hajj Hannah</div>
+                <div class="hero__date mono">EPFL · MA2 · 2026</div>
+            </div>
+            <p class="hero__scroll-hint mono" aria-hidden="true">
+                <span>Scroll to begin</span>
+                <span class="hero__scroll-rule"></span>
+            </p>
         </div>
     </header>
 
@@ -42,36 +63,35 @@
         </aside>
 
         <main class="scrollytelling__narrative" id="narrative">
-            <!--
-                Narrative step cards. Task 2.6 will populate this from a
-                single source-of-truth content file; for now one card is
-                hand-authored so the layout can be verified visually.
-            -->
-            <article class="step is-active">
-                <p class="step__eyebrow">Step 1 · 2024-05-12 · 00:00 CET</p>
-                <h2 class="step__headline">A Sunday in spring.</h2>
+            <article class="step" data-step="1" data-timestamp="2024-05-12 00:00 CET" data-meta="Midnight baseline">
+                <p class="step__eyebrow mono"><span class="step__number">01</span> A Sunday in spring</p>
+                <h2 class="step__headline">At midnight, the grid <em>breathes</em> in rhythm.</h2>
                 <p class="step__body">
-                    At midnight, electricity costs roughly the same across central Europe.
-                    Around <strong>forty-five euros per megawatt-hour</strong>. The grid is calm.
+                    Across central Europe, electricity costs roughly the same at the stroke of midnight.
+                    Around <strong class="mono">€45/MWh</strong>. Five countries, one price.
+                    The grid is calm.
                 </p>
             </article>
 
-            <article class="step">
-                <p class="step__eyebrow">Step 2 · 06:00 → 12:00</p>
-                <h2 class="step__headline">Then the sun rises.</h2>
+            <article class="step" data-step="2" data-timestamp="2024-05-12 10:00 CET" data-meta="Solar ascending">
+                <p class="step__eyebrow mono"><span class="step__number">02</span> Then the sun rises</p>
+                <h2 class="step__headline">Germany has <em>forty-two gigawatts</em> of solar capacity.</h2>
                 <p class="step__body">
-                    Germany has forty-two gigawatts of solar capacity. On a clear spring
-                    Sunday, there is more electricity than anyone needs.
+                    On a clear spring Sunday, there is more electricity than anyone needs.
+                    Germany's solar alone approaches the country's entire domestic demand.
+                    Prices begin their descent.
                 </p>
             </article>
 
-            <article class="step">
-                <p class="step__eyebrow">Step 3 · 13:00 CET</p>
-                <h2 class="step__headline">Negative.</h2>
+            <article class="step" data-step="3" data-timestamp="2024-05-12 13:00 CET" data-meta="The shock">
+                <p class="step__eyebrow mono"><span class="step__number">03</span> Negative</p>
+                <h2 class="step__headline">Switzerland dropped <em>lower</em> than Germany.</h2>
                 <p class="step__body">
-                    Switzerland produces almost no solar power. But on this Sunday, its
-                    electricity price dropped <strong>lower than Germany's</strong>. The
-                    grid doesn't respect borders.
+                    Switzerland produces almost no solar power.
+                    Yet on this Sunday, Swiss electricity hit <strong class="mono">−€145.12/MWh</strong> —
+                    ten euros deeper than Germany's <strong class="mono">−€135.45</strong>.
+                    The grid doesn't respect borders. When Germany's solar floods the interconnectors,
+                    Swiss prices crash too.
                 </p>
             </article>
         </main>
@@ -87,11 +107,11 @@
         <div class="site-footer__inner">
             <p>
                 Data: <a href="https://transparency.entsoe.eu/">ENTSO-E Transparency Platform</a>,
-                January 2024 — June 2025. Map geometry adapted from Natural Earth.
+                January 2024 — June 2025. Map geometry adapted from Natural Earth via world-atlas.
             </p>
             <p>
-                COM-480 Data Visualization · EPFL ·
-                HSquareB: Brian Banna, Lê Thào Huyèn, Hajj Hannah
+                COM-480 Data Visualization · EPFL · Spring 2026 ·
+                HSquareB: Brian Banna · Lê Thào Huyèn · Hajj Hannah
             </p>
         </div>
     </footer>

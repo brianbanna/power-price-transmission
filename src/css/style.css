@@ -1,30 +1,36 @@
 /*
- * The Price of Wind and Sun — base stylesheet
- * Design system: .claude/design_system.md (authoritative reference).
- * Any color, font, or motion value here must also exist as a token in :root.
+ * The Price of Wind and Sun — stylesheet
+ *
+ * Design reference: .claude/design_system.md
+ * Typography: Fraunces (variable display serif) + JetBrains Mono
+ * Aesthetic direction: "Dispatch from the grid" — editorial gravity meets trading-terminal precision
  */
 
 /* ---------- Tokens ---------- */
 
 :root {
-    /* Backgrounds */
+    /* Backgrounds — deep navy, not pure black, layered */
     --bg-base: #0a0e1a;
     --bg-surface: #131827;
     --bg-elevated: #1c2235;
+    --bg-glass: rgba(19, 24, 39, 0.72);
     --border: #2a3145;
     --border-strong: #3f4659;
+    --border-glass: rgba(255, 255, 255, 0.06);
 
-    /* Text */
+    /* Text — warm whites, muted blue-greys */
     --text-primary: #f5f7fa;
     --text-secondary: #8b95a7;
     --text-muted: #525a6b;
+    --text-ghost: #2f3647;
 
-    /* Accent */
+    /* Accent — electric cyan with an ice-white extreme */
     --accent: #22d3ee;
     --accent-bright: #67e8f9;
     --accent-glow: #e0f7ff;
+    --accent-dim: #0e7490;
 
-    /* Price diverging scale */
+    /* Price diverging scale — inverted luminance at the extreme */
     --price-neg-extreme: #e0f7ff;
     --price-neg-deep: #67e8f9;
     --price-neg: #22d3ee;
@@ -45,18 +51,22 @@
     /* Motion */
     --ease-default: cubic-bezier(0.22, 0.61, 0.36, 1);
     --ease-overshoot: cubic-bezier(0.34, 1.56, 0.64, 1);
-    --dur-fast: 150ms;
-    --dur-medium: 300ms;
+    --ease-cinematic: cubic-bezier(0.65, 0, 0.35, 1);
+    --dur-fast: 180ms;
+    --dur-medium: 400ms;
     --dur-default: 800ms;
+    --dur-slow: 1400ms;
 
     /* Type */
-    --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
-    --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+    --font-display: 'Fraunces', 'Iowan Old Style', 'Georgia', serif;
+    --font-body: 'Fraunces', 'Iowan Old Style', 'Georgia', serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
 
     /* Layout */
     --content-max: 1440px;
-    --narrative-col: 440px;
-    --gutter: clamp(24px, 4vw, 64px);
+    --narrative-col: 460px;
+    --gutter: clamp(24px, 4vw, 80px);
+    --gutter-sm: clamp(16px, 3vw, 40px);
 }
 
 /* ---------- Reset ---------- */
@@ -70,16 +80,19 @@
 html {
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
+    background: var(--bg-base);
 }
 
 body {
     margin: 0;
     background: var(--bg-base);
     color: var(--text-primary);
-    font-family: var(--font-sans);
+    font-family: var(--font-body);
     font-size: 17px;
     line-height: 1.55;
-    font-feature-settings: "ss01", "cv11";
+    /* Fraunces at small optical-size + slightly softer feel for body. */
+    font-variation-settings: "opsz" 14, "SOFT" 30;
+    font-feature-settings: "ss01", "cv11", "calt";
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
@@ -89,10 +102,16 @@ h1, h2, h3, p {
     margin: 0;
 }
 
+::selection {
+    background: var(--accent);
+    color: var(--bg-base);
+}
+
 a {
     color: var(--accent);
     text-decoration: none;
-    border-bottom: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+    padding-bottom: 1px;
     transition: border-color var(--dur-fast) var(--ease-default),
                 color var(--dur-fast) var(--ease-default);
 }
@@ -103,11 +122,119 @@ a:focus-visible {
     border-bottom-color: var(--accent-bright);
 }
 
-/* Numeric utility — every price, percentage, or tick label. */
+*:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 2px;
+}
+
 .mono {
     font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
     font-feature-settings: "zero", "ss02";
+    /* Reset Fraunces variation settings for the mono face */
+    font-variation-settings: normal;
+}
+
+em {
+    font-style: italic;
+    /* Fraunces italic has beautiful calligraphic character at display sizes */
+    font-variation-settings: "opsz" 144, "SOFT" 30;
+}
+
+strong {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* ---------- Scroll progress bar ---------- */
+
+.scroll-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: color-mix(in srgb, var(--border) 60%, transparent);
+    z-index: 100;
+    pointer-events: none;
+}
+
+.scroll-progress__bar {
+    height: 100%;
+    width: 0;
+    background: linear-gradient(
+        90deg,
+        var(--accent-dim) 0%,
+        var(--accent) 40%,
+        var(--accent-bright) 80%,
+        var(--accent-glow) 100%
+    );
+    box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 60%, transparent),
+                0 0 2px var(--accent);
+    transition: width 100ms linear;
+}
+
+/* ---------- HUD (time / position indicator) ---------- */
+
+.hud {
+    position: fixed;
+    top: 32px;
+    right: 32px;
+    z-index: 90;
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px) saturate(1.4);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    border: 1px solid var(--border-glass);
+    border-radius: 2px;
+    padding: 14px 18px;
+    min-width: 220px;
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity var(--dur-medium) var(--ease-default),
+                transform var(--dur-medium) var(--ease-default);
+    pointer-events: none;
+}
+
+.hud.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.hud__label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+}
+
+.hud__value {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-primary);
+    letter-spacing: 0.01em;
+    margin-bottom: 4px;
+}
+
+.hud__meta {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+}
+
+@media (max-width: 900px) {
+    .hud {
+        top: 16px;
+        right: 16px;
+        padding: 10px 14px;
+        min-width: 180px;
+    }
+    .hud__value { font-size: 13px; }
+    .hud__meta { font-size: 10px; }
 }
 
 /* ---------- Hero ---------- */
@@ -115,75 +242,201 @@ a:focus-visible {
 .hero {
     position: relative;
     z-index: 2;
-    min-height: 100vh;
-    padding: clamp(80px, 12vh, 160px) var(--gutter) 64px;
+    min-height: 100svh;
+    padding: clamp(72px, 10vh, 140px) var(--gutter) 64px;
     background: var(--bg-base);
     display: flex;
     flex-direction: column;
     justify-content: center;
+    overflow: hidden;
+}
+
+/* Subtle ambient gradient behind the hero — a light source
+ * from lower-left, barely visible, suggests a sunrise without
+ * a literal sun. */
+.hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(
+            ellipse 60% 40% at 15% 100%,
+            color-mix(in srgb, var(--accent) 8%, transparent) 0%,
+            transparent 60%
+        ),
+        radial-gradient(
+            ellipse 40% 30% at 90% 0%,
+            color-mix(in srgb, var(--gen-solar) 5%, transparent) 0%,
+            transparent 70%
+        );
+    pointer-events: none;
+}
+
+/* Grain overlay on the hero for atmospheric texture. */
+.hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.5 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    opacity: 0.05;
+    mix-blend-mode: overlay;
+    pointer-events: none;
 }
 
 .hero__inner {
+    position: relative;
     max-width: var(--content-max);
     margin: 0 auto;
     width: 100%;
+    z-index: 1;
 }
 
 .hero__eyebrow {
-    font-family: var(--font-mono);
-    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 11px;
+    font-weight: 500;
     text-transform: uppercase;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.16em;
     color: var(--accent);
-    margin-bottom: 32px;
+    margin-bottom: 48px;
+    opacity: 0;
+    animation: fadeUp 1000ms var(--ease-cinematic) 200ms forwards;
+}
+
+.hero__eyebrow-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 12px var(--accent), 0 0 2px var(--accent-glow);
+    animation: pulse 2.8s ease-in-out infinite;
 }
 
 .hero__title {
-    font-size: clamp(48px, 7vw, 88px);
-    font-weight: 700;
-    letter-spacing: -0.025em;
-    line-height: 1.02;
-    max-width: 18ch;
-    margin-bottom: 40px;
+    font-family: var(--font-display);
+    font-size: clamp(56px, 9vw, 136px);
+    font-weight: 400;
+    /* Fraunces's display-optimised opsz at the largest end */
+    font-variation-settings: "opsz" 144, "SOFT" 0;
+    letter-spacing: -0.035em;
+    line-height: 0.92;
+    color: var(--text-primary);
+    max-width: 14ch;
+    margin-bottom: 56px;
     text-wrap: balance;
 }
 
+.hero__title-line {
+    display: block;
+    opacity: 0;
+    transform: translateY(24px);
+    animation: heroLineReveal 1200ms var(--ease-cinematic) forwards;
+}
+
+.hero__title-line:nth-child(1) { animation-delay: 400ms; }
+.hero__title-line:nth-child(2) { animation-delay: 600ms; }
+.hero__title-line:nth-child(3) { animation-delay: 800ms; }
+
+.hero__title em {
+    font-style: italic;
+    color: var(--accent-bright);
+    font-variation-settings: "opsz" 144, "SOFT" 50;
+}
+
 .hero__lede {
-    font-size: clamp(18px, 1.6vw, 22px);
+    font-size: clamp(18px, 1.5vw, 22px);
     line-height: 1.5;
     color: var(--text-secondary);
-    max-width: 54ch;
+    max-width: 56ch;
+    margin-bottom: 72px;
+    font-variation-settings: "opsz" 24, "SOFT" 20;
+    opacity: 0;
+    animation: fadeUp 1200ms var(--ease-cinematic) 1100ms forwards;
+}
+
+.hero__signature {
+    display: flex;
+    align-items: baseline;
+    gap: 32px;
+    margin-bottom: 96px;
+    opacity: 0;
+    animation: fadeUp 1200ms var(--ease-cinematic) 1400ms forwards;
+    flex-wrap: wrap;
+}
+
+.hero__byline,
+.hero__date {
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+.hero__date {
+    color: var(--text-ghost);
 }
 
 .hero__scroll-hint {
-    font-family: var(--font-mono);
-    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 10px;
+    font-weight: 500;
     text-transform: uppercase;
-    letter-spacing: 0.15em;
+    letter-spacing: 0.18em;
     color: var(--text-muted);
     margin-top: auto;
-    padding-top: 80px;
-    animation: scroll-hint-pulse 2.4s var(--ease-default) infinite;
+    opacity: 0;
+    animation: scrollHintAppear 1200ms var(--ease-cinematic) 1800ms forwards;
 }
 
-@keyframes scroll-hint-pulse {
-    0%, 100% { opacity: 0.4; }
-    50%      { opacity: 1; }
+.hero__scroll-rule {
+    flex: 0 0 48px;
+    height: 1px;
+    background: var(--text-muted);
+    animation: scrollRulePulse 2.4s ease-in-out infinite;
+    transform-origin: left;
+}
+
+/* ---------- Hero animations ---------- */
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes heroLineReveal {
+    from {
+        opacity: 0;
+        transform: translateY(32px);
+        filter: blur(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+    }
+}
+
+@keyframes scrollHintAppear {
+    from { opacity: 0; transform: translateY(0); }
+    to   { opacity: 0.7; transform: translateY(0); }
+}
+
+@keyframes scrollRulePulse {
+    0%, 100% { transform: scaleX(0.6); opacity: 0.5; }
+    50%      { transform: scaleX(1);   opacity: 1; }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1;   transform: scale(1); }
+    50%      { opacity: 0.5; transform: scale(0.9); }
 }
 
 /* ---------- Scrollytelling (map-dominant) ---------- */
-
-/*
- * The map owns the viewport. Narrative cards float above it as
- * glass panels, appearing one at a time as the reader scrolls.
- *
- * Layout model:
- * - `.scrollytelling` is a tall container that defines the scroll track.
- * - `#map-container` is position:fixed, covering the whole viewport,
- *   so the map is the background for every scroll step.
- * - `#narrative` is a transparent column sitting inside the scroll
- *   track; its step cards act as scrollama triggers.
- */
 
 .scrollytelling {
     position: relative;
@@ -204,74 +457,170 @@ a:focus-visible {
     height: 100%;
 }
 
-/* ---------- Map — countries (base state, no price colors yet) ---------- */
+/* Vignette — subtle radial darken at the edges. Draws the eye
+ * to the center where the action happens. */
+.scrollytelling__map::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(
+            ellipse 80% 70% at 50% 50%,
+            transparent 40%,
+            color-mix(in srgb, var(--bg-base) 75%, transparent) 100%
+        );
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Grain overlay on the map for atmosphere */
+.scrollytelling__map::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.4 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    opacity: 0.035;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+    z-index: 2;
+}
+
+/* ---------- Map — countries (base state) ---------- */
 
 .country {
     fill: var(--bg-surface);
     stroke: var(--border-strong);
-    stroke-width: 1;
+    stroke-width: 0.8;
     stroke-linejoin: round;
     transition: fill var(--dur-default) var(--ease-default);
 }
 
-.scrollytelling__narrative {
-    position: relative;
-    z-index: 1;
-    pointer-events: none;  /* Cards re-enable pointer events themselves. */
-    max-width: var(--narrative-col);
-    margin-left: var(--gutter);
-    padding-block: 50vh 100vh;
-    display: flex;
-    flex-direction: column;
-    gap: 60vh;
+.country.is-highlight {
+    fill: var(--bg-elevated);
 }
 
-/* Glass panel: a narrative beat floating over the map. */
+/* ---------- Narrative column ---------- */
+
+.scrollytelling__narrative {
+    position: relative;
+    z-index: 3;
+    pointer-events: none;
+    max-width: var(--narrative-col);
+    margin-left: var(--gutter);
+    padding-block: 45vh 100vh;
+    display: flex;
+    flex-direction: column;
+    gap: 70vh;
+}
+
+/* Glass narrative card. A floating dispatch. */
 .step {
     pointer-events: auto;
-    background: color-mix(in srgb, var(--bg-surface) 84%, transparent);
-    backdrop-filter: blur(24px) saturate(1.4);
-    -webkit-backdrop-filter: blur(24px) saturate(1.4);
-    border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
-    border-radius: 4px;
-    padding: 32px 36px;
+    position: relative;
+    background: var(--bg-glass);
+    backdrop-filter: blur(28px) saturate(1.6);
+    -webkit-backdrop-filter: blur(28px) saturate(1.6);
+    border: 1px solid var(--border-glass);
+    border-radius: 3px;
+    padding: 36px 40px 40px;
     max-width: var(--narrative-col);
-    box-shadow: 0 20px 40px -24px rgba(0, 0, 0, 0.6),
-                0 1px 0 0 color-mix(in srgb, var(--text-primary) 4%, transparent) inset;
-    opacity: 0.35;
-    transform: translateY(8px);
-    transition: opacity var(--dur-default) var(--ease-default),
-                transform var(--dur-default) var(--ease-default);
+    box-shadow:
+        0 32px 64px -24px rgba(0, 0, 0, 0.7),
+        0 4px 12px -2px rgba(0, 0, 0, 0.3),
+        0 1px 0 0 rgba(255, 255, 255, 0.04) inset,
+        0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+
+    /* Inactive state — quieted, slightly shrunk */
+    opacity: 0.32;
+    transform: translateY(16px) scale(0.985);
+    transition:
+        opacity var(--dur-default) var(--ease-default),
+        transform var(--dur-default) var(--ease-default),
+        border-color var(--dur-default) var(--ease-default),
+        box-shadow var(--dur-default) var(--ease-default);
 }
 
 .step.is-active {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
+    border-color: color-mix(in srgb, var(--accent) 18%, var(--border-glass));
+    box-shadow:
+        0 40px 80px -20px rgba(0, 0, 0, 0.8),
+        0 4px 16px -2px rgba(0, 0, 0, 0.4),
+        0 0 0 1px color-mix(in srgb, var(--accent) 8%, transparent),
+        0 1px 0 0 rgba(255, 255, 255, 0.08) inset,
+        0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+}
+
+/* Left accent bar that grows when the step activates. */
+.step::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 24px;
+    bottom: 24px;
+    width: 2px;
+    background: var(--accent);
+    box-shadow: 0 0 12px var(--accent), 0 0 2px var(--accent-bright);
+    transform: scaleY(0);
+    transform-origin: top;
+    transition: transform var(--dur-default) var(--ease-cinematic);
+}
+
+.step.is-active::before {
+    transform: scaleY(1);
 }
 
 .step__eyebrow {
-    font-family: var(--font-mono);
-    font-size: 11px;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    font-size: 10px;
+    font-weight: 500;
     text-transform: uppercase;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.14em;
+    color: var(--text-muted);
+    margin-bottom: 18px;
+    transition: color var(--dur-default) var(--ease-default);
+}
+
+.step.is-active .step__eyebrow {
     color: var(--accent);
-    margin-bottom: 12px;
+}
+
+.step__number {
+    font-size: 10px;
+    color: var(--text-ghost);
+    transition: color var(--dur-default) var(--ease-default);
+}
+
+.step.is-active .step__number {
+    color: var(--accent-bright);
 }
 
 .step__headline {
-    font-size: 32px;
-    font-weight: 700;
+    font-family: var(--font-display);
+    font-size: 34px;
+    font-weight: 400;
+    font-variation-settings: "opsz" 72, "SOFT" 10;
     letter-spacing: -0.02em;
-    line-height: 1.1;
-    margin-bottom: 16px;
+    line-height: 1.08;
+    margin-bottom: 18px;
     color: var(--text-primary);
     text-wrap: balance;
 }
 
+.step__headline em {
+    color: var(--accent-bright);
+    font-style: italic;
+    font-variation-settings: "opsz" 144, "SOFT" 40;
+}
+
 .step__body {
-    font-size: 17px;
+    font-size: 16px;
     line-height: 1.6;
     color: var(--text-secondary);
+    font-variation-settings: "opsz" 18, "SOFT" 25;
 }
 
 .step__body strong {
@@ -279,17 +628,19 @@ a:focus-visible {
     font-weight: 500;
 }
 
+.step__body strong.mono {
+    /* Mono strongs are the data highlights — pulled out further. */
+    color: var(--accent-bright);
+    font-weight: 500;
+}
+
 /* ---------- Explorer placeholder ---------- */
 
-/* The explorer and footer sit in normal flow below the scrollytelling
- * column. Because the map is position:fixed, they need a solid
- * background to occlude it once the reader scrolls past the last
- * narrative step. */
 .explorer {
     position: relative;
-    z-index: 2;
+    z-index: 4;
     min-height: 60vh;
-    padding: 96px var(--gutter) 64px;
+    padding: 120px var(--gutter) 80px;
     background: var(--bg-base);
     border-top: 1px solid var(--border);
 }
@@ -299,26 +650,29 @@ a:focus-visible {
     margin: 0 auto;
 }
 
-.explorer:empty::before {
-    content: "Explorer loads in Phase 7";
+.explorer:has(.explorer__inner:empty)::before,
+.explorer .explorer__inner:empty::before {
+    content: "The explorer loads in Phase 7. Keep scrolling.";
     display: block;
     font-family: var(--font-mono);
-    font-size: 13px;
-    color: var(--text-muted);
+    font-size: 12px;
+    color: var(--text-ghost);
     text-align: center;
+    letter-spacing: 0.08em;
 }
 
 /* ---------- Footer ---------- */
 
 .site-footer {
     position: relative;
-    z-index: 2;
-    padding: 48px var(--gutter) 64px;
+    z-index: 4;
+    padding: 56px var(--gutter) 72px;
     background: var(--bg-base);
     border-top: 1px solid var(--border);
     font-size: 13px;
     color: var(--text-muted);
     line-height: 1.7;
+    font-variation-settings: "opsz" 14;
 }
 
 .site-footer__inner {
@@ -328,23 +682,28 @@ a:focus-visible {
 
 .site-footer p + p {
     margin-top: 8px;
+    color: var(--text-ghost);
 }
 
 /* ---------- Responsive ---------- */
 
 @media (max-width: 900px) {
     :root {
-        --narrative-col: min(360px, calc(100vw - 32px));
+        --narrative-col: min(380px, calc(100vw - 32px));
+    }
+
+    .hero__title {
+        font-size: clamp(48px, 12vw, 88px);
     }
 
     .scrollytelling__narrative {
         margin-inline: 16px;
         padding-block: 30vh 60vh;
-        gap: 50vh;
+        gap: 55vh;
     }
 
     .step {
-        padding: 24px 24px;
+        padding: 28px 28px 32px;
     }
 
     .step__headline {
@@ -353,13 +712,17 @@ a:focus-visible {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    html {
-        scroll-behavior: auto;
-    }
-    *,
-    *::before,
-    *::after {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
         animation-duration: 0ms !important;
         transition-duration: 0ms !important;
+    }
+    .hero__title-line,
+    .hero__eyebrow,
+    .hero__lede,
+    .hero__signature,
+    .hero__scroll-hint {
+        opacity: 1 !important;
+        transform: none !important;
     }
 }
