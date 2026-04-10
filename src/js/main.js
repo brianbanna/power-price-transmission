@@ -1,5 +1,6 @@
 import { createMap } from "./map.js";
 import { initNarrative } from "./narrative.js";
+import { initExplorer } from "./explorer.js";
 import { loadJSON } from "./utils/data.js";
 
 // Entry point. Wires the map and the scrollytelling narrative together
@@ -14,6 +15,7 @@ async function init() {
 
     const map = createMap("#map-container", { topology, showcase });
     initNarrative("#narrative", { map, showcase });
+    initExplorer({ map, showcase });
 
     setupHeroParallax();
     setupCursorLight();

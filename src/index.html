@@ -155,11 +155,61 @@
     </div>
 
     <!--
-        The interactive explorer lives here once Phase 7 lands. The element
-        is left out of the DOM entirely until then so the page does not ship
-        an empty placeholder section. See .claude/PROGRESS.md §7.
+        Explorer — a "now you steer the grid" mode that keeps the map
+        visible in the background and gives the reader a scrubbable
+        timeline spanning the showcase day. Phase 7.1-7.3.
     -->
-    <!-- <section class="explorer" id="explorer" aria-label="Interactive explorer"></section> -->
+    <section class="explorer" id="explorer" aria-label="Interactive explorer">
+        <div class="explorer__inner">
+            <div class="explorer__intro">
+                <p class="explorer__eyebrow mono"><span class="explorer__eyebrow-dot" aria-hidden="true"></span>Now you steer the grid</p>
+                <h2 class="explorer__headline">Scrub through <em>one day</em> of European electricity.</h2>
+                <p class="explorer__lede">
+                    Drag the playhead across the timeline below, or press play. The map
+                    above tracks the reader's position hour by hour across
+                    <strong class="mono">May 12, 2024</strong> — the same Sunday the story just told.
+                </p>
+            </div>
+
+            <div class="timeline" data-timeline>
+                <div class="timeline__chrome">
+                    <button
+                        type="button"
+                        class="timeline__play"
+                        data-timeline-play
+                        aria-label="Play timeline"
+                    >
+                        <svg class="timeline__play-icon" viewBox="0 0 24 24" aria-hidden="true">
+                            <path class="timeline__play-shape" d="M7 4 L20 12 L7 20 Z"></path>
+                        </svg>
+                    </button>
+
+                    <div class="timeline__readout">
+                        <p class="timeline__readout-label mono">Hour</p>
+                        <p class="timeline__readout-value mono" data-timeline-hour>00:00</p>
+                    </div>
+
+                    <div class="timeline__legend mono" aria-hidden="true">
+                        <span>Drag to scrub</span>
+                        <span class="timeline__legend-sep">·</span>
+                        <span>Space to play</span>
+                    </div>
+                </div>
+
+                <div class="timeline__track" data-timeline-track tabindex="0" role="slider" aria-label="Hour of day" aria-valuemin="0" aria-valuemax="23" aria-valuenow="0">
+                    <div class="timeline__rail"></div>
+                    <div class="timeline__ticks" data-timeline-ticks></div>
+                    <div class="timeline__fill" data-timeline-fill></div>
+                    <div class="timeline__handle" data-timeline-handle>
+                        <div class="timeline__handle-dot"></div>
+                        <div class="timeline__handle-ring"></div>
+                    </div>
+                </div>
+
+                <div class="timeline__hours mono" aria-hidden="true" data-timeline-hours></div>
+            </div>
+        </div>
+    </section>
 
     <footer class="site-footer">
         <div class="site-footer__inner">
