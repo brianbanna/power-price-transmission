@@ -136,6 +136,29 @@ a:focus-visible {
     font-variation-settings: normal;
 }
 
+/* Negative-price signal — the true Unicode minus (U+2212), rendered
+ * in the ice-white glow color so negative numbers visually carry the
+ * meaning of the extreme end of the price scale. Use as:
+ *   <span class="mono neg">145.12</span>
+ *   or with currency: <span class="mono neg">€145.12</span>
+ */
+.neg::before {
+    content: "−";  /* U+2212 */
+    color: var(--accent-glow);
+    margin-right: 0.06em;
+    font-weight: 400;
+}
+
+/* Currency unit rendered as a mono subscript — makes "€145.12/MWh"
+ * read as a quantity rather than a string of characters. */
+.unit {
+    font-size: 0.62em;
+    vertical-align: 0.32em;
+    letter-spacing: 0.04em;
+    color: color-mix(in srgb, currentColor 65%, transparent);
+    margin-left: 0.08em;
+}
+
 em {
     font-style: italic;
     /* Fraunces italic has beautiful calligraphic character at display sizes */
@@ -173,6 +196,23 @@ strong {
     box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 60%, transparent),
                 0 0 2px var(--accent);
     transition: width 100ms linear;
+}
+
+/* Chapter ticks. Data-chapter-ticks attribute on the bar container
+ * lets narrative.js set `--tick-count` so the notches auto-space. */
+.scroll-progress__ticks {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.scroll-progress__tick {
+    position: absolute;
+    top: 0;
+    width: 1px;
+    height: 6px;
+    background: color-mix(in srgb, var(--text-primary) 25%, transparent);
+    transform: translateY(0);
 }
 
 /* ---------- HUD (time / position indicator) ---------- */
@@ -455,6 +495,15 @@ strong {
     display: block;
     width: 100%;
     height: 100%;
+    /* Desaturate + dim the map when a narrative step is active, so
+     * overlaid prose always out-ranks the background. Reverts to full
+     * saturation for map-focused beats (hero reveal, explorer). */
+    filter: saturate(1) brightness(1);
+    transition: filter var(--dur-default) var(--ease-default);
+}
+
+body.is-narrative-active .scrollytelling__map svg {
+    filter: saturate(0.55) brightness(0.82);
 }
 
 /* Vignette — subtle radial darken at the edges. Draws the eye
@@ -471,6 +520,25 @@ strong {
         );
     pointer-events: none;
     z-index: 1;
+}
+
+/* Top-of-viewport scrim — a soft fade from the bg color so the HUD
+ * never collides with map fill colors. 96px tall, fully transparent
+ * at the bottom. Lives above the map but below the HUD. */
+.map-topscrim {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 96px;
+    background: linear-gradient(
+        180deg,
+        var(--bg-base) 0%,
+        color-mix(in srgb, var(--bg-base) 40%, transparent) 60%,
+        transparent 100%
+    );
+    pointer-events: none;
+    z-index: 80;
 }
 
 /* Grain overlay on the map for atmosphere */
@@ -513,7 +581,11 @@ strong {
     gap: 70vh;
 }
 
-/* Glass narrative card. A floating dispatch. */
+/* Glass narrative card. A floating dispatch.
+ *
+ * Asymmetric top border: a brighter 1px line on top fakes a light
+ * source from above. This is the single rule that separates "glass
+ * card" from "PowerPoint box". */
 .step {
     pointer-events: auto;
     position: relative;
@@ -521,14 +593,14 @@ strong {
     backdrop-filter: blur(28px) saturate(1.6);
     -webkit-backdrop-filter: blur(28px) saturate(1.6);
     border: 1px solid var(--border-glass);
+    border-top: 1px solid rgba(255, 255, 255, 0.09);
     border-radius: 3px;
     padding: 36px 40px 40px;
     max-width: var(--narrative-col);
     box-shadow:
         0 32px 64px -24px rgba(0, 0, 0, 0.7),
         0 4px 12px -2px rgba(0, 0, 0, 0.3),
-        0 1px 0 0 rgba(255, 255, 255, 0.04) inset,
-        0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+        0 1px 0 0 rgba(255, 255, 255, 0.05) inset;
 
     /* Inactive state — quieted, slightly shrunk */
     opacity: 0.32;
@@ -540,16 +612,37 @@ strong {
         box-shadow var(--dur-default) var(--ease-default);
 }
 
+/* Radial scrim under the active card only — guarantees legibility
+ * without dimming the whole map. */
+.step::after {
+    content: "";
+    position: absolute;
+    inset: -80px -200px -80px -120px;
+    background: radial-gradient(
+        ellipse 70% 60% at 30% 50%,
+        color-mix(in srgb, var(--bg-base) 70%, transparent) 0%,
+        transparent 65%
+    );
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--dur-default) var(--ease-default);
+}
+
+.step.is-active::after {
+    opacity: 1;
+}
+
 .step.is-active {
     opacity: 1;
     transform: translateY(0) scale(1);
     border-color: color-mix(in srgb, var(--accent) 18%, var(--border-glass));
+    border-top-color: color-mix(in srgb, var(--accent) 24%, rgba(255, 255, 255, 0.12));
     box-shadow:
         0 40px 80px -20px rgba(0, 0, 0, 0.8),
         0 4px 16px -2px rgba(0, 0, 0, 0.4),
-        0 0 0 1px color-mix(in srgb, var(--accent) 8%, transparent),
-        0 1px 0 0 rgba(255, 255, 255, 0.08) inset,
-        0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+        0 0 0 1px color-mix(in srgb, var(--accent) 10%, transparent),
+        0 1px 0 0 rgba(255, 255, 255, 0.1) inset;
 }
 
 /* Left accent bar that grows when the step activates. */

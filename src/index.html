@@ -25,7 +25,9 @@
 <body>
     <div class="scroll-progress" aria-hidden="true">
         <div class="scroll-progress__bar"></div>
+        <div class="scroll-progress__ticks" data-progress-ticks></div>
     </div>
+    <div class="map-topscrim" aria-hidden="true"></div>
 
     <div class="hud" aria-hidden="true">
         <div class="hud__label">Current moment</div>
@@ -88,8 +90,8 @@
                 <h2 class="step__headline">Switzerland dropped <em>lower</em> than Germany.</h2>
                 <p class="step__body">
                     Switzerland produces almost no solar power.
-                    Yet on this Sunday, Swiss electricity hit <strong class="mono">−€145.12/MWh</strong> —
-                    ten euros deeper than Germany's <strong class="mono">−€135.45</strong>.
+                    Yet on this Sunday, Swiss electricity hit <strong class="mono neg">€145.12<span class="unit">/MWh</span></strong> —
+                    ten euros deeper than Germany's <strong class="mono neg">€135.45</strong>.
                     The grid doesn't respect borders. When Germany's solar floods the interconnectors,
                     Swiss prices crash too.
                 </p>

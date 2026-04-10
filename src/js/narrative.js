@@ -17,7 +17,9 @@ const ACTIVE_OFFSET = 0.55;
 const HUD_PROGRESS_SELECTOR = "[data-hud-timestamp]";
 const HUD_META_SELECTOR = "[data-hud-meta]";
 const PROGRESS_BAR_SELECTOR = ".scroll-progress__bar";
+const PROGRESS_TICKS_SELECTOR = "[data-progress-ticks]";
 const HUD_SELECTOR = ".hud";
+const NARRATIVE_ACTIVE_CLASS = "is-narrative-active";
 
 export function initNarrative(selector, config) {
     const container = document.querySelector(selector);
@@ -35,6 +37,31 @@ export function initNarrative(selector, config) {
     const hudTimestamp = document.querySelector(HUD_PROGRESS_SELECTOR);
     const hudMeta = document.querySelector(HUD_META_SELECTOR);
     const progressBar = document.querySelector(PROGRESS_BAR_SELECTOR);
+    const progressTicks = document.querySelector(PROGRESS_TICKS_SELECTOR);
+
+    // Render chapter ticks on the progress bar — one per step, positioned
+    // at the scroll fraction corresponding to that step's centre.
+    if (progressTicks && steps.length > 1) {
+        progressTicks.replaceChildren();
+        const layoutTicks = () => {
+            progressTicks.replaceChildren();
+            const max = document.documentElement.scrollHeight - window.innerHeight;
+            if (max <= 0) return;
+            steps.forEach((step) => {
+                const rect = step.getBoundingClientRect();
+                const absoluteTop = window.scrollY + rect.top + rect.height / 2;
+                const trigger = absoluteTop - window.innerHeight * ACTIVE_OFFSET;
+                const pct = Math.min(100, Math.max(0, (trigger / max) * 100));
+                const tick = document.createElement("span");
+                tick.className = "scroll-progress__tick";
+                tick.style.left = `${pct}%`;
+                progressTicks.appendChild(tick);
+            });
+        };
+        layoutTicks();
+        window.addEventListener("resize", layoutTicks);
+        document.fonts?.ready?.then(layoutTicks);
+    }
 
     const scroller = scrollama();
     scroller
@@ -46,6 +73,10 @@ export function initNarrative(selector, config) {
         .onStepEnter(({ element, index }) => {
             // Mark the active step and clear any previously active.
             steps.forEach((s) => s.classList.toggle("is-active", s === element));
+
+            // Tell the map to desaturate — the CSS rule on the map SVG
+            // filter reacts to this class on <body>.
+            document.body.classList.add(NARRATIVE_ACTIVE_CLASS);
 
             // Update the HUD with this step's metadata.
             if (hud && hud.classList.contains("is-visible") === false) {
@@ -67,13 +98,21 @@ export function initNarrative(selector, config) {
             }
         })
         .onStepExit(({ element, direction }) => {
-            // When scrolling UP past the first step, hide the HUD again.
+            // When scrolling UP past the first step, hide the HUD again
+            // and re-saturate the map.
             if (direction === "up" && element === steps[0]) {
                 element.classList.remove("is-active");
+                document.body.classList.remove(NARRATIVE_ACTIVE_CLASS);
                 if (hud) hud.classList.remove("is-visible");
                 if (config.map && typeof config.map.update === "function") {
                     config.map.update({ activeStep: null });
                 }
+            }
+
+            // When scrolling DOWN past the last step, release the
+            // desaturation so the explorer below gets a vivid map.
+            if (direction === "down" && element === steps[steps.length - 1]) {
+                document.body.classList.remove(NARRATIVE_ACTIVE_CLASS);
             }
         });
 
