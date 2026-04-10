@@ -309,17 +309,26 @@ export function createMap(selector, config) {
         const DUR = 800;
         const EASE = d3.easeCubicInOut;
 
-        // Exit — fade opacity AND shrink width to 0 over the same
-        // duration, so outgoing arrows don't pop.
+        // Exit — collapse the arrow back to a degenerate dot at its
+        // origin point, fading stroke-opacity over the same beat.
+        // `d` is tweened via d3.interpolateString, so persistent
+        // structure (M _ Q _ _) lets us land smoothly at the source.
         selection.exit()
             .transition().duration(DUR).ease(EASE)
+            .attrTween("d", function (d) {
+                const from = d3.select(this).attr("d");
+                const collapsed = degeneratePath(d.fromXY);
+                return d3.interpolateString(from, collapsed);
+            })
             .attr("stroke-opacity", 0)
             .attr("stroke-width", 0)
             .remove();
 
-        // Enter — new arrows start at zero opacity and zero width but
-        // with their target path already set, so they "grow into" the
-        // shared transition below.
+        // Enter — new arrows start as a degenerate dot at the SOURCE
+        // country with zero width and zero opacity. The shared merge
+        // transition below then tweens `d` through d3's string
+        // interpolator, producing a visible "growth" from source to
+        // destination in the same 800ms beat.
         const enter = selection.enter()
             .append("path")
             .attr("class", "flow")
@@ -328,16 +337,19 @@ export function createMap(selector, config) {
             .attr("marker-end", "url(#flow-arrow-head)")
             .attr("stroke-opacity", 0)
             .attr("stroke-width", 0)
-            .attr("d", (d) => flowPath(d.fromXY, d.toXY));
+            .attr("d", (d) => degeneratePath(d.fromXY));
 
-        // Merge — transition path `d`, stroke-width and stroke-opacity
-        // together over the same curve as the country fills. D3's
-        // built-in string interpolation on the `d` attribute smoothly
-        // morphs between quadratic bezier paths of matching structure.
+        // Merge — tween `d`, stroke-width, and stroke-opacity together
+        // on the same curve. `attrTween` on `d` uses d3's string
+        // interpolator which handles matching-structure paths cleanly.
         enter.merge(selection)
             .classed("flow--focus", (d) => d.touchesFocus)
             .transition().duration(DUR).ease(EASE)
-            .attr("d", (d) => flowPath(d.fromXY, d.toXY))
+            .attrTween("d", function (d) {
+                const from = d3.select(this).attr("d") || degeneratePath(d.fromXY);
+                const to = flowPath(d.fromXY, d.toXY);
+                return d3.interpolateString(from, to);
+            })
             .attr("stroke-width", (d) => widthForSpread(d.spread))
             .attr("stroke-opacity", (d) => (d.touchesFocus ? 0.95 : 0.55));
     }
@@ -478,4 +490,14 @@ function flowPath([x1, y1], [x2, y2]) {
 function widthForSpread(spread) {
     const t = Math.min(1, Math.max(0, spread / ARROW_WIDTH_PIVOT));
     return ARROW_MIN_WIDTH + t * (ARROW_MAX_WIDTH - ARROW_MIN_WIDTH);
+}
+
+/**
+ * A zero-length path collapsed to a single point. Used as the start
+ * state for entering flow arrows and the end state for exiting ones
+ * so the `d` attribute can be tweened via d3.interpolateString
+ * through a path of matching structure (`M x,y Q x,y x,y`).
+ */
+function degeneratePath([x, y]) {
+    return `M${x},${y} Q${x},${y} ${x},${y}`;
 }

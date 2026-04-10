@@ -249,54 +249,82 @@ export function initNarrative(selector, config) {
 
 
 /**
- * Leader line controller — draws an SVG path from the active narrative
- * card to the centroid of the country the step is talking about.
+ * Leader line controller — draws a physical line from the active
+ * narrative card to the country it is talking about.
  *
- * The line is a two-segment elbow: horizontal from the card edge then
- * diagonal to the target. A glowing dot + pulsing ring mark the target.
- * On step exit the elements fade out; the rAF scroll loop in the
- * caller keeps the geometry in sync as the card translates.
+ * Motion model
+ * ------------
+ * The leader has three control points: (start, elbow, dest). Each
+ * point is tracked as a critical-damped spring whose target moves
+ * when the active step changes or when scroll displaces the card.
+ * Every frame we advance all six spring axes by a fixed dt, producing
+ * a line that *chases* its target with a natural follow-through,
+ * never snapping.
+ *
+ * The dest circle (the target dot on the country) uses the same
+ * springs, so the dot glides across the map from one country to the
+ * next on step change and the line + dot stay perfectly in phase.
+ *
+ * Visibility
+ * ----------
+ * Springs keep running as long as the loop is active, even when the
+ * line is hidden — on the next show() the springs are re-initialised
+ * at the current target so the reveal doesn't inherit stale state.
  */
 function createLeaderController(svgEl, mapCtl) {
     const NS = "http://www.w3.org/2000/svg";
     const line = document.createElementNS(NS, "path");
     line.setAttribute("class", "leader-line");
-    const target = document.createElementNS(NS, "circle");
-    target.setAttribute("class", "leader-target");
-    target.setAttribute("r", "3");
-    const pulse = document.createElementNS(NS, "circle");
-    pulse.setAttribute("class", "leader-target-pulse");
-    pulse.setAttribute("r", "4");
+    const dotEl = document.createElementNS(NS, "circle");
+    dotEl.setAttribute("class", "leader-target");
+    dotEl.setAttribute("r", "3");
+    const pulseEl = document.createElementNS(NS, "circle");
+    pulseEl.setAttribute("class", "leader-target-pulse");
+    pulseEl.setAttribute("r", "4");
 
-    svgEl.append(line, pulse, target);
+    svgEl.append(line, pulseEl, dotEl);
+
+    // Critical-damped spring constants. Tuned by feel — stiffness 170
+    // + damping 24 gives ~500ms to land with zero overshoot, matches
+    // iOS default system spring.
+    const SPRING_STIFFNESS = 170;
+    const SPRING_DAMPING = 24;
+    const SPRING_EPSILON = 0.03;   // stop condition in pixels
+    const MAX_DT = 1 / 30;         // clamp step to 30fps worst case
+
+    // Each spring axis has a current position and velocity.
+    const springs = {
+        startX: { current: 0, target: 0, velocity: 0 },
+        startY: { current: 0, target: 0, velocity: 0 },
+        elbowX: { current: 0, target: 0, velocity: 0 },
+        elbowY: { current: 0, target: 0, velocity: 0 },
+        destX:  { current: 0, target: 0, velocity: 0 },
+        destY:  { current: 0, target: 0, velocity: 0 },
+    };
 
     let activeStep = null;
+    let visible = false;
+    let rafHandle = null;
+    let lastFrameTime = null;
 
-    function show(stepEl) {
-        activeStep = stepEl;
-        line.classList.add("is-visible");
-        target.classList.add("is-visible");
-        pulse.classList.add("is-pulsing");
-        redraw();
-    }
-
-    function hide() {
-        activeStep = null;
-        line.classList.remove("is-visible");
-        target.classList.remove("is-visible");
-        pulse.classList.remove("is-pulsing");
-    }
-
-    function redraw() {
-        if (!activeStep) return;
+    /**
+     * Compute the desired (start, elbow, dest) for the current step
+     * and write them to the spring targets. Does NOT touch `current`
+     * so the animation continues from wherever the line actually is.
+     */
+    function computeTargets() {
+        if (!activeStep) return false;
         const iso = activeStep.dataset.country;
-        if (!iso) return;
+        if (!iso) return false;
         const dest = mapCtl.getCountryCentroidPx(iso);
-        if (!dest) return;
+        if (!dest) return false;
 
-        // Compute the leader's start: the right edge of the active card,
-        // vertically centered on the headline.
         const cardRect = activeStep.getBoundingClientRect();
+        // Card off-screen — keep the line hidden until it returns.
+        if (cardRect.right < 0 || cardRect.left > window.innerWidth) {
+            return false;
+        }
+
         const headline = activeStep.querySelector(".step__headline");
         const yAnchor = headline
             ? headline.getBoundingClientRect().top + headline.offsetHeight / 2
@@ -304,29 +332,143 @@ function createLeaderController(svgEl, mapCtl) {
         const startX = cardRect.right + 8;
         const startY = yAnchor;
 
-        // Bail if the card is off-screen — leader is meaningless then.
-        if (cardRect.right < 0 || cardRect.left > window.innerWidth) {
-            line.classList.remove("is-visible");
-            target.classList.remove("is-visible");
-            pulse.classList.remove("is-pulsing");
-            return;
-        } else if (activeStep) {
-            line.classList.add("is-visible");
-            target.classList.add("is-visible");
-            pulse.classList.add("is-pulsing");
-        }
-
-        // Two-segment elbow: horizontal stub from the card, then diagonal
-        // to the target. Stub length scales with horizontal distance.
+        // Elbow geometry — horizontal stub from the card, scaled by
+        // distance, with the vertical drop deferred to the diagonal
+        // second segment.
         const stubLen = Math.min(48, Math.max(16, (dest.x - startX) * 0.18));
         const elbowX = startX + stubLen;
-        const d = `M${startX},${startY} L${elbowX},${startY} L${dest.x - 6},${dest.y}`;
-        line.setAttribute("d", d);
+        const elbowY = startY;
 
-        target.setAttribute("cx", dest.x);
-        target.setAttribute("cy", dest.y);
-        pulse.setAttribute("cx", dest.x);
-        pulse.setAttribute("cy", dest.y);
+        springs.startX.target = startX;
+        springs.startY.target = startY;
+        springs.elbowX.target = elbowX;
+        springs.elbowY.target = elbowY;
+        springs.destX.target  = dest.x - 6; // 6px gap before the target dot
+        springs.destY.target  = dest.y;
+        return true;
+    }
+
+    /** Snap all current positions to their target (no motion). */
+    function snapToTarget() {
+        for (const k in springs) {
+            springs[k].current = springs[k].target;
+            springs[k].velocity = 0;
+        }
+    }
+
+    /** Step every spring forward by `dt` seconds. */
+    function stepSprings(dt) {
+        let moving = false;
+        for (const k in springs) {
+            const s = springs[k];
+            const delta = s.target - s.current;
+            // Critical-damped spring integrator (semi-implicit Euler).
+            const spring = delta * SPRING_STIFFNESS;
+            const damper = s.velocity * SPRING_DAMPING;
+            const accel = spring - damper;
+            s.velocity += accel * dt;
+            s.current += s.velocity * dt;
+            if (Math.abs(delta) > SPRING_EPSILON || Math.abs(s.velocity) > SPRING_EPSILON) {
+                moving = true;
+            } else {
+                // Settle exactly.
+                s.current = s.target;
+                s.velocity = 0;
+            }
+        }
+        return moving;
+    }
+
+    /** Paint the current spring positions to the DOM. */
+    function paint() {
+        const sX = springs.startX.current;
+        const sY = springs.startY.current;
+        const eX = springs.elbowX.current;
+        const eY = springs.elbowY.current;
+        const dX = springs.destX.current;
+        const dY = springs.destY.current;
+        line.setAttribute("d", `M${sX},${sY} L${eX},${eY} L${dX},${dY}`);
+        dotEl.setAttribute("cx", dX + 6);
+        dotEl.setAttribute("cy", dY);
+        pulseEl.setAttribute("cx", dX + 6);
+        pulseEl.setAttribute("cy", dY);
+    }
+
+    /** The continuous loop. Runs while the leader is visible. */
+    function tick(now) {
+        rafHandle = null;
+        if (!visible) return;
+
+        const dt = lastFrameTime == null
+            ? 1 / 60
+            : Math.min(MAX_DT, (now - lastFrameTime) / 1000);
+        lastFrameTime = now;
+
+        // Recompute targets (the card may have moved since last frame
+        // due to page scroll). If the step moved off-screen this will
+        // return false and the targets stay at the last valid values —
+        // the springs will simply settle in place, which is correct.
+        computeTargets();
+
+        const moving = stepSprings(dt);
+        paint();
+
+        // Always schedule the next frame while visible — even once
+        // settled — so scroll-driven target updates are picked up
+        // immediately. Cost is trivial (no DOM work when settled).
+        if (visible) {
+            rafHandle = requestAnimationFrame(tick);
+        }
+    }
+
+    function startLoop() {
+        if (rafHandle != null) return;
+        lastFrameTime = null;
+        rafHandle = requestAnimationFrame(tick);
+    }
+
+    function stopLoop() {
+        if (rafHandle != null) {
+            cancelAnimationFrame(rafHandle);
+            rafHandle = null;
+        }
+    }
+
+    function show(stepEl) {
+        const firstShow = activeStep == null;
+        activeStep = stepEl;
+        const gotTargets = computeTargets();
+        if (!gotTargets) return;
+
+        // On the very first reveal snap the line to its target so it
+        // doesn't appear from (0,0). On subsequent reveals keep the
+        // current position so the line glides across the screen from
+        // the previous step's anchor to the new one.
+        if (firstShow) snapToTarget();
+
+        visible = true;
+        line.classList.add("is-visible");
+        dotEl.classList.add("is-visible");
+        pulseEl.classList.add("is-pulsing");
+        paint();
+        startLoop();
+    }
+
+    function hide() {
+        activeStep = null;
+        visible = false;
+        line.classList.remove("is-visible");
+        dotEl.classList.remove("is-visible");
+        pulseEl.classList.remove("is-pulsing");
+        stopLoop();
+    }
+
+    /** External redraw trigger. The loop picks up the new target on
+     *  its next frame; if the loop is not running we schedule one
+     *  frame to re-paint. */
+    function redraw() {
+        if (!visible) return;
+        if (rafHandle == null) startLoop();
     }
 
     return { show, hide, redraw };
