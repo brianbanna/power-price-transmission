@@ -20,6 +20,7 @@ const HUD_META_SELECTOR = "[data-hud-meta]";
 const PROGRESS_BAR_SELECTOR = ".scroll-progress__bar";
 const PROGRESS_TICKS_SELECTOR = "[data-progress-ticks]";
 const HUD_SELECTOR = ".hud";
+const LEADER_OVERLAY_SELECTOR = "#leader-overlay";
 const NARRATIVE_ACTIVE_CLASS = "is-narrative-active";
 
 export function initNarrative(selector, config) {
@@ -39,6 +40,12 @@ export function initNarrative(selector, config) {
     const hudMeta = document.querySelector(HUD_META_SELECTOR);
     const progressBar = document.querySelector(PROGRESS_BAR_SELECTOR);
     const progressTicks = document.querySelector(PROGRESS_TICKS_SELECTOR);
+    const leaderOverlay = document.querySelector(LEADER_OVERLAY_SELECTOR);
+
+    // Set up the leader-line overlay if the map exposes centroid lookup.
+    const leaderCtl = (leaderOverlay && config.map?.getCountryCentroidPx)
+        ? createLeaderController(leaderOverlay, config.map)
+        : null;
 
     // Render a small sparkline inside each step card, showing the full
     // 24-hour price trajectory of that step's focus country with the
@@ -97,6 +104,11 @@ export function initNarrative(selector, config) {
                 hudMeta.textContent = element.dataset.meta || "";
             }
 
+            // Draw a leader line from the active card to its target country.
+            if (leaderCtl) {
+                leaderCtl.show(element);
+            }
+
             // Push state to the map so colors / arrows / labels can react.
             if (config.map && typeof config.map.update === "function") {
                 config.map.update({
@@ -112,6 +124,7 @@ export function initNarrative(selector, config) {
                 element.classList.remove("is-active");
                 document.body.classList.remove(NARRATIVE_ACTIVE_CLASS);
                 if (hud) hud.classList.remove("is-visible");
+                if (leaderCtl) leaderCtl.hide();
                 if (config.map && typeof config.map.update === "function") {
                     config.map.update({ activeStep: null });
                 }
@@ -121,6 +134,7 @@ export function initNarrative(selector, config) {
             // desaturation so the explorer below gets a vivid map.
             if (direction === "down" && element === steps[steps.length - 1]) {
                 document.body.classList.remove(NARRATIVE_ACTIVE_CLASS);
+                if (leaderCtl) leaderCtl.hide();
             }
         });
 
@@ -137,14 +151,122 @@ export function initNarrative(selector, config) {
     }
 
     // Resize handling — scrollama needs to recompute offsets when the
-    // viewport changes or when fonts load in and shift layout.
-    window.addEventListener("resize", () => scroller.resize());
-    document.fonts?.ready?.then(() => scroller.resize());
+    // viewport changes or when fonts load in and shift layout. The
+    // leader line also needs to redraw because card and country
+    // positions both depend on viewport geometry.
+    const onResize = () => {
+        scroller.resize();
+        if (leaderCtl) leaderCtl.redraw();
+    };
+    window.addEventListener("resize", onResize);
+    document.fonts?.ready?.then(() => {
+        scroller.resize();
+        if (leaderCtl) leaderCtl.redraw();
+    });
+
+    // The cards translate as the page scrolls, so the leader line's
+    // origin point shifts continuously. Cheap rAF redraw on scroll.
+    if (leaderCtl) {
+        let leaderTicking = false;
+        window.addEventListener("scroll", () => {
+            if (leaderTicking) return;
+            leaderTicking = true;
+            requestAnimationFrame(() => {
+                leaderCtl.redraw();
+                leaderTicking = false;
+            });
+        }, { passive: true });
+    }
 
     return {
         steps,
         scroller,
     };
+}
+
+
+/**
+ * Leader line controller — draws an SVG path from the active narrative
+ * card to the centroid of the country the step is talking about.
+ *
+ * The line is a two-segment elbow: horizontal from the card edge then
+ * diagonal to the target. A glowing dot + pulsing ring mark the target.
+ * On step exit the elements fade out; the rAF scroll loop in the
+ * caller keeps the geometry in sync as the card translates.
+ */
+function createLeaderController(svgEl, mapCtl) {
+    const NS = "http://www.w3.org/2000/svg";
+    const line = document.createElementNS(NS, "path");
+    line.setAttribute("class", "leader-line");
+    const target = document.createElementNS(NS, "circle");
+    target.setAttribute("class", "leader-target");
+    target.setAttribute("r", "3");
+    const pulse = document.createElementNS(NS, "circle");
+    pulse.setAttribute("class", "leader-target-pulse");
+    pulse.setAttribute("r", "4");
+
+    svgEl.append(line, pulse, target);
+
+    let activeStep = null;
+
+    function show(stepEl) {
+        activeStep = stepEl;
+        line.classList.add("is-visible");
+        target.classList.add("is-visible");
+        pulse.classList.add("is-pulsing");
+        redraw();
+    }
+
+    function hide() {
+        activeStep = null;
+        line.classList.remove("is-visible");
+        target.classList.remove("is-visible");
+        pulse.classList.remove("is-pulsing");
+    }
+
+    function redraw() {
+        if (!activeStep) return;
+        const iso = activeStep.dataset.country;
+        if (!iso) return;
+        const dest = mapCtl.getCountryCentroidPx(iso);
+        if (!dest) return;
+
+        // Compute the leader's start: the right edge of the active card,
+        // vertically centered on the headline.
+        const cardRect = activeStep.getBoundingClientRect();
+        const headline = activeStep.querySelector(".step__headline");
+        const yAnchor = headline
+            ? headline.getBoundingClientRect().top + headline.offsetHeight / 2
+            : cardRect.top + cardRect.height * 0.4;
+        const startX = cardRect.right + 8;
+        const startY = yAnchor;
+
+        // Bail if the card is off-screen — leader is meaningless then.
+        if (cardRect.right < 0 || cardRect.left > window.innerWidth) {
+            line.classList.remove("is-visible");
+            target.classList.remove("is-visible");
+            pulse.classList.remove("is-pulsing");
+            return;
+        } else if (activeStep) {
+            line.classList.add("is-visible");
+            target.classList.add("is-visible");
+            pulse.classList.add("is-pulsing");
+        }
+
+        // Two-segment elbow: horizontal stub from the card, then diagonal
+        // to the target. Stub length scales with horizontal distance.
+        const stubLen = Math.min(48, Math.max(16, (dest.x - startX) * 0.18));
+        const elbowX = startX + stubLen;
+        const d = `M${startX},${startY} L${elbowX},${startY} L${dest.x - 6},${dest.y}`;
+        line.setAttribute("d", d);
+
+        target.setAttribute("cx", dest.x);
+        target.setAttribute("cy", dest.y);
+        pulse.setAttribute("cx", dest.x);
+        pulse.setAttribute("cy", dest.y);
+    }
+
+    return { show, hide, redraw };
 }
 
 

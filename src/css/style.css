@@ -777,6 +777,66 @@ body.is-narrative-active .scrollytelling__map svg {
     z-index: 2;
 }
 
+/* ---------- Leader-line overlay (card → country) ----------
+ * SVG overlay that sits above the map but below the narrative cards.
+ * Renders the active card's leader line + target dot. */
+
+.leader-overlay {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 2;
+    overflow: visible;
+}
+
+.leader-line {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 1;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 0 4px color-mix(in srgb, var(--accent) 40%, transparent));
+    opacity: 0;
+    transition: opacity var(--dur-medium) var(--ease-default);
+}
+
+.leader-line.is-visible {
+    opacity: 0.9;
+}
+
+.leader-target {
+    fill: var(--accent);
+    stroke: var(--accent-glow);
+    stroke-width: 1;
+    filter: drop-shadow(0 0 8px var(--accent));
+    opacity: 0;
+    transition: opacity var(--dur-medium) var(--ease-default),
+                r var(--dur-default) var(--ease-overshoot);
+}
+
+.leader-target.is-visible {
+    opacity: 1;
+}
+
+.leader-target-pulse {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 1.5;
+    opacity: 0;
+    transform-origin: center;
+}
+
+.leader-target-pulse.is-pulsing {
+    animation: leaderPulse 1800ms var(--ease-default) infinite;
+}
+
+@keyframes leaderPulse {
+    0%   { opacity: 0.8; r: 4; }
+    100% { opacity: 0; r: 22; }
+}
+
 /* ---------- Map — graticule (cartographic atlas touch) ---------- */
 
 /*
@@ -893,16 +953,135 @@ body.is-narrative-active .scrollytelling__map svg {
 .step.is-active {
     opacity: 1;
     transform: translateY(0) scale(1);
-    border-color: color-mix(in srgb, var(--accent) 18%, var(--border-glass));
-    border-top-color: color-mix(in srgb, var(--accent) 24%, rgba(255, 255, 255, 0.12));
+    border-color: color-mix(in srgb, var(--step-accent, var(--accent)) 18%, var(--border-glass));
+    border-top-color: color-mix(in srgb, var(--step-accent, var(--accent)) 24%, rgba(255, 255, 255, 0.12));
     box-shadow:
         0 40px 80px -20px rgba(0, 0, 0, 0.8),
         0 4px 16px -2px rgba(0, 0, 0, 0.4),
-        0 0 0 1px color-mix(in srgb, var(--accent) 10%, transparent),
+        0 0 0 1px color-mix(in srgb, var(--step-accent, var(--accent)) 10%, transparent),
         0 1px 0 0 rgba(255, 255, 255, 0.1) inset;
 }
 
-/* Left accent bar that grows when the step activates. */
+/* Per-step semantic accent. Each step's active state uses a slightly
+ * different hue tied to the temperature of the moment. The whole bar,
+ * border, eyebrow, and step number react together. */
+.step[data-step="1"] { --step-accent: var(--accent-dim); }
+.step[data-step="2"] { --step-accent: var(--accent); }
+.step[data-step="3"] { --step-accent: var(--accent-glow); }
+
+.step[data-step="3"].is-active {
+    /* Step 3 — the shock. Adds an interior cyan wash because this is
+     * the moment the data breaks the rule. */
+    box-shadow:
+        0 40px 80px -20px rgba(0, 0, 0, 0.85),
+        0 4px 16px -2px rgba(0, 0, 0, 0.4),
+        0 0 0 1px color-mix(in srgb, var(--accent-glow) 18%, transparent),
+        0 1px 0 0 rgba(255, 255, 255, 0.18) inset,
+        inset 0 0 80px color-mix(in srgb, var(--accent) 6%, transparent);
+}
+
+/* ---------- Step 3 — break the grid (number-as-hero) ---------- */
+
+/*
+ * After two cards in a steady rhythm, Step 3 ruptures the layout: the
+ * card widens, and the price value becomes the centerpiece in display
+ * Fraunces italic. The body prose flows under the number like a cutline.
+ *
+ * This is intentional craft — the data breaks the rule (prices going
+ * negative is nonsense), so the layout breaks the rule too.
+ */
+
+.step--shock {
+    max-width: 540px;
+}
+
+.step__hero-number {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 300;
+    font-variation-settings: "opsz" 144, "SOFT" 50, "wght" 300;
+    color: var(--accent-glow);
+    line-height: 0.85;
+    letter-spacing: -0.04em;
+    margin: 8px 0 22px;
+    text-shadow:
+        0 0 60px color-mix(in srgb, var(--accent) 40%, transparent),
+        0 0 24px color-mix(in srgb, var(--accent-bright) 30%, transparent);
+
+    /* Hidden by default; revealed when the card activates */
+    opacity: 0;
+    transform: translateY(20px) scale(0.96);
+    filter: blur(8px);
+    transition:
+        opacity 1400ms var(--ease-cinematic) 200ms,
+        transform 1400ms var(--ease-cinematic) 200ms,
+        filter 1400ms var(--ease-cinematic) 200ms;
+}
+
+.step--shock.is-active .step__hero-number {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+}
+
+.step__hero-currency {
+    font-size: 0.32em;
+    font-style: normal;
+    font-variation-settings: "opsz" 24, "wght" 400;
+    color: color-mix(in srgb, var(--accent-glow) 60%, transparent);
+    margin-right: 0.06em;
+    align-self: flex-start;
+    margin-top: 0.5em;
+}
+
+.step__hero-sign {
+    font-size: 0.92em;
+    font-style: normal;
+    font-weight: 300;
+    color: var(--accent-glow);
+    margin-right: -0.04em;
+}
+
+.step__hero-value {
+    font-family: var(--font-display);
+    font-size: clamp(80px, 8.5vw, 132px);
+    font-style: italic;
+    font-weight: 300;
+    font-variation-settings: "opsz" 144, "SOFT" 50, "wght" 300;
+    letter-spacing: -0.04em;
+    color: var(--accent-glow);
+    /* Reset mono utility settings — we want the display serif here */
+    font-variant-numeric: normal;
+    font-feature-settings: normal;
+}
+
+.step__hero-decimal {
+    font-size: 0.42em;
+    vertical-align: 0.6em;
+    margin-left: 0.04em;
+    color: color-mix(in srgb, var(--accent-glow) 60%, var(--text-secondary));
+    letter-spacing: -0.02em;
+}
+
+.step__hero-unit {
+    font-size: 0.16em;
+    font-style: normal;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: color-mix(in srgb, var(--accent-glow) 50%, var(--text-secondary));
+    align-self: flex-end;
+    margin-bottom: 1.2em;
+    margin-left: 0.4em;
+    border-top: 1px solid color-mix(in srgb, var(--accent-glow) 40%, transparent);
+    padding-top: 4px;
+}
+
+/* Left accent bar that grows when the step activates. Uses the
+ * step-specific accent hue. */
 .step::before {
     content: "";
     position: absolute;
@@ -910,11 +1089,14 @@ body.is-narrative-active .scrollytelling__map svg {
     top: 24px;
     bottom: 24px;
     width: 2px;
-    background: var(--accent);
-    box-shadow: 0 0 12px var(--accent), 0 0 2px var(--accent-bright);
+    background: var(--step-accent, var(--accent));
+    box-shadow: 0 0 12px var(--step-accent, var(--accent)),
+                0 0 2px var(--accent-bright);
     transform: scaleY(0);
     transform-origin: top;
-    transition: transform var(--dur-default) var(--ease-cinematic);
+    transition: transform var(--dur-default) var(--ease-cinematic),
+                background var(--dur-default) var(--ease-default),
+                box-shadow var(--dur-default) var(--ease-default);
 }
 
 .step.is-active::before {
@@ -935,7 +1117,7 @@ body.is-narrative-active .scrollytelling__map svg {
 }
 
 .step.is-active .step__eyebrow {
-    color: var(--accent);
+    color: var(--step-accent, var(--accent));
 }
 
 .step__number {
@@ -945,7 +1127,7 @@ body.is-narrative-active .scrollytelling__map svg {
 }
 
 .step.is-active .step__number {
-    color: var(--accent-bright);
+    color: var(--step-accent, var(--accent-bright));
 }
 
 .step__headline {

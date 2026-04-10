@@ -91,6 +91,10 @@
             <!-- Map canvas. Populated by js/map.js. -->
         </aside>
 
+        <!-- Leader-line overlay — sits above the map, below the cards.
+             Populated by js/narrative.js when a step activates. -->
+        <svg class="leader-overlay" id="leader-overlay" aria-hidden="true"></svg>
+
         <main class="scrollytelling__narrative" id="narrative">
             <article class="step" data-step="1" data-hour="0" data-country="CH" data-timestamp="2024-05-12 00:00 CET" data-meta="Midnight baseline">
                 <p class="step__eyebrow mono"><span class="step__number">01</span> A Sunday in spring</p>
@@ -114,15 +118,22 @@
                 <div class="step__chart" data-step-chart aria-hidden="true"></div>
             </article>
 
-            <article class="step" data-step="3" data-hour="13" data-country="CH" data-timestamp="2024-05-12 13:00 CET" data-meta="The shock">
+            <article class="step step--shock" data-step="3" data-hour="13" data-country="CH" data-timestamp="2024-05-12 13:00 CET" data-meta="The shock">
                 <p class="step__eyebrow mono"><span class="step__number">03</span> Negative</p>
+                <div class="step__hero-number" aria-hidden="true">
+                    <span class="step__hero-currency">€</span>
+                    <span class="step__hero-sign">−</span>
+                    <span class="step__hero-value mono">145<span class="step__hero-decimal">.12</span></span>
+                    <span class="step__hero-unit mono">MWh</span>
+                </div>
                 <h2 class="step__headline">Switzerland dropped <em>lower</em> than Germany.</h2>
                 <p class="step__body">
                     Switzerland produces almost no solar power.
-                    Yet on this Sunday, Swiss electricity hit <strong class="mono neg">€145.12<span class="unit">/MWh</span></strong> —
-                    ten euros deeper than Germany's <strong class="mono neg">€135.45</strong>.
-                    The grid doesn't respect borders. When Germany's solar floods the interconnectors,
-                    Swiss prices crash too.
+                    Yet on this Sunday, Swiss electricity reached an unprecedented low —
+                    ten euros deeper than Germany's own trough at
+                    <strong class="mono neg">€135.45</strong>.
+                    The grid doesn't respect borders. When Germany's solar floods the
+                    interconnectors, Swiss prices crash too.
                 </p>
                 <div class="step__chart" data-step-chart aria-hidden="true"></div>
             </article>

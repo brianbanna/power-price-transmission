@@ -161,10 +161,27 @@ export function createMap(selector, config) {
         // Color fills, flow arrows, and labels land in Tasks 3.3–3.9.
     }
 
+    /**
+     * Project a country's centroid to viewport coordinates.
+     * Used by narrative.js to draw leader lines from card edges to
+     * the country a step is talking about.
+     */
+    function getCountryCentroidPx(iso) {
+        const feature = countries.features.find((f) => f.id === iso);
+        if (!feature) return null;
+        // d3.geoCentroid → [lon, lat]; project to pixel space.
+        const [lon, lat] = d3.geoCentroid(feature);
+        const px = projection([lon, lat]);
+        if (!px) return null;
+        // The container is position:fixed, so its rect is in viewport coords.
+        const rect = container.getBoundingClientRect();
+        return { x: rect.left + px[0], y: rect.top + px[1] };
+    }
+
     function destroy() {
         window.removeEventListener("resize", resize);
         svg.remove();
     }
 
-    return { update, destroy };
+    return { update, destroy, getCountryCentroidPx };
 }
