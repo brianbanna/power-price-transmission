@@ -101,6 +101,11 @@ GENERATION_COLUMNS = [
 
 RENEWABLE_COLUMNS = ["solar", "wind_onshore", "wind_offshore", "hydro_total"]
 
+# The date the Step 1-3 scroll animation plays on. See design_spec.md §2
+# for why this Sunday in particular (CH hits -145 EUR/MWh deeper than DE).
+SHOWCASE_DATE = "2024-05-12"
+SHOWCASE_PEAK_HOUR = 13  # CET, when CH reaches its -145.12 trough.
+
 
 # ---------------------------------------------------------------------------
 # Shared loading + transforms
@@ -227,11 +232,68 @@ def _not_implemented(name: str) -> Callable[[pd.DataFrame], None]:
     return stub
 
 
+def build_showcase_day(df: pd.DataFrame) -> None:
+    """Emit `showcase_day.json` — hourly data for every focus country
+    across the full 24 hours of the showcase date.
+
+    The frontend reads this once at page load and uses it to drive the
+    Step 1-3 clock animation. Shape is country-major so each country's
+    array can be joined directly to its SVG path.
+    """
+    target_date = pd.Timestamp(SHOWCASE_DATE).date()
+    day = df[df["datetime"].dt.date == target_date].copy()
+    if day.empty:
+        raise RuntimeError(f"no rows found for {SHOWCASE_DATE}")
+    day["hour"] = day["datetime"].dt.hour
+
+    countries: dict[str, list[dict[str, object]]] = {}
+    for code in FOCUS_ORDER:
+        rows = day[day["country"] == code].sort_values("hour")
+        if len(rows) != 24:
+            raise RuntimeError(
+                f"{code}: expected 24 hours on {SHOWCASE_DATE}, got {len(rows)}"
+            )
+        hourly: list[dict[str, object]] = []
+        for _, r in rows.iterrows():
+            wind = float(r["wind_onshore"]) + float(r["wind_offshore"])
+            share = r["renewable_share"]
+            hourly.append({
+                "hour": int(r["hour"]),
+                "price": round(float(r["price"]), 2),
+                "solar": int(round(float(r["solar"]))),
+                "wind": int(round(wind)),
+                "hydro": int(round(float(r["hydro_total"]))),
+                "nuclear": int(round(float(r["nuclear"]))),
+                "gas": int(round(float(r["fossil_gas"]))),
+                "renewable_share": (
+                    None if pd.isna(share) else round(float(share), 3)
+                ),
+            })
+        countries[code] = hourly
+
+    payload = {
+        "date": SHOWCASE_DATE,
+        "timezone": DISPLAY_TZ,
+        "peak_hour": SHOWCASE_PEAK_HOUR,
+        "countries": countries,
+    }
+    save_json(payload, "showcase_day.json")
+
+    # Sanity check — the spec fact we validated in Task 0.4 must hold.
+    ch_peak = countries["CH"][SHOWCASE_PEAK_HOUR]["price"]
+    if abs(ch_peak - (-145.12)) > 0.5:
+        raise RuntimeError(
+            f"CH peak price at hour {SHOWCASE_PEAK_HOUR} is {ch_peak}, "
+            f"expected -145.12"
+        )
+    print(f"  peak moment: CH={ch_peak} EUR/MWh at hour {SHOWCASE_PEAK_HOUR} CET")
+
+
 TARGETS: dict[str, Target] = {
     "showcase_day": Target(
         name="showcase_day",
         description="Hourly prices + generation for 2024-05-12 across 5 countries (Steps 1-3).",
-        builder=_not_implemented("showcase_day"),
+        builder=build_showcase_day,
     ),
     "calendar_heatmap": Target(
         name="calendar_heatmap",
