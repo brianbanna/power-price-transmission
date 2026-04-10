@@ -21,7 +21,11 @@ const PROGRESS_BAR_SELECTOR = ".scroll-progress__bar";
 const PROGRESS_TICKS_SELECTOR = "[data-progress-ticks]";
 const HUD_SELECTOR = ".hud";
 const LEADER_OVERLAY_SELECTOR = "#leader-overlay";
+const MAP_CLOCK_SELECTOR = "[data-map-clock]";
+const CLOCK_HOUR_SELECTOR = "[data-clock-hour]";
+const CLOCK_DATE_SELECTOR = "[data-clock-date]";
 const NARRATIVE_ACTIVE_CLASS = "is-narrative-active";
+const PEAK_HOUR = 13;  // Step 3 trough — clock gets accent-glow treatment
 
 export function initNarrative(selector, config) {
     const container = document.querySelector(selector);
@@ -41,6 +45,9 @@ export function initNarrative(selector, config) {
     const progressBar = document.querySelector(PROGRESS_BAR_SELECTOR);
     const progressTicks = document.querySelector(PROGRESS_TICKS_SELECTOR);
     const leaderOverlay = document.querySelector(LEADER_OVERLAY_SELECTOR);
+    const mapClock = document.querySelector(MAP_CLOCK_SELECTOR);
+    const clockHour = document.querySelector(CLOCK_HOUR_SELECTOR);
+    const clockDate = document.querySelector(CLOCK_DATE_SELECTOR);
 
     // Set up the leader-line overlay if the map exposes centroid lookup.
     const leaderCtl = (leaderOverlay && config.map?.getCountryCentroidPx)
@@ -124,6 +131,33 @@ export function initNarrative(selector, config) {
                 hudMeta.textContent = element.dataset.meta || "";
             }
 
+            // Update the big on-map clock. Parses the step's data-hour
+            // and data-timestamp to populate the display-sized digits,
+            // animates the digit reveal via a re-triggered CSS animation
+            // on class toggle, and flags the peak-hour state so the
+            // digits glow ice-white at the moment of the shock.
+            if (mapClock) {
+                mapClock.classList.add("is-visible");
+                const hour = Number(element.dataset.hour);
+                const isPeak = hour === PEAK_HOUR;
+                mapClock.classList.toggle("is-peak", isPeak);
+                if (clockHour && Number.isFinite(hour)) {
+                    // Trigger the CSS keyframe on every change by
+                    // removing and re-adding the animation via a reflow.
+                    clockHour.textContent = String(hour).padStart(2, "0");
+                    clockHour.style.animation = "none";
+                    void clockHour.offsetWidth;
+                    clockHour.style.animation = "";
+                }
+                if (clockDate && element.dataset.timestamp) {
+                    // Extract the date portion from "2024-05-12 13:00 CET"
+                    const datePart = element.dataset.timestamp.split(" ")[0];
+                    if (datePart) {
+                        clockDate.textContent = datePart.replace(/-/g, " · ");
+                    }
+                }
+            }
+
             // Draw a leader line from the active card to its target country.
             if (leaderCtl) {
                 leaderCtl.show(element);
@@ -142,12 +176,16 @@ export function initNarrative(selector, config) {
             }
         })
         .onStepExit(({ element, direction }) => {
-            // When scrolling UP past the first step, hide the HUD again
+            // When scrolling UP past the first step, hide the HUD + clock
             // and reset the map to base state (no colors, no labels).
             if (direction === "up" && element === steps[0]) {
                 element.classList.remove("is-active");
                 document.body.classList.remove(NARRATIVE_ACTIVE_CLASS);
                 if (hud) hud.classList.remove("is-visible");
+                if (mapClock) {
+                    mapClock.classList.remove("is-visible");
+                    mapClock.classList.remove("is-peak");
+                }
                 if (leaderCtl) leaderCtl.hide();
                 if (config.map && typeof config.map.update === "function") {
                     config.map.update({ hour: null, focusCountry: null });
@@ -155,7 +193,8 @@ export function initNarrative(selector, config) {
             }
 
             // When scrolling DOWN past the last step, release the
-            // desaturation so the explorer below gets a vivid map.
+            // desaturation so the explorer below gets a vivid map,
+            // but keep the clock visible as the reader transitions.
             if (direction === "down" && element === steps[steps.length - 1]) {
                 document.body.classList.remove(NARRATIVE_ACTIVE_CLASS);
                 if (leaderCtl) leaderCtl.hide();

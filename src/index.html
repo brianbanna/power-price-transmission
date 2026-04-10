@@ -35,6 +35,19 @@
         <div class="hud__meta mono" data-hud-meta>Scroll to begin</div>
     </div>
 
+    <!--
+        Big on-map clock. Sits in the lower-right of the viewport and
+        shows the hour of the active narrative step at display size.
+        Fades in on first step enter, fades out when no step is active.
+    -->
+    <div class="map-clock" aria-hidden="true" data-map-clock>
+        <p class="map-clock__label mono">Central European Time</p>
+        <div class="map-clock__time">
+            <span class="map-clock__hour" data-clock-hour>00</span><span class="map-clock__colon">:</span><span class="map-clock__minute mono">00</span>
+        </div>
+        <p class="map-clock__date mono" data-clock-date>2024 · 05 · 12</p>
+    </div>
+
     <header class="hero">
         <div class="hero__rail" aria-hidden="true"></div>
         <div class="hero__inner">
