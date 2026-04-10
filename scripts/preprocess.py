@@ -368,6 +368,100 @@ def build_calendar_heatmap(df: pd.DataFrame) -> None:
             print(f"    {date}: {n} hours")
 
 
+def build_daily_profiles(df: pd.DataFrame) -> None:
+    """Emit `daily_profiles.json` — average hourly price profile per
+    country per month, plus an annual average per country.
+
+    Step 6 animates each country's monthly profile through chronological
+    time, revealing the midday dip deepening into the classic duck curve.
+    Step 7's small multiples use the annual averages for a geographic
+    side-by-side comparison.
+    """
+    work = df.copy()
+    work["year"] = work["datetime"].dt.year
+    work["month"] = work["datetime"].dt.month
+    work["hour"] = work["datetime"].dt.hour
+    work["month_key"] = work["datetime"].dt.strftime("%Y-%m")
+
+    # Canonical month ordering so the frontend iterates chronologically
+    # rather than relying on JS object-key insertion order.
+    months = sorted(work["month_key"].unique())
+
+    countries: dict[str, dict[str, object]] = {}
+    for code in FOCUS_ORDER:
+        country_df = work[work["country"] == code]
+
+        # Monthly profile: mean price for each (month, hour) pair.
+        monthly_means = (
+            country_df.groupby(["month_key", "hour"], sort=False)["price"]
+            .mean()
+            .reset_index()
+        )
+        monthly: dict[str, list[float]] = {}
+        for month_key in months:
+            month_rows = monthly_means[monthly_means["month_key"] == month_key]
+            by_hour = {int(r["hour"]): round(float(r["price"]), 2) for _, r in month_rows.iterrows()}
+            # Emit a fixed-length 24-vector; missing hours (extremely rare)
+            # fall back to None so the chart can interpolate.
+            profile = [by_hour.get(h) for h in range(24)]
+            if any(p is None for p in profile):
+                raise RuntimeError(
+                    f"{code} {month_key}: missing hours in monthly profile"
+                )
+            monthly[month_key] = profile  # type: ignore[assignment]
+
+        # Annual (whole-dataset) average — used as the ghost overlay in
+        # Step 7 and the explorer sidebar.
+        annual_series = country_df.groupby("hour")["price"].mean()
+        annual = [round(float(annual_series[h]), 2) for h in range(24)]
+
+        countries[code] = {
+            "annual_average": annual,
+            "monthly": monthly,
+        }
+
+    payload = {
+        "timezone": DISPLAY_TZ,
+        "months": months,
+        "countries": countries,
+    }
+    save_json(payload, "daily_profiles.json")
+
+    # Sanity checks.
+    if len(months) != 18:
+        raise RuntimeError(f"expected 18 months (Jan 2024 – Jun 2025), got {len(months)}")
+    for code in FOCUS_ORDER:
+        entry = countries[code]
+        if len(entry["monthly"]) != 18:  # type: ignore[arg-type]
+            raise RuntimeError(f"{code}: expected 18 monthly profiles")
+        if len(entry["annual_average"]) != 24:  # type: ignore[arg-type]
+            raise RuntimeError(f"{code}: expected 24 annual-average points")
+
+    # Germany's annual profile should show a clear midday dip — if it
+    # doesn't, the aggregation is broken.
+    de_annual = countries["DE"]["annual_average"]
+    midday_min = min(de_annual[9:16])  # type: ignore[index]
+    evening_max = max(de_annual[17:22])  # type: ignore[index]
+    if midday_min >= evening_max:
+        raise RuntimeError(
+            "DE annual profile has no duck shape — check groupby logic "
+            f"(midday min={midday_min}, evening max={evening_max})"
+        )
+
+    # France should be noticeably flatter than Germany (nuclear baseload).
+    de_spread = max(de_annual) - min(de_annual)  # type: ignore[arg-type]
+    fr_spread = max(countries["FR"]["annual_average"]) - min(countries["FR"]["annual_average"])  # type: ignore[arg-type]
+    print(
+        f"  months: {len(months)}  "
+        f"countries: {list(countries.keys())}"
+    )
+    print(
+        f"  DE annual spread: {de_spread:.1f} EUR/MWh  "
+        f"FR annual spread: {fr_spread:.1f} EUR/MWh  "
+        f"(duck vs baseload)"
+    )
+
+
 TARGETS: dict[str, Target] = {
     "showcase_day": Target(
         name="showcase_day",
@@ -382,7 +476,7 @@ TARGETS: dict[str, Target] = {
     "daily_profiles": Target(
         name="daily_profiles",
         description="Average hourly price profile per country per month (Step 6).",
-        builder=_not_implemented("daily_profiles"),
+        builder=build_daily_profiles,
     ),
     "explorer_hourly": Target(
         name="explorer_hourly",
