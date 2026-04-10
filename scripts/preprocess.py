@@ -289,6 +289,85 @@ def build_showcase_day(df: pd.DataFrame) -> None:
     print(f"  peak moment: CH={ch_peak} EUR/MWh at hour {SHOWCASE_PEAK_HOUR} CET")
 
 
+def build_calendar_heatmap(df: pd.DataFrame) -> None:
+    """Emit `calendar_heatmap.json` — every hour of CH and DE, nested by day.
+
+    The frontend renders a `(day × hour)` grid for each country. Shaping
+    the file as a list of day records mirrors that structure directly:
+
+        selectAll('.day').data(days).selectAll('.cell').data(d => d.CH)
+
+    Each day's price array is flat — one entry per hour — so DST days
+    (spring forward = 23 entries, fall back = 25 entries) naturally vary
+    in length. There are only three DST transitions in the dataset range
+    (2024-03-31, 2024-10-27, 2025-03-30), but the format handles them
+    without special-casing.
+    """
+    countries = ["CH", "DE"]
+    sub = df[df["country"].isin(countries)].copy()
+    sub = sub.sort_values(["country", "datetime"])
+    sub["date"] = sub["datetime"].dt.date
+    sub["hour"] = sub["datetime"].dt.hour
+
+    # Pre-bin prices into {(country, date): [price_in_hour_order]}. Hours
+    # are not assumed to be contiguous — on a DST spring-forward day the
+    # 02:00 slot is simply absent, which is correct.
+    binned: dict[tuple[str, object], list[float]] = {}
+    for (country, date), group in sub.groupby(["country", "date"], sort=False):
+        prices = [
+            round(float(p), 2)
+            for _, p in sorted(
+                zip(group["hour"], group["price"]),
+                key=lambda t: t[0],
+            )
+        ]
+        binned[(country, date)] = prices
+
+    dates = sorted(sub["date"].unique())
+    days: list[dict[str, object]] = []
+    for date in dates:
+        record: dict[str, object] = {
+            "date": date.isoformat(),
+            "dow": date.weekday(),  # 0=Mon .. 6=Sun
+        }
+        for country in countries:
+            record[country] = binned.get((country, date), [])
+        days.append(record)
+
+    payload = {
+        "start_date": dates[0].isoformat(),
+        "end_date": dates[-1].isoformat(),
+        "timezone": DISPLAY_TZ,
+        "countries": countries,
+        "days": days,
+    }
+    save_json(payload, "calendar_heatmap.json")
+
+    # Sanity checks tied to the exploration pass in `.claude/data_exploration.md`.
+    total_hours = {c: sum(len(d[c]) for d in days) for c in countries}
+    neg_hours = {
+        c: sum(1 for d in days for price in d[c] if price < 0)
+        for c in countries
+    }
+    expected_neg = {"CH": 529, "DE": 846}
+    for c in countries:
+        if neg_hours[c] != expected_neg[c]:
+            raise RuntimeError(
+                f"{c}: expected {expected_neg[c]} negative hours, got {neg_hours[c]}"
+            )
+
+    irregular = [(d["date"], len(d["CH"])) for d in days if len(d["CH"]) != 24]
+    print(
+        f"  days: {len(days)}  "
+        f"hours: CH={total_hours['CH']} DE={total_hours['DE']}  "
+        f"neg: CH={neg_hours['CH']} DE={neg_hours['DE']}"
+    )
+    if irregular:
+        print("  irregular days (DST or dataset-edge truncation):")
+        for date, n in irregular:
+            print(f"    {date}: {n} hours")
+
+
 TARGETS: dict[str, Target] = {
     "showcase_day": Target(
         name="showcase_day",
@@ -298,7 +377,7 @@ TARGETS: dict[str, Target] = {
     "calendar_heatmap": Target(
         name="calendar_heatmap",
         description="Hourly prices for DE and CH, full date range (Step 4).",
-        builder=_not_implemented("calendar_heatmap"),
+        builder=build_calendar_heatmap,
     ),
     "daily_profiles": Target(
         name="daily_profiles",
