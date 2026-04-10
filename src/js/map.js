@@ -19,7 +19,16 @@ const PROJECTION_CONFIG = {
 };
 
 // The geometry is rendered once and then re-fitted on window resize.
-const FIT_PADDING = 32;
+const FIT_PADDING = 64;
+
+// Concentric graticule circles — a cartographic atlas touch that also
+// reads as a power-grid radar sweep. Rendered as distance rings around
+// the map's anchor point (Munich, roughly 48N 10E) in kilometres.
+const GRATICULE_RINGS_KM = [200, 400, 600, 800];
+const GRATICULE_ANCHOR = [10, 48];
+const GRATICULE_MERIDIANS = [0, 5, 10, 15, 20];
+const GRATICULE_PARALLELS = [40, 45, 50, 55];
+const EARTH_KM_PER_DEGREE = 111.32;
 
 export function createMap(selector, config) {
     const container = document.querySelector(selector);
@@ -45,7 +54,36 @@ export function createMap(selector, config) {
 
     const pathGen = d3.geoPath(projection);
 
+    // Layer order matters: graticule first so countries paint on top.
+    const gGraticule = svg.append("g").attr("class", "graticule");
+    const gRings = svg.append("g").attr("class", "graticule__rings");
     const gCountries = svg.append("g").attr("class", "countries");
+
+    // Meridians + parallels — thin dashed hairlines covering the region.
+    const meridianLines = gGraticule
+        .selectAll("path.graticule__meridian")
+        .data(GRATICULE_MERIDIANS)
+        .join("path")
+        .attr("class", "graticule__line graticule__meridian");
+
+    const parallelLines = gGraticule
+        .selectAll("path.graticule__parallel")
+        .data(GRATICULE_PARALLELS)
+        .join("path")
+        .attr("class", "graticule__line graticule__parallel");
+
+    // Concentric distance rings around the anchor point.
+    const ringCircles = gRings
+        .selectAll("circle.graticule__ring")
+        .data(GRATICULE_RINGS_KM)
+        .join("circle")
+        .attr("class", "graticule__ring")
+        .attr("fill", "none");
+
+    // Anchor cross at the map's geographic center — a tiny "+" glyph.
+    const crosshair = gRings.append("g").attr("class", "graticule__crosshair");
+    crosshair.append("line").attr("class", "graticule__crosshair-line");
+    crosshair.append("line").attr("class", "graticule__crosshair-line");
 
     const countryPaths = gCountries
         .selectAll("path")
@@ -65,7 +103,48 @@ export function createMap(selector, config) {
             ],
             countries,
         );
+
         countryPaths.attr("d", pathGen);
+
+        // Draw meridians as line segments spanning the parallel extent.
+        const [lat0, lat1] = [
+            GRATICULE_PARALLELS[0],
+            GRATICULE_PARALLELS[GRATICULE_PARALLELS.length - 1],
+        ];
+        meridianLines.attr("d", (lon) => {
+            const samples = d3.range(lat0, lat1 + 0.01, 0.5).map((lat) => [lon, lat]);
+            return d3.line()(samples.map((p) => projection(p)));
+        });
+
+        const [lon0, lon1] = [
+            GRATICULE_MERIDIANS[0],
+            GRATICULE_MERIDIANS[GRATICULE_MERIDIANS.length - 1],
+        ];
+        parallelLines.attr("d", (lat) => {
+            const samples = d3.range(lon0, lon1 + 0.01, 0.5).map((lon) => [lon, lat]);
+            return d3.line()(samples.map((p) => projection(p)));
+        });
+
+        // Concentric rings use projected distance: convert km → degrees,
+        // then measure the projected distance along the north meridian.
+        const anchorXY = projection(GRATICULE_ANCHOR);
+        ringCircles
+            .attr("cx", anchorXY[0])
+            .attr("cy", anchorXY[1])
+            .attr("r", (km) => {
+                const deg = km / EARTH_KM_PER_DEGREE;
+                const edge = projection([GRATICULE_ANCHOR[0], GRATICULE_ANCHOR[1] + deg]);
+                return Math.hypot(edge[0] - anchorXY[0], edge[1] - anchorXY[1]);
+            });
+
+        // Anchor crosshair — 8px horizontal and vertical ticks at center.
+        const ch = crosshair.selectAll(".graticule__crosshair-line");
+        ch.filter((_, i) => i === 0)
+            .attr("x1", anchorXY[0] - 6).attr("y1", anchorXY[1])
+            .attr("x2", anchorXY[0] + 6).attr("y2", anchorXY[1]);
+        ch.filter((_, i) => i === 1)
+            .attr("x1", anchorXY[0]).attr("y1", anchorXY[1] - 6)
+            .attr("x2", anchorXY[0]).attr("y2", anchorXY[1] + 6);
     }
 
     resize();

@@ -553,6 +553,39 @@ body.is-narrative-active .scrollytelling__map svg {
     z-index: 2;
 }
 
+/* ---------- Map — graticule (cartographic atlas touch) ---------- */
+
+/*
+ * Thin meridian/parallel lines + concentric distance rings from the
+ * map's anchor point (Munich). Half-opacity grey so they sit behind
+ * the countries without ever competing for attention. Reads as both
+ * "serious atlas" and "radar sweep / grid schematic".
+ */
+
+.graticule__line {
+    fill: none;
+    stroke: color-mix(in srgb, var(--border-strong) 55%, transparent);
+    stroke-width: 0.5;
+    stroke-dasharray: 2 4;
+    stroke-linecap: round;
+}
+
+.graticule__ring {
+    stroke: color-mix(in srgb, var(--accent) 10%, transparent);
+    stroke-width: 0.5;
+    stroke-dasharray: 1 6;
+}
+
+.graticule__ring:last-of-type {
+    stroke: color-mix(in srgb, var(--accent) 4%, transparent);
+}
+
+.graticule__crosshair-line {
+    stroke: color-mix(in srgb, var(--accent) 40%, transparent);
+    stroke-width: 1;
+    stroke-linecap: round;
+}
+
 /* ---------- Map — countries (base state) ---------- */
 
 .country {
