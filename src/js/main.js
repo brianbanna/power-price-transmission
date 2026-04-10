@@ -17,8 +17,67 @@ async function init() {
 
     setupHeroParallax();
     setupCursorLight();
+    setupSpotTape(showcase);
 
     console.info("HSquareB initialized");
+}
+
+/**
+ * Spot-price tape — the trading-floor ticker under the hero byline.
+ *
+ * Cycles through 4 key hours of the showcase day every 5.5 seconds,
+ * flashing each quote briefly as it updates and re-styling negative
+ * prices with the true minus sign + ice-white glow color.
+ *
+ * Hours chosen tell the whole story in preview: midnight calm,
+ * mid-morning dip, peak negative shock, evening recovery.
+ */
+const TAPE_HOURS = [0, 10, 13, 19];
+const TAPE_INTERVAL_MS = 5500;
+
+function setupSpotTape(showcase) {
+    const tape = document.querySelector("[data-hero-tape]");
+    if (!tape || !showcase?.countries) return;
+
+    const timestampEl = tape.querySelector("[data-tape-timestamp]");
+    const priceEls = {
+        CH: tape.querySelector('[data-tape-price="CH"]'),
+        DE: tape.querySelector('[data-tape-price="DE"]'),
+        FR: tape.querySelector('[data-tape-price="FR"]'),
+        IT: tape.querySelector('[data-tape-price="IT"]'),
+        AT: tape.querySelector('[data-tape-price="AT"]'),
+    };
+
+    const renderHour = (hour) => {
+        const padded = String(hour).padStart(2, "0");
+        if (timestampEl) {
+            timestampEl.textContent = `${showcase.date} · ${padded}:00 CET`;
+        }
+        for (const [code, el] of Object.entries(priceEls)) {
+            if (!el) continue;
+            const entry = showcase.countries[code]?.[hour];
+            if (!entry) continue;
+            const price = entry.price;
+            el.textContent = formatPrice(price);
+            el.classList.toggle("is-negative", price < 0);
+            // Brief "flash" on update so the reader sees motion
+            el.classList.add("is-flash");
+            setTimeout(() => el.classList.remove("is-flash"), 480);
+        }
+    };
+
+    let idx = 0;
+    renderHour(TAPE_HOURS[idx]);
+    setInterval(() => {
+        idx = (idx + 1) % TAPE_HOURS.length;
+        renderHour(TAPE_HOURS[idx]);
+    }, TAPE_INTERVAL_MS);
+}
+
+function formatPrice(value) {
+    const abs = Math.abs(value).toFixed(0);
+    const sign = value < 0 ? "\u2212" : ""; // U+2212
+    return `${sign}${abs}`;
 }
 
 /**

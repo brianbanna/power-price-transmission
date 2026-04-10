@@ -6,6 +6,29 @@
  * Aesthetic direction: "Dispatch from the grid" — editorial gravity meets trading-terminal precision
  */
 
+/* ---------- Synchronized 1Hz heartbeat ----------
+ * European AC grids run at 50Hz; humans can't see that, but they CAN
+ * feel a 1Hz pulse as a heartbeat. The --beat property is animated as
+ * a single source of truth and several elements (the eyebrow dot, the
+ * accent mark, the graticule rings) read from it for in-phase glow.
+ * Requires @property registration so a number can be transitioned. */
+
+@property --beat {
+    syntax: "<number>";
+    inherits: true;
+    initial-value: 0;
+}
+
+:root {
+    --beat: 0;
+    animation: beat 1100ms cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes beat {
+    0%, 100% { --beat: 0; }
+    45%      { --beat: 1; }
+}
+
 /* ---------- Tokens ---------- */
 
 :root {
@@ -431,8 +454,12 @@ strong {
     height: 6px;
     border-radius: 50%;
     background: var(--accent);
-    box-shadow: 0 0 12px var(--accent), 0 0 2px var(--accent-glow);
-    animation: pulse 2.8s ease-in-out infinite;
+    /* Glow modulates with the global heartbeat. The --beat var is
+     * read from :root and used to compute box-shadow softness. */
+    box-shadow:
+        0 0 calc(8px + var(--beat) * 12px) color-mix(in srgb, var(--accent) calc(50% + var(--beat) * 50%), transparent),
+        0 0 2px var(--accent-glow);
+    transform: scale(calc(0.92 + var(--beat) * 0.16));
 }
 
 .hero__title {
@@ -472,9 +499,26 @@ strong {
     padding-right: 0.02em;
 }
 
+/* The wonk-italic ampersand. Fraunces has a WONK axis which switches
+ * selected glyphs (like &) to swash/calligraphic variants — one of the
+ * most beautiful glyphs in any free variable font, almost nobody uses
+ * it. Sits slightly below the baseline and is colored accent cyan. */
+.hero__amp {
+    display: inline-block;
+    font-style: italic;
+    font-variation-settings: "opsz" 144, "wght" 500, "SOFT" 100, "WONK" 1;
+    color: var(--accent);
+    font-size: 0.85em;
+    transform: translateY(0.08em) rotate(-3deg);
+    transform-origin: center;
+    padding: 0 0.04em;
+    text-shadow: 0 0 20px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
 /* Decorative terminal mark at the end of the title. Replaces the bare
  * full stop with a small accent-colored point — an editorial flourish
- * borrowed from FT and economist long-form headlines. */
+ * borrowed from FT and economist long-form headlines. Glow phases
+ * with the global heartbeat. */
 .hero__title-mark {
     display: inline-block;
     margin-left: 0.08em;
@@ -483,7 +527,8 @@ strong {
     vertical-align: 0.55em;
     font-variation-settings: "opsz" 144, "wght" 700;
     transform: translateY(0);
-    text-shadow: 0 0 16px color-mix(in srgb, var(--accent) 40%, transparent);
+    text-shadow:
+        0 0 calc(12px + var(--beat) * 14px) color-mix(in srgb, var(--accent) calc(35% + var(--beat) * 35%), transparent);
 }
 
 .hero__lede {
@@ -507,10 +552,82 @@ strong {
     display: flex;
     align-items: baseline;
     gap: 32px;
-    margin-bottom: 96px;
+    margin-bottom: 36px;
     opacity: 0;
     animation: fadeUp 1200ms var(--ease-cinematic) 1400ms forwards;
     flex-wrap: wrap;
+}
+
+/* Spot-price tape — the trading-floor ticker. A hairline-bounded row
+ * of mono country quotes under the byline, reads like a Bloomberg
+ * terminal dispatch. Populated from showcase_day.json by main.js. */
+.hero__tape {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    padding: 14px 0;
+    margin-bottom: 72px;
+    border-top: 1px solid color-mix(in srgb, var(--border-strong) 70%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--border-strong) 70%, transparent);
+    max-width: 680px;
+    opacity: 0;
+    animation: fadeUp 1200ms var(--ease-cinematic) 1650ms forwards;
+    flex-wrap: wrap;
+}
+
+.hero__tape-label {
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.hero__tape-sep {
+    color: var(--text-ghost);
+    margin: 0 4px;
+}
+
+.hero__tape-row {
+    display: flex;
+    gap: 22px;
+    flex-wrap: wrap;
+}
+
+.hero__tape-quote {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--text-secondary);
+    display: inline-flex;
+    gap: 6px;
+    align-items: baseline;
+}
+
+.hero__tape-quote em {
+    font-style: normal;
+    color: var(--text-muted);
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.hero__tape-quote [data-tape-price] {
+    color: var(--accent);
+    font-weight: 500;
+    transition: color 400ms ease;
+    min-width: 4ch;
+    display: inline-block;
+    text-align: right;
+}
+
+.hero__tape-quote [data-tape-price].is-negative {
+    color: var(--accent-glow);
+}
+
+.hero__tape-quote [data-tape-price].is-flash {
+    color: var(--accent-bright);
 }
 
 .hero__byline,

@@ -52,7 +52,7 @@
             <h1 class="hero__title">
                 <span class="hero__title-line" data-reveal="1">The Price</span>
                 <span class="hero__title-line" data-reveal="2">of <em>Wind</em></span>
-                <span class="hero__title-line" data-reveal="3">and <em>Sun</em><span class="hero__title-mark" aria-hidden="true">.</span></span>
+                <span class="hero__title-line" data-reveal="3"><span class="hero__amp" aria-label="and">&amp;</span> <em>Sun</em><span class="hero__title-mark" aria-hidden="true">.</span></span>
             </h1>
             <p class="hero__lede" data-reveal="4">
                 Switzerland produces almost no solar power. Yet on a spring Sunday in 2024,
@@ -62,6 +62,22 @@
             <div class="hero__signature" data-reveal="5">
                 <div class="hero__byline mono">Brian Banna · Lê Thào Huyèn · Hajj Hannah</div>
                 <div class="hero__date mono">EPFL · MA2 · 2026</div>
+            </div>
+            <!--
+                Spot-price tape — a live-looking trading-floor ticker under
+                the byline. Values are populated from showcase_day.json and
+                cycled through four hours of the day to sell "these prices
+                move" before the first chart loads.
+            -->
+            <div class="hero__tape" aria-hidden="true" data-hero-tape>
+                <span class="hero__tape-label mono">Spot <span class="hero__tape-sep">·</span> <span data-tape-timestamp>2024-05-12 · 00:00 CET</span></span>
+                <span class="hero__tape-row">
+                    <span class="hero__tape-quote mono"><em>CH</em> <span data-tape-price="CH">—</span></span>
+                    <span class="hero__tape-quote mono"><em>DE</em> <span data-tape-price="DE">—</span></span>
+                    <span class="hero__tape-quote mono"><em>FR</em> <span data-tape-price="FR">—</span></span>
+                    <span class="hero__tape-quote mono"><em>IT</em> <span data-tape-price="IT">—</span></span>
+                    <span class="hero__tape-quote mono"><em>AT</em> <span data-tape-price="AT">—</span></span>
+                </span>
             </div>
             <p class="hero__scroll-hint mono" aria-hidden="true">
                 <span>Scroll to begin</span>
