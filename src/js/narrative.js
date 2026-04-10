@@ -11,6 +11,7 @@
 // needs to scroll just past the middle before it lights up, which
 // matches the pace of reading rather than pure geometry.
 
+import * as d3 from "d3";
 import scrollama from "scrollama";
 
 const ACTIVE_OFFSET = 0.55;
@@ -38,6 +39,13 @@ export function initNarrative(selector, config) {
     const hudMeta = document.querySelector(HUD_META_SELECTOR);
     const progressBar = document.querySelector(PROGRESS_BAR_SELECTOR);
     const progressTicks = document.querySelector(PROGRESS_TICKS_SELECTOR);
+
+    // Render a small sparkline inside each step card, showing the full
+    // 24-hour price trajectory of that step's focus country with the
+    // current hour highlighted.
+    if (config.showcase) {
+        steps.forEach((step) => renderStepSparkline(step, config.showcase));
+    }
 
     // Render chapter ticks on the progress bar — one per step, positioned
     // at the scroll fraction corresponding to that step's centre.
@@ -137,4 +145,114 @@ export function initNarrative(selector, config) {
         steps,
         scroller,
     };
+}
+
+
+/**
+ * Render an in-card sparkline of the showcase day's hourly price curve
+ * for the step's focus country, with a filled zero line, the current
+ * hour highlighted as a bright dot, and the labelled endpoints.
+ *
+ * The chart is 100% intentional visual — it serves two roles:
+ *   1. gives the reader peripheral context ("you are HERE in a 24h arc")
+ *   2. previews the dramatic drop that the story is about to tell
+ */
+function renderStepSparkline(stepEl, showcase) {
+    const target = stepEl.querySelector("[data-step-chart]");
+    if (!target) return;
+
+    const country = stepEl.dataset.country || "CH";
+    const focusHour = Number(stepEl.dataset.hour ?? 0);
+    const series = showcase?.countries?.[country];
+    if (!series || !Array.isArray(series) || series.length === 0) return;
+
+    const width = 384;
+    const height = 48;
+    const padding = { top: 6, right: 6, bottom: 14, left: 6 };
+
+    const x = d3.scaleLinear().domain([0, 23]).range([padding.left, width - padding.right]);
+    const yExtent = d3.extent(series, (d) => d.price);
+    // Pad the y range so extremes don't graze the top/bottom edges.
+    const yPad = Math.max(10, (yExtent[1] - yExtent[0]) * 0.08);
+    const y = d3
+        .scaleLinear()
+        .domain([yExtent[0] - yPad, Math.max(yExtent[1] + yPad, 0)])
+        .range([height - padding.bottom, padding.top]);
+
+    const svg = d3
+        .select(target)
+        .append("svg")
+        .attr("viewBox", `0 0 ${width} ${height}`)
+        .attr("preserveAspectRatio", "none")
+        .attr("class", "spark");
+
+    // Zero line — a dashed reference for the price-negative threshold.
+    if (y.domain()[0] < 0) {
+        svg.append("line")
+            .attr("class", "spark__zero")
+            .attr("x1", padding.left)
+            .attr("x2", width - padding.right)
+            .attr("y1", y(0))
+            .attr("y2", y(0));
+    }
+
+    // Area fill under the curve — a gradient that leans cyan when the
+    // trace dives below zero.
+    const areaGen = d3
+        .area()
+        .x((d) => x(d.hour))
+        .y0(() => y(Math.max(y.domain()[0], Math.min(0, y.domain()[1]))))
+        .y1((d) => y(d.price))
+        .curve(d3.curveMonotoneX);
+
+    svg.append("path")
+        .datum(series)
+        .attr("class", "spark__area")
+        .attr("d", areaGen);
+
+    // Line — the actual trajectory.
+    const lineGen = d3
+        .line()
+        .x((d) => x(d.hour))
+        .y((d) => y(d.price))
+        .curve(d3.curveMonotoneX);
+
+    svg.append("path")
+        .datum(series)
+        .attr("class", "spark__line")
+        .attr("d", lineGen);
+
+    // Focus marker — the current hour, rendered as a glowing dot.
+    const focusPoint = series[focusHour];
+    if (focusPoint) {
+        const fx = x(focusPoint.hour);
+        const fy = y(focusPoint.price);
+        // Vertical indicator rule dropped from the dot down to the x-axis
+        svg.append("line")
+            .attr("class", "spark__indicator")
+            .attr("x1", fx).attr("x2", fx)
+            .attr("y1", fy).attr("y2", height - padding.bottom);
+        svg.append("circle")
+            .attr("class", "spark__dot")
+            .attr("cx", fx).attr("cy", fy).attr("r", 3.5);
+    }
+
+    // Axis anchors — just the 00 and 23 hour labels for context, no ticks.
+    svg.append("text")
+        .attr("class", "spark__anchor")
+        .attr("x", padding.left).attr("y", height - 2)
+        .attr("text-anchor", "start")
+        .text("00");
+    svg.append("text")
+        .attr("class", "spark__anchor")
+        .attr("x", width - padding.right).attr("y", height - 2)
+        .attr("text-anchor", "end")
+        .text("23");
+    // Country label on the left edge, near the top of the card's chart
+    svg.append("text")
+        .attr("class", "spark__country")
+        .attr("x", padding.left)
+        .attr("y", padding.top + 7)
+        .attr("text-anchor", "start")
+        .text(country);
 }

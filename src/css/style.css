@@ -840,6 +840,94 @@ body.is-narrative-active .scrollytelling__map svg {
     font-weight: 500;
 }
 
+/* ---------- Step sparkline (in-card 24h price trace) ---------- */
+
+.step__chart {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+    opacity: 0.5;
+    transition: opacity var(--dur-default) var(--ease-default);
+}
+
+.step.is-active .step__chart {
+    opacity: 1;
+}
+
+.spark {
+    display: block;
+    width: 100%;
+    height: 48px;
+    overflow: visible;
+}
+
+.spark__zero {
+    stroke: color-mix(in srgb, var(--text-muted) 50%, transparent);
+    stroke-width: 0.5;
+    stroke-dasharray: 2 3;
+}
+
+.spark__area {
+    fill: color-mix(in srgb, var(--accent) 12%, transparent);
+    stroke: none;
+}
+
+.spark__line {
+    fill: none;
+    stroke: color-mix(in srgb, var(--text-primary) 55%, transparent);
+    stroke-width: 1.4;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    transition: stroke var(--dur-default) var(--ease-default);
+}
+
+.step.is-active .spark__line {
+    stroke: var(--accent-bright);
+    filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 50%, transparent));
+}
+
+.spark__indicator {
+    stroke: color-mix(in srgb, var(--accent) 35%, transparent);
+    stroke-width: 1;
+    stroke-dasharray: 1 2;
+}
+
+.step.is-active .spark__indicator {
+    stroke: color-mix(in srgb, var(--accent-glow) 65%, transparent);
+}
+
+.spark__dot {
+    fill: var(--accent);
+    stroke: var(--bg-glass);
+    stroke-width: 1.5;
+    filter: drop-shadow(0 0 6px var(--accent));
+    transition: fill var(--dur-default) var(--ease-default),
+                r var(--dur-default) var(--ease-overshoot);
+}
+
+.step.is-active .spark__dot {
+    fill: var(--accent-glow);
+    r: 4.5;
+    filter: drop-shadow(0 0 10px var(--accent-glow))
+            drop-shadow(0 0 2px var(--accent-bright));
+}
+
+.spark__anchor,
+.spark__country {
+    font-family: var(--font-mono);
+    font-size: 8px;
+    font-weight: 500;
+    fill: var(--text-muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-variation-settings: normal;
+}
+
+.spark__country {
+    fill: color-mix(in srgb, var(--accent) 65%, var(--text-secondary));
+    font-weight: 600;
+}
+
 /* ---------- Explorer placeholder ---------- */
 
 .explorer {
