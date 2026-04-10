@@ -1,8 +1,10 @@
 /*
- * Design system tokens from `.claude/design_system.md`.
- * Task 2.1 (this file) contains only the `:root` custom properties.
- * Task 2.2 adds layout, typography rules, and component styles.
+ * The Price of Wind and Sun — base stylesheet
+ * Design system: .claude/design_system.md (authoritative reference).
+ * Any color, font, or motion value here must also exist as a token in :root.
  */
+
+/* ---------- Tokens ---------- */
 
 :root {
     /* Backgrounds */
@@ -50,14 +52,263 @@
     /* Type */
     --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
     --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+    /* Layout */
+    --content-max: 1440px;
+    --narrative-col: 440px;
+    --gutter: clamp(24px, 4vw, 64px);
 }
 
-/* Minimal bootstrap — dark background so the page isn't a white flash
- * during Task 2.1 verification. Real styles land in Task 2.2. */
-html, body {
+/* ---------- Reset ---------- */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
     margin: 0;
-    padding: 0;
     background: var(--bg-base);
     color: var(--text-primary);
     font-family: var(--font-sans);
+    font-size: 17px;
+    line-height: 1.55;
+    font-feature-settings: "ss01", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+}
+
+h1, h2, h3, p {
+    margin: 0;
+}
+
+a {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    transition: border-color var(--dur-fast) var(--ease-default),
+                color var(--dur-fast) var(--ease-default);
+}
+
+a:hover,
+a:focus-visible {
+    color: var(--accent-bright);
+    border-bottom-color: var(--accent-bright);
+}
+
+/* Numeric utility — every price, percentage, or tick label. */
+.mono {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "zero", "ss02";
+}
+
+/* ---------- Hero ---------- */
+
+.hero {
+    min-height: 100vh;
+    max-width: var(--content-max);
+    margin: 0 auto;
+    padding: clamp(80px, 12vh, 160px) var(--gutter) 64px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.hero__eyebrow {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    margin-bottom: 32px;
+}
+
+.hero__title {
+    font-size: clamp(48px, 7vw, 88px);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.02;
+    max-width: 18ch;
+    margin-bottom: 40px;
+    text-wrap: balance;
+}
+
+.hero__lede {
+    font-size: clamp(18px, 1.6vw, 22px);
+    line-height: 1.5;
+    color: var(--text-secondary);
+    max-width: 54ch;
+}
+
+.hero__scroll-hint {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--text-muted);
+    margin-top: auto;
+    padding-top: 80px;
+    animation: scroll-hint-pulse 2.4s var(--ease-default) infinite;
+}
+
+@keyframes scroll-hint-pulse {
+    0%, 100% { opacity: 0.4; }
+    50%      { opacity: 1; }
+}
+
+/* ---------- Scrollytelling ---------- */
+
+.scrollytelling {
+    display: grid;
+    grid-template-columns: var(--narrative-col) 1fr;
+    gap: var(--gutter);
+    max-width: var(--content-max);
+    margin: 0 auto;
+    padding: 0 var(--gutter);
+    position: relative;
+}
+
+.scrollytelling__map {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    grid-column: 2;
+    grid-row: 1;
+    background: var(--bg-base);
+    border-left: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.scrollytelling__map::before {
+    /* Temporary placeholder until Task 3.1 renders the real map */
+    content: "Map loads here in Task 3.1";
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.scrollytelling__narrative {
+    grid-column: 1;
+    grid-row: 1;
+    padding-block: 40vh;
+    display: flex;
+    flex-direction: column;
+    gap: 70vh;
+}
+
+/* Narrative step card. Populated by narrative.js in Task 2.6. */
+.step {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 32px 36px;
+    max-width: var(--narrative-col);
+}
+
+.step__headline {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    margin-bottom: 16px;
+    color: var(--text-primary);
+}
+
+.step__body {
+    font-size: 17px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+}
+
+.step__body strong {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+/* ---------- Explorer placeholder ---------- */
+
+.explorer {
+    min-height: 60vh;
+    max-width: var(--content-max);
+    margin: 160px auto 0;
+    padding: 64px var(--gutter);
+    border-top: 1px solid var(--border);
+}
+
+.explorer:empty::before {
+    content: "Explorer loads in Phase 7";
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+/* ---------- Footer ---------- */
+
+.site-footer {
+    max-width: var(--content-max);
+    margin: 120px auto 0;
+    padding: 48px var(--gutter) 64px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.7;
+}
+
+.site-footer p + p {
+    margin-top: 8px;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 900px) {
+    :root {
+        --narrative-col: 360px;
+    }
+
+    .scrollytelling {
+        grid-template-columns: 1fr;
+    }
+
+    .scrollytelling__map {
+        position: sticky;
+        top: 0;
+        height: 60vh;
+        grid-column: 1;
+        border-left: none;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .scrollytelling__narrative {
+        grid-column: 1;
+        padding-block: 10vh;
+    }
+
+    .step {
+        max-width: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0ms !important;
+        transition-duration: 0ms !important;
+    }
 }
