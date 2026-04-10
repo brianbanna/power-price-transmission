@@ -298,32 +298,47 @@ export function createMap(selector, config) {
             });
         }
 
-        // Stable key so enter/update/exit doesn't churn the DOM.
+        // Stable key so persistent arrows reuse the same DOM node and
+        // morph smoothly instead of being destroyed and recreated.
         const selection = gFlows
             .selectAll("path.flow")
             .data(flows, (d) => d.id);
 
-        // Exit — fade out removed flows.
+        // Transition duration matches the country fill transition so
+        // colors, labels, and arrows all land together as one beat.
+        const DUR = 800;
+        const EASE = d3.easeCubicInOut;
+
+        // Exit — fade opacity AND shrink width to 0 over the same
+        // duration, so outgoing arrows don't pop.
         selection.exit()
-            .transition().duration(400)
+            .transition().duration(DUR).ease(EASE)
             .attr("stroke-opacity", 0)
+            .attr("stroke-width", 0)
             .remove();
 
-        // Enter — new flow paths start invisible and fade to visible.
+        // Enter — new arrows start at zero opacity and zero width but
+        // with their target path already set, so they "grow into" the
+        // shared transition below.
         const enter = selection.enter()
             .append("path")
             .attr("class", "flow")
             .attr("fill", "none")
             .attr("stroke-linecap", "round")
             .attr("marker-end", "url(#flow-arrow-head)")
-            .attr("stroke-opacity", 0);
+            .attr("stroke-opacity", 0)
+            .attr("stroke-width", 0)
+            .attr("d", (d) => flowPath(d.fromXY, d.toXY));
 
-        // Merge for the shared update step.
+        // Merge — transition path `d`, stroke-width and stroke-opacity
+        // together over the same curve as the country fills. D3's
+        // built-in string interpolation on the `d` attribute smoothly
+        // morphs between quadratic bezier paths of matching structure.
         enter.merge(selection)
             .classed("flow--focus", (d) => d.touchesFocus)
+            .transition().duration(DUR).ease(EASE)
             .attr("d", (d) => flowPath(d.fromXY, d.toXY))
             .attr("stroke-width", (d) => widthForSpread(d.spread))
-            .transition().duration(700)
             .attr("stroke-opacity", (d) => (d.touchesFocus ? 0.95 : 0.55));
     }
 
@@ -353,9 +368,12 @@ export function createMap(selector, config) {
 
         labelGroups.classed("is-visible", true);
 
+        // Country fills share duration AND easing with the flow-arrow
+        // transition below so the whole beat lands in unison.
         countryPaths
             .transition()
             .duration(800)
+            .ease(d3.easeCubicInOut)
             .attr("fill", (d) => {
                 const entry = showcase.countries?.[d.id]?.[state.hour];
                 return entry ? priceColor(entry.price) : null;
