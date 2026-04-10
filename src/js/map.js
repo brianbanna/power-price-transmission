@@ -44,6 +44,31 @@ const LABEL_NUDGE_PX = {
     IT: [-14, 10],
 };
 
+// Interconnector pairs — the 8 connected markets where a price gradient
+// implies cross-border electricity flow. Direction is inferred from the
+// price differential (low → high); see PROJECT_TRACKER.md Decision 3.
+const INTERCONNECTORS = [
+    ["CH", "DE"],
+    ["CH", "FR"],
+    ["CH", "IT"],
+    ["CH", "AT"],
+    ["DE", "AT"],
+    ["DE", "FR"],
+    ["FR", "IT"],
+    ["AT", "IT"],
+];
+
+// Spread threshold (EUR/MWh) below which arrows are suppressed entirely
+// — a tiny price differential rarely produces material cross-border flow
+// and makes the map noisy.
+const ARROW_SPREAD_THRESHOLD = 5;
+
+// Linear mapping from |spread| → stroke width in pixels. At 150 EUR
+// spread (CH→IT at the peak moment) the arrow reaches MAX_WIDTH.
+const ARROW_MIN_WIDTH = 1.4;
+const ARROW_MAX_WIDTH = 6;
+const ARROW_WIDTH_PIVOT = 150;
+
 export function createMap(selector, config) {
     const container = document.querySelector(selector);
     if (!container) {
@@ -62,6 +87,21 @@ export function createMap(selector, config) {
         .attr("role", "img")
         .attr("aria-label", "Map of Switzerland, Germany, France, Italy and Austria");
 
+    // Shared <defs> block — currently holds the arrow marker used by the
+    // flow layer. Markers inherit the path's stroke via context-stroke.
+    const defs = svg.append("defs");
+    defs.append("marker")
+        .attr("id", "flow-arrow-head")
+        .attr("viewBox", "0 0 10 10")
+        .attr("refX", 7)
+        .attr("refY", 5)
+        .attr("markerWidth", 5)
+        .attr("markerHeight", 5)
+        .attr("orient", "auto-start-reverse")
+        .append("path")
+        .attr("d", "M 0 1 L 8 5 L 0 9 z")
+        .attr("fill", "context-stroke");
+
     const projection = d3
         .geoConicConformal()
         .center(PROJECTION_CONFIG.center)
@@ -70,10 +110,11 @@ export function createMap(selector, config) {
 
     const pathGen = d3.geoPath(projection);
 
-    // Layer order matters: graticule → countries → labels, top to bottom.
+    // Layer order: graticule → countries → flows → labels.
     const gGraticule = svg.append("g").attr("class", "graticule");
     const gRings = svg.append("g").attr("class", "graticule__rings");
     const gCountries = svg.append("g").attr("class", "countries");
+    const gFlows = svg.append("g").attr("class", "flows");
     const gLabels = svg.append("g").attr("class", "labels");
 
     // Meridians + parallels — thin dashed hairlines covering the region.
@@ -191,16 +232,103 @@ export function createMap(selector, config) {
 
         labelGroups.select(".label__code").attr("y", -8);
         labelGroups.select(".label__price").attr("y", 10);
+
+        // Centroid cache used by the flow layer. Indexed by ISO code,
+        // values are projected [x, y] in pixel space.
+        centroidPx = new Map(
+            countries.features.map((f) => {
+                const [lon, lat] = d3.geoCentroid(f);
+                return [f.id, projection([lon, lat])];
+            }),
+        );
+
+        // If we have an active state, redraw the flows with the new
+        // centroid positions after a resize.
+        if (state.hour != null) drawFlows();
     }
 
-    resize();
-    window.addEventListener("resize", resize);
-
-    // Controller surface used by narrative.js and explorer.js.
+    // Must be declared BEFORE the first resize() call because resize()
+    // reads from `state` when deciding whether to redraw flows.
     const state = {
         hour: null,
         focusCountry: null,
     };
+
+    // Populated on every resize; read by drawFlows().
+    let centroidPx = new Map();
+
+    /**
+     * Render SVG flow arrows between every connected market pair with
+     * a material price differential. Arrows go from low-price to
+     * high-price (direction money would push electricity) with
+     * thickness proportional to |spread|. Re-runs on every `update()`
+     * and after resize.
+     */
+    function drawFlows() {
+        if (state.hour == null || !showcase) return;
+
+        const flows = [];
+        for (const [a, b] of INTERCONNECTORS) {
+            const pa = showcase.countries?.[a]?.[state.hour]?.price;
+            const pb = showcase.countries?.[b]?.[state.hour]?.price;
+            if (pa == null || pb == null) continue;
+            const spread = Math.abs(pa - pb);
+            if (spread < ARROW_SPREAD_THRESHOLD) continue;
+
+            // Flow direction: money follows the gradient. Low price is
+            // the source (oversupply), high price is the destination.
+            const [fromIso, toIso] = pa < pb ? [a, b] : [b, a];
+            const fromXY = centroidPx.get(fromIso);
+            const toXY = centroidPx.get(toIso);
+            if (!fromXY || !toXY) continue;
+
+            // Highlight the strongest arrow touching the focus country.
+            const touchesFocus =
+                state.focusCountry != null &&
+                (fromIso === state.focusCountry || toIso === state.focusCountry);
+
+            flows.push({
+                id: `${a}-${b}`,
+                fromIso,
+                toIso,
+                fromXY,
+                toXY,
+                spread,
+                touchesFocus,
+            });
+        }
+
+        // Stable key so enter/update/exit doesn't churn the DOM.
+        const selection = gFlows
+            .selectAll("path.flow")
+            .data(flows, (d) => d.id);
+
+        // Exit — fade out removed flows.
+        selection.exit()
+            .transition().duration(400)
+            .attr("stroke-opacity", 0)
+            .remove();
+
+        // Enter — new flow paths start invisible and fade to visible.
+        const enter = selection.enter()
+            .append("path")
+            .attr("class", "flow")
+            .attr("fill", "none")
+            .attr("stroke-linecap", "round")
+            .attr("marker-end", "url(#flow-arrow-head)")
+            .attr("stroke-opacity", 0);
+
+        // Merge for the shared update step.
+        enter.merge(selection)
+            .classed("flow--focus", (d) => d.touchesFocus)
+            .attr("d", (d) => flowPath(d.fromXY, d.toXY))
+            .attr("stroke-width", (d) => widthForSpread(d.spread))
+            .transition().duration(700)
+            .attr("stroke-opacity", (d) => (d.touchesFocus ? 0.95 : 0.55));
+    }
+
+    resize();
+    window.addEventListener("resize", resize);
 
     /**
      * Update the map state to a specific hour on the showcase day,
@@ -216,11 +344,10 @@ export function createMap(selector, config) {
 
         // Fill each country with its price color at the current hour.
         if (state.hour == null || !showcase) {
-            // Reset — base state, no colors, no labels.
-            // Kill any in-flight color transition and clear the
-            // presentation attribute so the CSS default fill wins.
+            // Reset — base state, no colors, no labels, no flows.
             countryPaths.interrupt().attr("fill", null);
             labelGroups.classed("is-visible", false).classed("is-focus", false);
+            gFlows.selectAll("path.flow").remove();
             return;
         }
 
@@ -246,6 +373,8 @@ export function createMap(selector, config) {
             }
             g.select(".label__price").text(formatPrice(entry.price));
         });
+
+        drawFlows();
     }
 
     /**
@@ -285,4 +414,50 @@ function formatPrice(value) {
         return `\u2212€${Math.abs(rounded)}`;
     }
     return `€${rounded}`;
+}
+
+/**
+ * Build a curved SVG path from one country's centroid to another's.
+ *
+ * Two-endpoint quadratic bezier whose control point sits perpendicular
+ * to the midpoint at 18% of the segment length, biased to the left so
+ * opposing flows (A→B and B→A are never both drawn, but adjacent pairs
+ * like CH→IT and AT→IT never overlap).
+ *
+ * Start and end points are inset by an "anchor gap" so the arrow does
+ * not visually collide with the price label at the centroid.
+ */
+function flowPath([x1, y1], [x2, y2]) {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const len = Math.hypot(dx, dy);
+    if (len === 0) return "";
+
+    // Inset both endpoints by a fixed gap (in pixels) along the line.
+    const GAP = 28;
+    const ux = dx / len;
+    const uy = dy / len;
+    const sx = x1 + ux * GAP;
+    const sy = y1 + uy * GAP;
+    const ex = x2 - ux * GAP;
+    const ey = y2 - uy * GAP;
+
+    // Perpendicular control point — curves the arrow to the left of the
+    // direction of travel. Curvature is a fraction of segment length.
+    const mx = (sx + ex) / 2;
+    const my = (sy + ey) / 2;
+    const CURVATURE = 0.18;
+    const cx = mx + -uy * len * CURVATURE;
+    const cy = my + ux * len * CURVATURE;
+
+    return `M${sx},${sy} Q${cx},${cy} ${ex},${ey}`;
+}
+
+/**
+ * Map |price spread| in EUR/MWh to a pixel stroke width. Clamped to
+ * the ARROW_MIN_WIDTH / ARROW_MAX_WIDTH range.
+ */
+function widthForSpread(spread) {
+    const t = Math.min(1, Math.max(0, spread / ARROW_WIDTH_PIVOT));
+    return ARROW_MIN_WIDTH + t * (ARROW_MAX_WIDTH - ARROW_MIN_WIDTH);
 }

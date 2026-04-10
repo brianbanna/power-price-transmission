@@ -962,6 +962,36 @@ body.is-zero-crossing .scrollytelling__map svg {
     fill: var(--bg-elevated);
 }
 
+/* ---------- Map — flow arrows ----------
+ *
+ * Quadratic bezier paths connecting country centroids, rendered when
+ * the price spread between two connected markets exceeds a threshold.
+ * Direction follows the price gradient (low → high). Marching-ants
+ * dash animation runs in that same direction.
+ */
+
+.flow {
+    stroke: var(--accent);
+    stroke-dasharray: 6 5;
+    filter: drop-shadow(0 0 4px color-mix(in srgb, var(--accent) 50%, transparent));
+    animation: flowMarch 1600ms linear infinite;
+}
+
+/* Arrows touching the card's focus country are the "loudest" — brighter
+ * hue, thicker glow, slightly faster dash animation so they dominate
+ * the visual hierarchy of the flow layer. */
+.flow--focus {
+    stroke: var(--accent-glow);
+    filter: drop-shadow(0 0 10px var(--accent))
+            drop-shadow(0 0 2px var(--accent-glow));
+    animation-duration: 1100ms;
+}
+
+@keyframes flowMarch {
+    from { stroke-dashoffset: 0; }
+    to   { stroke-dashoffset: -22; }
+}
+
 /* ---------- Map — labels (ISO code + live price per country) ----------
  *
  * Two text elements per country, grouped:
