@@ -1,0 +1,63 @@
+/*
+ * Design system tokens from `.claude/design_system.md`.
+ * Task 2.1 (this file) contains only the `:root` custom properties.
+ * Task 2.2 adds layout, typography rules, and component styles.
+ */
+
+:root {
+    /* Backgrounds */
+    --bg-base: #0a0e1a;
+    --bg-surface: #131827;
+    --bg-elevated: #1c2235;
+    --border: #2a3145;
+    --border-strong: #3f4659;
+
+    /* Text */
+    --text-primary: #f5f7fa;
+    --text-secondary: #8b95a7;
+    --text-muted: #525a6b;
+
+    /* Accent */
+    --accent: #22d3ee;
+    --accent-bright: #67e8f9;
+    --accent-glow: #e0f7ff;
+
+    /* Price diverging scale */
+    --price-neg-extreme: #e0f7ff;
+    --price-neg-deep: #67e8f9;
+    --price-neg: #22d3ee;
+    --price-zero: #475569;
+    --price-pos: #fb923c;
+    --price-pos-high: #ef4444;
+    --price-pos-extreme: #991b1b;
+
+    /* Generation sources */
+    --gen-solar: #fbbf24;
+    --gen-wind: #10b981;
+    --gen-nuclear: #a855f7;
+    --gen-hydro: #6366f1;
+    --gen-biomass: #84cc16;
+    --gen-gas: #f97316;
+    --gen-coal: #64748b;
+
+    /* Motion */
+    --ease-default: cubic-bezier(0.22, 0.61, 0.36, 1);
+    --ease-overshoot: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --dur-fast: 150ms;
+    --dur-medium: 300ms;
+    --dur-default: 800ms;
+
+    /* Type */
+    --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+/* Minimal bootstrap — dark background so the page isn't a white flash
+ * during Task 2.1 verification. Real styles land in Task 2.2. */
+html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg-base);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+}

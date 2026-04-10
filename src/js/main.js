@@ -1,8 +1,25 @@
-import * as d3 from "d3";
-import * as topojson from "topojson-client";
-import scrollama from "scrollama";
+import { createMap } from "./map.js";
+import { initNarrative } from "./narrative.js";
+import { loadJSON } from "./utils/data.js";
 
-// Temporary dependency check — remove once Phase 2 infrastructure is in place.
-console.log("[deps] d3 version:", d3.version);
-console.log("[deps] topojson-client feature():", typeof topojson.feature === "function");
-console.log("[deps] scrollama():", typeof scrollama === "function");
+// Entry point. Wires the map and the scrollytelling narrative together
+// once the DOM is ready. Individual modules are responsible for their
+// own rendering; this file only coordinates their lifecycle.
+
+async function init() {
+    const [topology, showcase] = await Promise.all([
+        loadJSON("map.topojson"),
+        loadJSON("showcase_day.json"),
+    ]);
+
+    const map = createMap("#map-container", { topology });
+    initNarrative("#narrative", { map, showcase });
+
+    console.info("HSquareB initialized");
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+} else {
+    init();
+}

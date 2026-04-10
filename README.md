@@ -50,10 +50,9 @@ python3 -m venv .venv
 # 3. Sanity-check the raw dataset against the headline findings
 .venv/bin/python scripts/explore.py
 
-# 4. Serve the site
-cd src
+# 4. Serve the site (from the repo root, not from src/)
 python3 -m http.server 8000
-# then open http://localhost:8000
+# then open http://localhost:8000/src/
 ```
 
 ## Project structure
