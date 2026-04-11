@@ -923,50 +923,6 @@ body.is-iris-firing .scrollytelling__map::before {
     transition: opacity 700ms cubic-bezier(0.65, 0, 0.35, 1);
 }
 
-/* ---------- Zero-crossing sweep ----------
- * Fires once when the reader reaches Step 3 — the moment the story
- * crosses from positive to negative prices. A thin warm-gold line
- * sweeps across the viewport like a trading-floor "limit broken"
- * indicator, while the map briefly gains a 6° hue rotation. The
- * warm gold is thematically precise: the SUN is what caused this
- * price crash, so the broadcast cue carries its color. */
-
-.zero-cross-sweep {
-    position: fixed;
-    left: 0;
-    top: 50%;
-    width: 100%;
-    height: 1px;
-    background: linear-gradient(
-        90deg,
-        transparent 0%,
-        color-mix(in srgb, var(--gen-solar) 80%, transparent) 20%,
-        var(--accent-glow) 50%,
-        color-mix(in srgb, var(--gen-solar) 80%, transparent) 80%,
-        transparent 100%
-    );
-    box-shadow:
-        0 0 16px color-mix(in srgb, var(--gen-solar) 55%, transparent),
-        0 0 40px color-mix(in srgb, var(--gen-solar) 25%, transparent);
-    pointer-events: none;
-    z-index: 9999;
-    transform: translateX(-100%);
-    opacity: 0;
-    animation: zeroCrossSweep 1100ms cubic-bezier(0.19, 1, 0.22, 1) forwards;
-}
-
-@keyframes zeroCrossSweep {
-    0%   { transform: translateX(-100%); opacity: 0; }
-    15%  { opacity: 1; }
-    85%  { opacity: 1; }
-    100% { transform: translateX(100%); opacity: 0; }
-}
-
-body.is-zero-crossing .scrollytelling__map svg {
-    transition: filter 1100ms cubic-bezier(0.19, 1, 0.22, 1);
-    filter: saturate(0.6) brightness(0.85) hue-rotate(-8deg);
-}
-
 /* ---------- Leader-line overlay (card → country) ----------
  * SVG overlay that sits above the map but below the narrative cards.
  * Renders the active card's leader line + target dot. */
@@ -1547,30 +1503,44 @@ body.is-zero-crossing .scrollytelling__map svg {
 
 /* ---------- Explorer (Phase 7) ----------
  *
- * A "steer the grid" mode. The map stays visible in the fixed
- * background (no solid bg, no z-index occlusion), and the explorer
- * section is a translucent layer over it holding the intro copy and
- * the timeline scrubber.
+ * A "steer the grid" mode. The map stays FULLY visible in the fixed
+ * background — the explorer section is completely transparent so the
+ * reader can see the countries and flow arrows they're about to
+ * drive. Intro copy and the timeline card float over the map as
+ * semantic glass panels with their own backdrop blur; the section
+ * itself adds nothing between them and the map.
  */
 
 .explorer {
     position: relative;
     z-index: 4;
     min-height: 100vh;
-    padding: 18vh var(--gutter) 12vh;
-    /* Intentionally translucent — the fixed map shows through. A
-     * subtle top-fading gradient softens the boundary with the last
-     * narrative step. */
-    background: linear-gradient(
-        180deg,
-        color-mix(in srgb, var(--bg-base) 92%, transparent) 0%,
-        color-mix(in srgb, var(--bg-base) 82%, transparent) 30%,
-        color-mix(in srgb, var(--bg-base) 50%, transparent) 100%
-    );
-    border-top: 1px solid color-mix(in srgb, var(--accent) 12%, var(--border));
+    padding: 12vh var(--gutter) 10vh;
+    background: transparent;
+    /* Single hairline at the top to signal the mode shift. */
+    border-top: 1px solid color-mix(in srgb, var(--accent) 20%, var(--border));
     display: flex;
     flex-direction: column;
     gap: 96px;
+}
+
+/* A soft darken at the very top of the section so the "mode shift"
+ * reads as intentional even though the map is fully visible. Narrower
+ * and subtler than the old full-section wash. */
+.explorer::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 160px;
+    background: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--bg-base) 55%, transparent) 0%,
+        transparent 100%
+    );
+    pointer-events: none;
+    z-index: -1;
 }
 
 .explorer__inner {
@@ -1579,12 +1549,16 @@ body.is-zero-crossing .scrollytelling__map svg {
     width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 12vh;
+    gap: 10vh;
     flex: 1;
 }
 
 .explorer__intro {
     max-width: 640px;
+    /* Legibility on bare map — tight dark halo under the text so any
+     * country color behind it doesn't compete with the prose. */
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6),
+                 0 0 12px rgba(10, 14, 26, 0.8);
 }
 
 .explorer__eyebrow {

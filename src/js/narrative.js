@@ -61,19 +61,6 @@ export function initNarrative(selector, config) {
         steps.forEach((step) => renderStepSparkline(step, config.showcase));
     }
 
-    // One-shot flag for the zero-crossing sweep.
-    let zeroCrossFired = false;
-    const triggerZeroCrossSweep = () => {
-        const line = document.createElement("div");
-        line.className = "zero-cross-sweep";
-        document.body.appendChild(line);
-        document.body.classList.add("is-zero-crossing");
-        setTimeout(() => {
-            line.remove();
-            document.body.classList.remove("is-zero-crossing");
-        }, 1100);
-    };
-
     // Render chapter ticks on the progress bar — one per step, positioned
     // at the scroll fraction corresponding to that step's centre.
     if (progressTicks && steps.length > 1) {
@@ -108,13 +95,6 @@ export function initNarrative(selector, config) {
         .onStepEnter(({ element, index }) => {
             // Mark the active step and clear any previously active.
             steps.forEach((s) => s.classList.toggle("is-active", s === element));
-
-            // Zero-crossing sweep — fires exactly once, the first time
-            // the reader reaches the shock step (data-step="3").
-            if (element.dataset.step === "3" && !zeroCrossFired) {
-                zeroCrossFired = true;
-                triggerZeroCrossSweep();
-            }
 
             // Tell the map to desaturate — the CSS rule on the map SVG
             // filter reacts to this class on <body>.
