@@ -215,21 +215,61 @@
             </div>
             </div>
         </div>
-
-        <!-- Outro beat — empty scroll track between the stage and the
-             footer so the hand-off isn't abrupt. -->
-        <div class="explorer__outro" aria-hidden="true"></div>
     </section>
 
     <footer class="site-footer">
         <div class="site-footer__inner">
-            <p>
-                Data: <a href="https://transparency.entsoe.eu/">ENTSO-E Transparency Platform</a>,
-                January 2024 — June 2025. Map geometry adapted from Natural Earth via world-atlas.
-            </p>
-            <p>
-                COM-480 Data Visualization · EPFL · Spring 2026 ·
-                HSquareB: Brian Banna · Lê Thào Huyèn · Hajj Hannah
+            <p class="site-footer__kicker mono">End of dispatch</p>
+            <h2 class="site-footer__closing">
+                One country's renewable revolution
+                <em>rewires</em> the economics of its neighbours.
+            </h2>
+            <div class="site-footer__columns">
+                <div class="site-footer__col">
+                    <p class="site-footer__col-label mono">Data</p>
+                    <p>
+                        <a href="https://transparency.entsoe.eu/">ENTSO-E Transparency Platform</a>,
+                        day-ahead prices and generation by source,
+                        January 2024 — June 2025.
+                    </p>
+                    <p>
+                        Map geometry: Natural Earth 1:50m via
+                        <a href="https://github.com/topojson/world-atlas">world-atlas</a>.
+                    </p>
+                </div>
+                <div class="site-footer__col">
+                    <p class="site-footer__col-label mono">Method</p>
+                    <p>
+                        Flow directions inferred from day-ahead price
+                        differentials; magnitude proportional to
+                        |spread| between connected bidding zones.
+                    </p>
+                    <p>
+                        Showcase day validated against the raw dataset
+                        to 1 decimal place across nine headline facts.
+                    </p>
+                </div>
+                <div class="site-footer__col">
+                    <p class="site-footer__col-label mono">Credits</p>
+                    <p>
+                        A data story by
+                        <strong>Brian Banna</strong>,
+                        <strong>Lê Thào Huyèn</strong>, and
+                        <strong>Hajj Hannah</strong>.
+                    </p>
+                    <p>
+                        COM-480 Data Visualization · EPFL ·
+                        Spring 2026.
+                    </p>
+                </div>
+            </div>
+            <div class="site-footer__rule" aria-hidden="true"></div>
+            <p class="site-footer__coda mono">
+                <span>HSquareB</span>
+                <span class="site-footer__coda-dot" aria-hidden="true"></span>
+                <span>The Price of Wind and Sun</span>
+                <span class="site-footer__coda-dot" aria-hidden="true"></span>
+                <span>2026</span>
             </p>
         </div>
     </footer>

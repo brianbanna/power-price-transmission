@@ -219,9 +219,13 @@ export function initExplorer(config) {
         || section.querySelector(".explorer__intro");
 
     // Timeline fade-in band (anchored to the headline's position).
-    const FADE_START = 0.75;  // headline.top / vh — fade begins (timeline: 0)
-    const FADE_END   = 0.50;  // headline.top / vh — fade completes (timeline: 1)
-    const HIDE_CHROME_AT = 0.65; // headline.top / vh — HUD + clock hide below this
+    //  FADE_START: headline.top / vh = 0.70 → headline is 30% up from
+    //  the bottom of the viewport, about to cross into the middle zone.
+    //  FADE_END:   headline.top / vh = 0.12 → headline has reached its
+    //  final top-left resting position inside the intro's top padding.
+    const FADE_START = 0.70;
+    const FADE_END   = 0.12;
+    const HIDE_CHROME_AT = 0.50; // headline.top / vh — HUD + clock hide below this
 
     const smoothstep = (a, b, t) => {
         const x = Math.max(0, Math.min(1, (t - a) / (b - a)));

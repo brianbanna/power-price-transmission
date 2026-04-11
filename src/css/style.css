@@ -1567,11 +1567,11 @@ body.is-iris-firing .scrollytelling__map::before {
                  0 0 12px rgba(10, 14, 26, 0.9);
 }
 
-/* Outro — empty scroll track between the stage and the footer so
- * the hand-off doesn't feel like a cliff. */
+/* No outro spacer — the footer arrives directly after the stage.
+ * Dead rule retained and zero-sized in case stray DOM references the
+ * class. */
 .explorer__outro {
-    height: 70vh;
-    pointer-events: none;
+    display: none;
 }
 
 /* Timeline wrap — bottom of the stage. `margin-top: auto` pushes it
@@ -1899,29 +1899,31 @@ body.is-iris-firing .scrollytelling__map::before {
 .site-footer {
     position: relative;
     z-index: 4;
-    padding: 96px var(--gutter) 72px;
+    padding: 120px var(--gutter) 80px;
     background: var(--bg-base);
     border-top: 1px solid var(--border);
-    font-size: 13px;
-    color: var(--text-muted);
-    line-height: 1.7;
-    font-variation-settings: "opsz" 14;
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.65;
+    font-variation-settings: "opsz" 16;
+    min-height: 80vh;
 }
 
 /* Soft fade-in mask at the top of the footer. The footer's background
- * color gradients up from transparent over the first 80px so the
+ * color gradients up from transparent over the first 100px so the
  * explorer's map doesn't hit the credits as a hard edge. */
 .site-footer::before {
     content: "";
     position: absolute;
     left: 0;
     right: 0;
-    top: -80px;
-    height: 80px;
+    top: -100px;
+    height: 100px;
     background: linear-gradient(
         180deg,
         transparent 0%,
-        color-mix(in srgb, var(--bg-base) 50%, transparent) 40%,
+        color-mix(in srgb, var(--bg-base) 40%, transparent) 35%,
+        color-mix(in srgb, var(--bg-base) 85%, transparent) 75%,
         var(--bg-base) 100%
     );
     pointer-events: none;
@@ -1931,11 +1933,121 @@ body.is-iris-firing .scrollytelling__map::before {
 .site-footer__inner {
     max-width: var(--content-max);
     margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 56px;
 }
 
-.site-footer p + p {
-    margin-top: 8px;
-    color: var(--text-ghost);
+.site-footer__kicker {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--accent);
+    margin: 0;
+}
+
+.site-footer__closing {
+    font-family: var(--font-display);
+    font-size: clamp(32px, 4vw, 56px);
+    font-weight: 400;
+    font-variation-settings: "opsz" 144, "SOFT" 10;
+    letter-spacing: -0.02em;
+    line-height: 1.06;
+    color: var(--text-primary);
+    max-width: 24ch;
+    margin: 0;
+    text-wrap: balance;
+}
+
+.site-footer__closing em {
+    font-style: italic;
+    color: var(--accent-bright);
+    font-variation-settings: "opsz" 144, "SOFT" 50;
+}
+
+.site-footer__columns {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 48px;
+    margin-top: 16px;
+}
+
+.site-footer__col {
+    max-width: 38ch;
+}
+
+.site-footer__col-label {
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--text-muted);
+    margin: 0 0 16px 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+}
+
+.site-footer__col p {
+    margin: 0 0 12px 0;
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+.site-footer__col p:last-child {
+    margin-bottom: 0;
+}
+
+.site-footer__col strong {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.site-footer__rule {
+    height: 1px;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        var(--border) 15%,
+        var(--border) 85%,
+        transparent 100%
+    );
+    margin-top: 24px;
+}
+
+.site-footer__coda {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.site-footer__coda-dot {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--accent) 45%, transparent);
+    flex-shrink: 0;
+}
+
+@media (max-width: 900px) {
+    .site-footer {
+        padding: 80px 16px 56px;
+        min-height: 0;
+    }
+    .site-footer__columns {
+        grid-template-columns: 1fr;
+        gap: 32px;
+    }
+    .site-footer__closing {
+        font-size: clamp(26px, 7vw, 42px);
+    }
 }
 
 /* ---------- Responsive ---------- */
