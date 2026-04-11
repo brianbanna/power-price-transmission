@@ -169,7 +169,16 @@ export function createMap(selector, config) {
         .text("—");
 
     function resize() {
-        const { clientWidth, clientHeight } = container;
+        let { clientWidth, clientHeight } = container;
+        // The map container is position:fixed; inset:0 so its layout
+        // size always equals the viewport. If clientWidth/Height are
+        // still 0 on first-paint bootstrap, fall back to the viewport
+        // itself so the projection fits correctly and centroids get
+        // computed. Without this fallback, the leader line never
+        // appears during the narrative because getCountryCentroidPx
+        // returns null on every step enter.
+        if (!clientWidth) clientWidth = window.innerWidth;
+        if (!clientHeight) clientHeight = window.innerHeight;
         if (!clientWidth || !clientHeight) return;
         svg.attr("viewBox", `0 0 ${clientWidth} ${clientHeight}`);
         projection.fitExtent(

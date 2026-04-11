@@ -320,14 +320,15 @@ function createLeaderController(svgEl, mapCtl) {
         if (!dest) return false;
 
         const cardRect = activeStep.getBoundingClientRect();
-        // Card off-screen — keep the line hidden until it returns.
-        if (cardRect.right < 0 || cardRect.left > window.innerWidth) {
-            return false;
-        }
 
+        // Read the headline anchor first so we can derive startY even
+        // when the card itself happens to be vertically clipped.
         const headline = activeStep.querySelector(".step__headline");
-        const yAnchor = headline
-            ? headline.getBoundingClientRect().top + headline.offsetHeight / 2
+        const headlineRect = headline
+            ? headline.getBoundingClientRect()
+            : null;
+        const yAnchor = headlineRect
+            ? headlineRect.top + headlineRect.height / 2
             : cardRect.top + cardRect.height * 0.4;
         const startX = cardRect.right + 8;
         const startY = yAnchor;
@@ -437,19 +438,24 @@ function createLeaderController(svgEl, mapCtl) {
     function show(stepEl) {
         const firstShow = activeStep == null;
         activeStep = stepEl;
-        const gotTargets = computeTargets();
-        if (!gotTargets) return;
 
-        // On the very first reveal snap the line to its target so it
-        // doesn't appear from (0,0). On subsequent reveals keep the
-        // current position so the line glides across the screen from
-        // the previous step's anchor to the new one.
-        if (firstShow) snapToTarget();
-
+        // Mark visible BEFORE computing targets so that even if the
+        // card's geometry is briefly unreadable (e.g. its centroid
+        // isn't projected yet on first paint), the rAF loop still
+        // starts and will pick up valid targets on the next frame.
         visible = true;
         line.classList.add("is-visible");
         dotEl.classList.add("is-visible");
         pulseEl.classList.add("is-pulsing");
+
+        const gotTargets = computeTargets();
+
+        // On the very first reveal, snap to the target so the line
+        // doesn't visibly draw itself from (0,0) → destination on the
+        // opening beat. On subsequent reveals keep the current
+        // position so the line glides across from the previous step.
+        if (firstShow && gotTargets) snapToTarget();
+
         paint();
         startLoop();
     }

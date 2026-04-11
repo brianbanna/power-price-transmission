@@ -977,7 +977,11 @@ body.is-zero-crossing .scrollytelling__map svg {
     width: 100vw;
     height: 100vh;
     pointer-events: none;
-    z-index: 2;
+    /* Above everything on the map layer (map=0, vignette=1, grain=2,
+     * circadian=3) but below the narrative cards (narrative col=3, but
+     * cards paint their own z-stack). Use 4 to sit on top of the map
+     * stacking context unambiguously. */
+    z-index: 4;
     overflow: visible;
 }
 
