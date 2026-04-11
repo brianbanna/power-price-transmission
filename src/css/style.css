@@ -1985,17 +1985,42 @@ body.is-iris-firing .scrollytelling__map::before {
 }
 
 @media (max-width: 900px) {
+    /* Tighten explorer intro padding + rework the cue to be more
+     * compact on narrow screens. The sticky timeline stays at the
+     * viewport bottom and the intro rides above it. */
+    .scene__explorer,
     .explorer {
-        padding: 10vh 16px 8vh;
+        padding: 0;
+    }
+    .explorer__intro {
+        padding: 10vh 16px 0;
+    }
+    .explorer__headline {
+        font-size: clamp(28px, 8vw, 40px);
+    }
+    .explorer__lede {
+        font-size: 15px;
+    }
+    .explorer__cue {
+        padding: 12px 14px;
+        font-size: 13px;
+        margin-top: 20px;
+    }
+    .explorer__timeline-wrap {
+        padding: 0 16px;
     }
     .timeline {
-        padding: 20px 20px 24px;
+        padding: 16px 16px 20px;
     }
     .timeline__chrome {
-        gap: 14px;
+        gap: 12px;
+        margin-bottom: 18px;
     }
     .timeline__legend {
         display: none;
+    }
+    .timeline__readout-value {
+        font-size: 18px;
     }
 }
 
@@ -2014,26 +2039,10 @@ body.is-iris-firing .scrollytelling__map::before {
     min-height: 80vh;
 }
 
-/* Soft fade-in mask at the top of the footer. The footer's background
- * color gradients up from transparent over the first 100px so the
- * explorer's map doesn't hit the credits as a hard edge. */
-.site-footer::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: -100px;
-    height: 100px;
-    background: linear-gradient(
-        180deg,
-        transparent 0%,
-        color-mix(in srgb, var(--bg-base) 40%, transparent) 35%,
-        color-mix(in srgb, var(--bg-base) 85%, transparent) 75%,
-        var(--bg-base) 100%
-    );
-    pointer-events: none;
-    z-index: -1;
-}
+/* No footer top-mask — under the sticky-scene architecture the map
+ * naturally scrolls out of the viewport as the scene ends, so the
+ * footer arrives cleanly through empty space. A soft mask here would
+ * add visual noise to a transition that no longer needs softening. */
 
 .site-footer__inner {
     max-width: var(--content-max);
