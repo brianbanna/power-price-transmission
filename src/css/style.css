@@ -1527,18 +1527,12 @@ body.is-iris-firing .scrollytelling__map::before {
 
 /* ---------- Explorer layout ----------
  *
- * The explorer has two parts:
- *
- *   1. Intro — sticks to the top of the viewport while the reader
- *      scrolls through the section. Once pinned, the composition
- *      (intro upper-left + map + docked timeline) stays LOCKED while
- *      the reader continues scrolling.
- *
- *   2. Outro — an empty 80vh spacer below the intro that provides
- *      the scroll track AFTER the locked composition. When the
- *      reader scrolls through this spacer the intro stays pinned,
- *      then gracefully un-pins as the footer reaches the top of the
- *      outro — giving a gentle hand-off to the credits.
+ * Single-viewport composition: intro upper-left, map behind (map is
+ * position:fixed globally), timeline at the bottom. The intro and
+ * timeline are both in normal document flow — they scroll naturally
+ * with the page. An empty outro spacer below the timeline adds room
+ * between the locked-in composition and the footer so the reader
+ * can scroll "out" of the explorer without slamming into credits.
  */
 
 .explorer {
@@ -1547,49 +1541,41 @@ body.is-iris-firing .scrollytelling__map::before {
     padding: 0;
     background: transparent;
     border-top: 1px solid color-mix(in srgb, var(--accent) 20%, var(--border));
+    /* Grid-based layout so the intro sits at the top and the timeline
+     * at the bottom of a single viewport, with the outro as a scroll
+     * track below. */
+    display: flex;
+    flex-direction: column;
 }
 
-/* Intro — sticky. Once the reader scrolls to it, it pins to the top
- * of the viewport. The `position: sticky` element itself is a full
- * viewport tall so the layout reserves space for it; the actual text
- * lives inside and breathes with the top padding. */
+/* Intro — normal flow. Reads as a full-viewport hero for the explorer
+ * mode. When the reader keeps scrolling past the intro, it naturally
+ * drifts upward with the page, along with the timeline below it. */
 .explorer__intro {
-    position: sticky;
-    top: 0;
-    height: 100vh;
-    padding: 12vh var(--gutter) 24vh;
+    min-height: 70vh;
+    padding: 12vh var(--gutter) 0;
     max-width: calc(520px + var(--gutter) * 2);
     /* Legibility on bare map — tight dark halo under the text. */
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7),
                  0 0 12px rgba(10, 14, 26, 0.9);
 }
 
-/* Outro — a silent 80vh scroll track below the sticky intro. As the
- * reader scrolls through this, the intro remains pinned at the top
- * and the timeline stays docked. Once the reader scrolls past the
- * outro, the sticky intro releases and the footer arrives. */
+/* Outro — empty scroll track between the timeline and the footer so
+ * the hand-off doesn't feel like a cliff. */
 .explorer__outro {
-    height: 80vh;
+    height: 60vh;
     pointer-events: none;
 }
 
-/* Timeline dock — fixed to the viewport's bottom edge. The opacity
- * and transform are driven by JS as a function of the explorer
- * section's position in the viewport, producing a smooth fade-in
- * tied to scroll progress (see explorer.js::updateDock). */
+/* Timeline wrap — normal document flow inside the explorer, sitting
+ * below the intro. As the reader scrolls, it moves naturally with
+ * the intro above it, so the whole composition lifts together. */
 .explorer__timeline-wrap {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: clamp(24px, 4vh, 56px);
-    z-index: 6;
-    padding: 0 var(--gutter);
-    pointer-events: none;
+    padding: 4vh var(--gutter) 0;
     opacity: 0;
     transform: translateY(24px);
-    /* No CSS transitions — the JS scroll handler writes the opacity
-     * value directly on every frame, producing a smooth fade that
-     * follows the scroll gesture exactly. */
+    /* JS scroll handler writes opacity and transform directly on
+     * every frame as a function of the headline's position. */
     will-change: opacity, transform;
 }
 
