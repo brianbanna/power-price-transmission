@@ -160,17 +160,20 @@
         timeline spanning the showcase day. Phase 7.1-7.3.
     -->
     <section class="explorer" id="explorer" aria-label="Interactive explorer">
-        <div class="explorer__inner">
-            <div class="explorer__intro">
-                <p class="explorer__eyebrow mono"><span class="explorer__eyebrow-dot" aria-hidden="true"></span>Now you steer the grid</p>
-                <h2 class="explorer__headline">Scrub through <em>one day</em> of European electricity.</h2>
-                <p class="explorer__lede">
-                    Drag the playhead across the timeline below, or press play. The map
-                    above tracks the reader's position hour by hour across
-                    <strong class="mono">May 12, 2024</strong> — the same Sunday the story just told.
-                </p>
-            </div>
+        <div class="explorer__intro">
+            <p class="explorer__eyebrow mono"><span class="explorer__eyebrow-dot" aria-hidden="true"></span>Now you steer the grid</p>
+            <h2 class="explorer__headline">Scrub through <em>one day</em> of European electricity.</h2>
+            <p class="explorer__lede">
+                Drag the playhead, or press play. The map above tracks your
+                position across <strong class="mono">May 12, 2024</strong> — the same
+                Sunday the story just told.
+            </p>
+        </div>
 
+        <!-- Grid row 2 is an empty flex spacer; the map shows through here. -->
+        <div class="explorer__spacer" aria-hidden="true"></div>
+
+        <div class="explorer__timeline-wrap">
             <div class="timeline" data-timeline>
                 <div class="timeline__chrome">
                     <button

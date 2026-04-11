@@ -22,8 +22,30 @@ async function init() {
     setupSpotTape(showcase);
     setupCircadianTint();
     setupIrisWipe();
+    setupFooterHide();
 
     console.info("HSquareB initialized");
+}
+
+/**
+ * Hide the map clock (and HUD) once the footer scrolls into view,
+ * so those fixed-position readouts don't fight the footer's content
+ * at the very bottom of the page.
+ */
+function setupFooterHide() {
+    const footer = document.querySelector(".site-footer");
+    if (!footer) return;
+    const clock = document.querySelector("[data-map-clock]");
+    const hud = document.querySelector(".hud");
+    const observer = new IntersectionObserver(
+        ([entry]) => {
+            const fade = entry.isIntersecting;
+            if (clock) clock.classList.toggle("is-hidden-by-footer", fade);
+            if (hud) hud.classList.toggle("is-hidden-by-footer", fade);
+        },
+        { threshold: 0 },
+    );
+    observer.observe(footer);
 }
 
 /**

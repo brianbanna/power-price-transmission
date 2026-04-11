@@ -264,6 +264,12 @@ strong {
     transform: translateY(0);
 }
 
+.hud.is-hidden-by-footer {
+    opacity: 0 !important;
+    transform: translateY(-8px) !important;
+    pointer-events: none;
+}
+
 .hud__label {
     font-family: var(--font-mono);
     font-size: 9px;
@@ -323,6 +329,12 @@ strong {
 .map-clock.is-visible {
     opacity: 1;
     transform: translateY(0);
+}
+
+.map-clock.is-hidden-by-footer {
+    opacity: 0;
+    transform: translateY(16px);
+    pointer-events: none;
 }
 
 .map-clock__label {
@@ -1515,50 +1527,40 @@ body.is-iris-firing .scrollytelling__map::before {
     position: relative;
     z-index: 4;
     min-height: 100vh;
-    padding: 12vh var(--gutter) 10vh;
+    padding: 72px var(--gutter) 56px;
     background: transparent;
     /* Single hairline at the top to signal the mode shift. */
     border-top: 1px solid color-mix(in srgb, var(--accent) 20%, var(--border));
-    display: flex;
-    flex-direction: column;
-    gap: 96px;
+    /* Three-row grid: intro pins top, flex middle lets the map
+     * breathe, timeline pins bottom. This prevents the intro from
+     * sprawling over the active countries mid-viewport. */
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    gap: 48px;
 }
 
-/* A soft darken at the very top of the section so the "mode shift"
- * reads as intentional even though the map is fully visible. Narrower
- * and subtler than the old full-section wash. */
-.explorer::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    height: 160px;
-    background: linear-gradient(
-        180deg,
-        color-mix(in srgb, var(--bg-base) 55%, transparent) 0%,
-        transparent 100%
-    );
-    pointer-events: none;
-    z-index: -1;
-}
+/* No top-darken gradient — the 1px accent hairline alone marks the
+ * section boundary. The map stays fully visible in the explorer. */
 
-.explorer__inner {
+/* Three distinct wrapper rows inside the explorer grid — intro on top,
+ * spacer in the middle (inherits the 1fr and stays empty), timeline
+ * strip at the bottom. The inner max-width applies to each one
+ * independently so they all align to the same center column. */
+.explorer__intro,
+.explorer__timeline-wrap {
     max-width: var(--content-max);
-    margin: 0 auto;
+    margin-inline: auto;
     width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 10vh;
-    flex: 1;
 }
 
 .explorer__intro {
-    max-width: 640px;
+    /* Constrain width so the display headline never sprawls over the
+     * active countries at the center of the map. */
+    max-width: 460px;
     /* Legibility on bare map — tight dark halo under the text so any
      * country color behind it doesn't compete with the prose. */
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6),
-                 0 0 12px rgba(10, 14, 26, 0.8);
+                 0 0 12px rgba(10, 14, 26, 0.85);
 }
 
 .explorer__eyebrow {
