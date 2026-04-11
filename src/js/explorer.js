@@ -110,7 +110,22 @@ export function initExplorer(config) {
         if (state.playing) pause(); else play();
     }
 
-    playBtn?.addEventListener("click", togglePlay);
+    // ---- First-encounter hint ----
+    // The timeline handle pulses gently the first time the reader
+    // sees the explorer, to signal that it's interactive. The pulse
+    // is a CSS-only animation triggered by the is-hinting class; it
+    // plays three times and then stops via a CSS `animation-iteration-count`
+    // of 3. The is-touched class kills it permanently the first time
+    // the reader actually interacts with the timeline.
+    const markTouched = () => {
+        timeline.classList.add("is-touched");
+        timeline.classList.remove("is-hinting");
+    };
+
+    playBtn?.addEventListener("click", () => {
+        markTouched();
+        togglePlay();
+    });
 
     // ---- Drag scrubbing ----
     let dragging = false;
@@ -124,6 +139,7 @@ export function initExplorer(config) {
     track.addEventListener("pointerdown", (e) => {
         dragging = true;
         track.setPointerCapture?.(e.pointerId);
+        markTouched();
         pause();
         setHour(pointerToHour(e));
     });
@@ -138,6 +154,10 @@ export function initExplorer(config) {
 
     // ---- Keyboard ----
     track.addEventListener("keydown", (e) => {
+        // Any keyboard nudge counts as "touched" and silences the hint.
+        if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End", " ", "Enter"].includes(e.key)) {
+            markTouched();
+        }
         switch (e.key) {
             case "ArrowLeft":
             case "ArrowDown":
@@ -176,6 +196,7 @@ export function initExplorer(config) {
         const t = e.target;
         if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
         e.preventDefault();
+        markTouched();
         togglePlay();
     });
 
@@ -201,15 +222,19 @@ export function initExplorer(config) {
     );
     observer.observe(section);
 
-    // ---- Fixed chrome hiding ----
+    // ---- Fixed chrome hiding + first-encounter hint trigger ----
     //
     // The timeline dock is native CSS sticky now (see style.css), so
-    // no JS opacity writes here. We only toggle the map clock + HUD
-    // on/off based on whether the reader is inside the explorer
-    // section — when they are, those fixed chrome items step aside
-    // because the timeline readout owns the current-hour display.
+    // no JS opacity writes here. We only:
+    //   1. Toggle the map clock + HUD off when the reader is inside
+    //      the explorer (the timeline readout owns the hour display).
+    //   2. Add the `is-hinting` class the first time the timeline
+    //      becomes meaningfully visible, so the handle pulses three
+    //      times to signal interactivity. Cleared permanently the
+    //      first time the reader actually touches the timeline.
     const mapClock = document.querySelector("[data-map-clock]");
     const hud = document.querySelector(".hud");
+    let hintArmed = false;
 
     const updateChrome = () => {
         const sectionRect = section.getBoundingClientRect();
@@ -223,6 +248,13 @@ export function initExplorer(config) {
         }
         if (hud) {
             hud.classList.toggle("is-hidden-by-explorer", inExplorer);
+        }
+
+        // Arm the hint once when the reader crosses into the explorer.
+        // Skips silently if the timeline has already been touched.
+        if (inExplorer && !hintArmed && !timeline.classList.contains("is-touched")) {
+            hintArmed = true;
+            timeline.classList.add("is-hinting");
         }
     };
 
