@@ -28,6 +28,11 @@ Thumbs.db
 .vscode/
 .cursor/
 
+# Dev screenshots (local testing artifacts)
+Screenshot*.png
+Screenshot*.jpg
+Screenshot*.jpeg
+
 # Environment
 .env
 .env.local
