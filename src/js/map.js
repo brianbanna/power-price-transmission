@@ -32,6 +32,15 @@ const GRATICULE_MERIDIANS = [0, 5, 10, 15, 20];
 const GRATICULE_PARALLELS = [40, 45, 50, 55];
 const EARTH_KM_PER_DEGREE = 111.32;
 
+// Cartographic cartouche — compass rose + scale bar. Positioned in the
+// viewport's bottom-left clear of the clock (bottom-right) and the HUD
+// (top-right). Measured in CSS pixels against the fitted viewBox so
+// they sit at fixed offsets regardless of resize.
+const CARTOUCHE_MARGIN_X = 42;
+const CARTOUCHE_BOTTOM = 120;
+const COMPASS_RADIUS = 24;
+const SCALE_BAR_KM = 200;
+
 // Per-country label position overrides (added to the geometric centroid).
 // CH and AT are small and their centroids land awkwardly on borders; we
 // nudge in whichever direction gives the cleanest placement. Values are
@@ -127,16 +136,97 @@ export function createMap(selector, config) {
 
     const pathGen = d3.geoPath(projection);
 
-    // Layer order: graticule → countries → flow guides → particles → labels.
-    // Particles sit above the (very dim) flow guide so the stream reads
-    // brighter than its channel, and above countries so they ride the
-    // surface of the geography rather than bleeding into a fill.
+    // Layer order: graticule → countries → flow guides → particles →
+    // labels → cartouche. Cartouche sits on top so compass + scale bar
+    // always remain legible above country fills.
     const gGraticule = svg.append("g").attr("class", "graticule");
     const gRings = svg.append("g").attr("class", "graticule__rings");
     const gCountries = svg.append("g").attr("class", "countries");
     const gFlows = svg.append("g").attr("class", "flows");
     const gParticles = svg.append("g").attr("class", "particles");
     const gLabels = svg.append("g").attr("class", "labels");
+    const gCartouche = svg.append("g").attr("class", "cartouche");
+
+    // Build the cartouche once — its internal geometry is static
+    // (compass tick angles, bar sub-divisions). The outer transform is
+    // re-applied on every resize to keep it pinned to the viewport
+    // bottom-left. Scale bar pixel length is also computed per-resize
+    // against the projection.
+    const gCompass = gCartouche.append("g").attr("class", "cartouche__compass");
+    gCompass.append("circle")
+        .attr("class", "cartouche__compass-ring")
+        .attr("r", COMPASS_RADIUS);
+    gCompass.append("circle")
+        .attr("class", "cartouche__compass-ring cartouche__compass-ring--inner")
+        .attr("r", COMPASS_RADIUS - 6);
+    // Eight-point tick marks, longer on the cardinals.
+    for (let i = 0; i < 16; i++) {
+        const angle = (i / 16) * Math.PI * 2;
+        const isCardinal = i % 4 === 0;
+        const outer = COMPASS_RADIUS - 1;
+        const inner = outer - (isCardinal ? 8 : 4);
+        gCompass.append("line")
+            .attr("class",
+                `cartouche__compass-tick${isCardinal ? " cartouche__compass-tick--cardinal" : ""}`)
+            .attr("x1", Math.sin(angle) * inner)
+            .attr("y1", -Math.cos(angle) * inner)
+            .attr("x2", Math.sin(angle) * outer)
+            .attr("y2", -Math.cos(angle) * outer);
+    }
+    // North-pointing arrow — a thin isoceles triangle from center to
+    // the inner-ring top. The cyan/glow stroke gives it the only color
+    // accent on the cartouche so it naturally draws the eye.
+    gCompass.append("path")
+        .attr("class", "cartouche__compass-needle")
+        .attr("d", `M0,${-COMPASS_RADIUS + 3} L3,4 L0,0 L-3,4 Z`);
+    // Cardinal letters — N only (keeps it minimal).
+    gCompass.append("text")
+        .attr("class", "cartouche__compass-letter")
+        .attr("y", -COMPASS_RADIUS - 7)
+        .text("N");
+
+    const gScale = gCartouche.append("g").attr("class", "cartouche__scale");
+    gScale.append("line")
+        .attr("class", "cartouche__scale-bar")
+        .attr("y1", 0).attr("y2", 0);
+    gScale.append("line")
+        .attr("class", "cartouche__scale-tick")
+        .attr("y1", -4).attr("y2", 4);
+    gScale.append("line")
+        .attr("class", "cartouche__scale-tick cartouche__scale-tick--end")
+        .attr("y1", -4).attr("y2", 4);
+    gScale.append("line")
+        .attr("class", "cartouche__scale-tick cartouche__scale-tick--mid")
+        .attr("y1", -3).attr("y2", 3);
+    gScale.append("text")
+        .attr("class", "cartouche__scale-label")
+        .attr("y", -10)
+        .text(`${SCALE_BAR_KM} km`);
+    gScale.append("text")
+        .attr("class", "cartouche__scale-origin")
+        .attr("y", 16)
+        .text("0");
+    gScale.append("text")
+        .attr("class", "cartouche__scale-end")
+        .attr("y", 16)
+        .text(SCALE_BAR_KM);
+
+    // Graticule edge labels — degree readouts on meridians (top edge)
+    // and parallels (left edge). Built once, positioned per-resize so
+    // they always sit just inside the viewport frame.
+    const gEdgeLabels = gCartouche.append("g").attr("class", "cartouche__edges");
+    const meridianLabels = gEdgeLabels
+        .selectAll("text.cartouche__edge-lon")
+        .data(GRATICULE_MERIDIANS)
+        .join("text")
+        .attr("class", "cartouche__edge-label cartouche__edge-lon")
+        .text((d) => `${d}°E`);
+    const parallelLabels = gEdgeLabels
+        .selectAll("text.cartouche__edge-lat")
+        .data(GRATICULE_PARALLELS)
+        .join("text")
+        .attr("class", "cartouche__edge-label cartouche__edge-lat")
+        .text((d) => `${d}°N`);
 
     // Meridians + parallels — thin dashed hairlines covering the region.
     const meridianLines = gGraticule
@@ -262,6 +352,53 @@ export function createMap(selector, config) {
 
         labelGroups.select(".label__code").attr("y", -8);
         labelGroups.select(".label__price").attr("y", 10);
+
+        // Cartouche — compass rose in the bottom-left corner, scale
+        // bar above it. Positioned in absolute viewBox pixel coords so
+        // it stays pinned regardless of resize. Scale bar pixel length
+        // is recomputed from the current projection by measuring the
+        // projected distance for SCALE_BAR_KM along the north meridian
+        // at the anchor latitude — what the reader sees as "200 km"
+        // is the same 200 km wherever they would measure it.
+        const compassX = CARTOUCHE_MARGIN_X + COMPASS_RADIUS + 4;
+        const compassY = clientHeight - CARTOUCHE_BOTTOM - COMPASS_RADIUS - 48;
+        gCompass.attr("transform", `translate(${compassX}, ${compassY})`);
+
+        const scaleDeg = SCALE_BAR_KM / EARTH_KM_PER_DEGREE;
+        const scaleEdge = projection([
+            GRATICULE_ANCHOR[0] + scaleDeg / Math.cos((GRATICULE_ANCHOR[1] * Math.PI) / 180),
+            GRATICULE_ANCHOR[1],
+        ]);
+        const scaleAnchor = projection(GRATICULE_ANCHOR);
+        const scaleLenPx = Math.max(
+            40,
+            Math.abs(scaleEdge[0] - scaleAnchor[0]),
+        );
+        const scaleX = CARTOUCHE_MARGIN_X + 4;
+        const scaleY = clientHeight - CARTOUCHE_BOTTOM + 24;
+        gScale.attr("transform", `translate(${scaleX}, ${scaleY})`);
+        gScale.select(".cartouche__scale-bar")
+            .attr("x1", 0).attr("x2", scaleLenPx);
+        gScale.select(".cartouche__scale-tick:not(.cartouche__scale-tick--end):not(.cartouche__scale-tick--mid)")
+            .attr("x1", 0).attr("x2", 0);
+        gScale.select(".cartouche__scale-tick--end")
+            .attr("x1", scaleLenPx).attr("x2", scaleLenPx);
+        gScale.select(".cartouche__scale-tick--mid")
+            .attr("x1", scaleLenPx / 2).attr("x2", scaleLenPx / 2);
+        gScale.select(".cartouche__scale-label").attr("x", scaleLenPx / 2);
+        gScale.select(".cartouche__scale-origin").attr("x", 0);
+        gScale.select(".cartouche__scale-end").attr("x", scaleLenPx);
+
+        // Edge labels — meridians pinned to the top inside-edge, parallels
+        // to the right inside-edge. Use a small inset so they sit clear
+        // of the scroll-progress bar and the HUD.
+        const edgePad = 16;
+        meridianLabels
+            .attr("x", (lon) => projection([lon, GRATICULE_PARALLELS[GRATICULE_PARALLELS.length - 1]])[0])
+            .attr("y", edgePad + 14);
+        parallelLabels
+            .attr("x", clientWidth - edgePad - 4)
+            .attr("y", (lat) => projection([GRATICULE_MERIDIANS[GRATICULE_MERIDIANS.length - 1], lat])[1]);
 
         // Centroid cache used by the flow layer. Indexed by ISO code,
         // values are projected [x, y] in pixel space.

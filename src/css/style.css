@@ -1049,6 +1049,115 @@ body.is-iris-firing .scrollytelling__map::before {
     stroke-linecap: round;
 }
 
+/* ---------- Map — cartouche (compass rose, scale bar, edge labels) ----------
+ *
+ * Classic atlas furniture rendered inside the map SVG so it tilts with
+ * the 3D perspective and reads as part of the geography, not as chrome.
+ * Thin warm-gold strokes (via --gen-solar) tie the cartouche to the
+ * hero's warm-gold vertical rule — one subtle through-line across the
+ * piece. The north needle is the only piece in accent cyan so it carries
+ * the only color in the corner.
+ */
+
+.cartouche {
+    pointer-events: none;
+}
+
+.cartouche__compass-ring {
+    fill: none;
+    stroke: color-mix(in srgb, var(--gen-solar) 32%, transparent);
+    stroke-width: 0.8;
+}
+
+.cartouche__compass-ring--inner {
+    stroke: color-mix(in srgb, var(--gen-solar) 18%, transparent);
+    stroke-dasharray: 1 3;
+}
+
+.cartouche__compass-tick {
+    stroke: color-mix(in srgb, var(--gen-solar) 30%, transparent);
+    stroke-width: 0.6;
+    stroke-linecap: round;
+}
+
+.cartouche__compass-tick--cardinal {
+    stroke: color-mix(in srgb, var(--gen-solar) 60%, transparent);
+    stroke-width: 1;
+}
+
+.cartouche__compass-needle {
+    fill: color-mix(in srgb, var(--accent) 85%, transparent);
+    stroke: var(--accent-glow);
+    stroke-width: 0.4;
+    filter: drop-shadow(0 0 4px color-mix(in srgb, var(--accent) 50%, transparent));
+}
+
+.cartouche__compass-letter {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    fill: color-mix(in srgb, var(--accent) 80%, transparent);
+    text-anchor: middle;
+    dominant-baseline: alphabetic;
+    text-transform: uppercase;
+}
+
+.cartouche__scale-bar {
+    stroke: color-mix(in srgb, var(--gen-solar) 55%, transparent);
+    stroke-width: 1.2;
+    stroke-linecap: square;
+}
+
+.cartouche__scale-tick {
+    stroke: color-mix(in srgb, var(--gen-solar) 55%, transparent);
+    stroke-width: 1;
+}
+
+.cartouche__scale-tick--mid {
+    stroke: color-mix(in srgb, var(--gen-solar) 35%, transparent);
+}
+
+.cartouche__scale-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    fill: color-mix(in srgb, var(--gen-solar) 72%, transparent);
+    text-anchor: middle;
+    text-transform: uppercase;
+}
+
+.cartouche__scale-origin,
+.cartouche__scale-end {
+    font-family: var(--font-mono);
+    font-size: 8px;
+    fill: color-mix(in srgb, var(--text-secondary) 60%, transparent);
+    text-anchor: middle;
+}
+
+.cartouche__edge-label {
+    font-family: var(--font-mono);
+    font-size: 8px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    fill: color-mix(in srgb, var(--text-secondary) 45%, transparent);
+}
+
+.cartouche__edge-lon {
+    text-anchor: middle;
+}
+
+.cartouche__edge-lat {
+    text-anchor: end;
+    dominant-baseline: middle;
+}
+
+@media (max-width: 900px) {
+    /* Cartouche clutter hurts the smaller viewport — hide it on mobile. */
+    .cartouche { display: none; }
+}
+
 /* ---------- Map — countries (base state) ---------- */
 
 .country {
