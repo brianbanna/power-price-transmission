@@ -1063,34 +1063,45 @@ body.is-iris-firing .scrollytelling__map::before {
     fill: var(--bg-elevated);
 }
 
-/* ---------- Map — flow arrows ----------
+/* ---------- Map — flow guides + particle stream ----------
  *
  * Quadratic bezier paths connecting country centroids, rendered when
  * the price spread between two connected markets exceeds a threshold.
- * Direction follows the price gradient (low → high). Marching-ants
- * dash animation runs in that same direction.
+ * Direction follows the price gradient (low → high).
+ *
+ * The path itself is now a dim CHANNEL — a low-opacity cyan hairline
+ * that shows the route of the interconnector even when no particle is
+ * currently on it. The motion layer is a generative stream of small
+ * dots (`.particle`) that ride the same path, spawned and advanced by
+ * map.js. Focus-country flows glow brighter and flow faster.
  */
 
 .flow {
-    stroke: var(--accent);
-    stroke-dasharray: 6 5;
-    filter: drop-shadow(0 0 4px color-mix(in srgb, var(--accent) 50%, transparent));
-    animation: flowMarch 1600ms linear infinite;
+    stroke: color-mix(in srgb, var(--accent) 70%, transparent);
+    stroke-linecap: round;
+    filter: drop-shadow(0 0 3px color-mix(in srgb, var(--accent) 32%, transparent));
 }
 
-/* Arrows touching the card's focus country are the "loudest" — brighter
- * hue, thicker glow, slightly faster dash animation so they dominate
- * the visual hierarchy of the flow layer. */
 .flow--focus {
-    stroke: var(--accent-glow);
-    filter: drop-shadow(0 0 10px var(--accent))
+    stroke: color-mix(in srgb, var(--accent-glow) 80%, transparent);
+    filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 50%, transparent))
             drop-shadow(0 0 2px var(--accent-glow));
-    animation-duration: 1100ms;
 }
 
-@keyframes flowMarch {
-    from { stroke-dashoffset: 0; }
-    to   { stroke-dashoffset: -22; }
+/* Particles — small cyan dots streaming along the flow guide. JS owns
+ * their cx/cy/opacity on every tick; CSS owns color, glow, and the
+ * smoothing-out transition on cx/cy so rAF updates land as motion
+ * blur rather than discrete jumps. */
+.particle {
+    fill: var(--accent);
+    filter: drop-shadow(0 0 3px color-mix(in srgb, var(--accent) 60%, transparent));
+    pointer-events: none;
+}
+
+.particle--focus {
+    fill: var(--accent-glow);
+    filter: drop-shadow(0 0 6px var(--accent))
+            drop-shadow(0 0 2px var(--accent-glow));
 }
 
 /* ---------- Map — labels (ISO code + live price per country) ----------

@@ -69,6 +69,23 @@ const ARROW_MIN_WIDTH = 1.4;
 const ARROW_MAX_WIDTH = 6;
 const ARROW_WIDTH_PIVOT = 150;
 
+// Particle flow — a generative dot stream riding each active flow path.
+// Replaces the old marching-ants dashed stroke with something that feels
+// like actual current moving through the interconnector. The guide path
+// remains in the DOM at very low opacity so the reader still sees the
+// route when no particles happen to be on it.
+//
+// Density scales with |spread|: a small 10 EUR differential carries a
+// handful of particles; the 150 EUR peak-moment shocks swarm. Particles
+// are pooled per flow and recycled (t wraps from 1 → 0) so the DOM
+// population stays flat once a flow is active.
+const PARTICLE_MIN_COUNT = 3;
+const PARTICLE_MAX_COUNT = 16;
+const PARTICLE_BASE_RADIUS = 1.4;
+const PARTICLE_FOCUS_RADIUS = 2.2;
+const PARTICLE_BASE_SPEED = 0.00035; // fraction of path length per ms
+const PARTICLE_FOCUS_SPEED = 0.00055;
+
 export function createMap(selector, config) {
     const container = document.querySelector(selector);
     if (!container) {
@@ -110,11 +127,15 @@ export function createMap(selector, config) {
 
     const pathGen = d3.geoPath(projection);
 
-    // Layer order: graticule → countries → flows → labels.
+    // Layer order: graticule → countries → flow guides → particles → labels.
+    // Particles sit above the (very dim) flow guide so the stream reads
+    // brighter than its channel, and above countries so they ride the
+    // surface of the geography rather than bleeding into a fill.
     const gGraticule = svg.append("g").attr("class", "graticule");
     const gRings = svg.append("g").attr("class", "graticule__rings");
     const gCountries = svg.append("g").attr("class", "countries");
     const gFlows = svg.append("g").attr("class", "flows");
+    const gParticles = svg.append("g").attr("class", "particles");
     const gLabels = svg.append("g").attr("class", "labels");
 
     // Meridians + parallels — thin dashed hairlines covering the region.
@@ -266,6 +287,14 @@ export function createMap(selector, config) {
     // Populated on every resize; read by drawFlows().
     let centroidPx = new Map();
 
+    // Particle pool keyed by flow id ("CH-DE" etc). Each entry carries
+    // the measured path length, a focus flag, and an array of particle
+    // state objects. The pool is rebuilt whenever drawFlows() runs so
+    // count/speed/radius track the current spread and focus country.
+    const particlePools = new Map();
+    let particleRafId = null;
+    let particleLastTs = null;
+
     /**
      * Render SVG flow arrows between every connected market pair with
      * a material price differential. Arrows go from low-price to
@@ -351,6 +380,10 @@ export function createMap(selector, config) {
         // Merge — tween `d`, stroke-width, and stroke-opacity together
         // on the same curve. `attrTween` on `d` uses d3's string
         // interpolator which handles matching-structure paths cleanly.
+        //
+        // Note: the guide path is now a dim channel rather than the
+        // marching-ants hero. The real motion lives in the particle
+        // layer driven by syncParticlePools() below.
         enter.merge(selection)
             .classed("flow--focus", (d) => d.touchesFocus)
             .transition().duration(DUR).ease(EASE)
@@ -359,8 +392,144 @@ export function createMap(selector, config) {
                 const to = flowPath(d.fromXY, d.toXY);
                 return d3.interpolateString(from, to);
             })
-            .attr("stroke-width", (d) => widthForSpread(d.spread))
-            .attr("stroke-opacity", (d) => (d.touchesFocus ? 0.95 : 0.55));
+            .attr("stroke-width", (d) => widthForSpread(d.spread) * 0.6)
+            .attr("stroke-opacity", (d) => (d.touchesFocus ? 0.32 : 0.18));
+
+        syncParticlePools(flows);
+    }
+
+    /**
+     * Rebuild the particle pools so the set of active flows and the
+     * density of each matches the current spread/focus state.
+     *
+     * Existing pools for flows that are still present are reused
+     * (keeps their t-values so there's no visual reset), but their
+     * target density/speed are refreshed. Flows that disappeared get
+     * their DOM nodes removed. Flows that just appeared get a fresh
+     * pool whose particles are initialized at staggered t values so
+     * the stream doesn't clump at the origin.
+     */
+    function syncParticlePools(flows) {
+        const nextIds = new Set(flows.map((f) => f.id));
+
+        // Drop pools whose flow no longer exists this frame.
+        for (const id of Array.from(particlePools.keys())) {
+            if (!nextIds.has(id)) {
+                const pool = particlePools.get(id);
+                pool.group.remove();
+                particlePools.delete(id);
+            }
+        }
+
+        for (const flow of flows) {
+            let pool = particlePools.get(flow.id);
+            if (!pool) {
+                // Create the guide-path measurement node (a hidden
+                // SVG path sharing the same `d` as the visible flow
+                // guide). We read totalLength() and getPointAtLength()
+                // off this node rather than the visible one, so tween
+                // transitions on the visible path never make particles
+                // momentarily jump.
+                const measure = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                measure.setAttribute("d", flowPath(flow.fromXY, flow.toXY));
+                measure.setAttribute("fill", "none");
+                measure.setAttribute("stroke", "none");
+                // Measure path is NOT appended to DOM; getPointAtLength
+                // still works on detached SVGPathElement in modern browsers.
+                const group = gParticles.append("g").attr("class", "particle-group");
+                pool = {
+                    id: flow.id,
+                    measure,
+                    group,
+                    length: measure.getTotalLength(),
+                    particles: [],
+                    touchesFocus: flow.touchesFocus,
+                    spread: flow.spread,
+                };
+                particlePools.set(flow.id, pool);
+            } else {
+                // Refresh the measurement path so tweens land cleanly.
+                pool.measure.setAttribute("d", flowPath(flow.fromXY, flow.toXY));
+                pool.length = pool.measure.getTotalLength();
+                pool.touchesFocus = flow.touchesFocus;
+                pool.spread = flow.spread;
+            }
+
+            const targetCount = particleCountForSpread(flow.spread);
+            resizeParticlePool(pool, targetCount);
+        }
+
+        ensureParticleLoop();
+    }
+
+    function resizeParticlePool(pool, targetCount) {
+        // Grow: add new particles with staggered t so they enter
+        // smoothly across the length rather than all from the source.
+        while (pool.particles.length < targetCount) {
+            const idx = pool.particles.length;
+            const t = (idx / targetCount + Math.random() * 0.02) % 1;
+            const circle = pool.group.append("circle")
+                .attr("class", "particle")
+                .attr("r", pool.touchesFocus ? PARTICLE_FOCUS_RADIUS : PARTICLE_BASE_RADIUS)
+                .attr("cx", 0)
+                .attr("cy", 0);
+            if (pool.touchesFocus) circle.classed("particle--focus", true);
+            pool.particles.push({ t, circle });
+        }
+        // Shrink: drop trailing circles (they'll recycle on next spread).
+        while (pool.particles.length > targetCount) {
+            const p = pool.particles.pop();
+            p.circle.remove();
+        }
+        // Refresh radius + class on kept particles in case focus toggled.
+        pool.particles.forEach((p) => {
+            p.circle
+                .attr("r", pool.touchesFocus ? PARTICLE_FOCUS_RADIUS : PARTICLE_BASE_RADIUS)
+                .classed("particle--focus", pool.touchesFocus);
+        });
+    }
+
+    function ensureParticleLoop() {
+        if (particleRafId != null) return;
+        particleLastTs = null;
+        const tick = (ts) => {
+            if (particleLastTs == null) particleLastTs = ts;
+            const dt = Math.min(64, ts - particleLastTs);
+            particleLastTs = ts;
+
+            for (const pool of particlePools.values()) {
+                if (!pool.length) continue;
+                const speed = pool.touchesFocus
+                    ? PARTICLE_FOCUS_SPEED
+                    : PARTICLE_BASE_SPEED;
+                for (const p of pool.particles) {
+                    p.t += dt * speed;
+                    if (p.t >= 1) p.t -= 1;
+                    // Fade in at t~0, peak mid-path, fade out near t~1.
+                    // sin(pi * t) gives a clean 0→1→0 envelope.
+                    const envelope = Math.sin(Math.PI * p.t);
+                    const pt = pool.measure.getPointAtLength(p.t * pool.length);
+                    p.circle
+                        .attr("cx", pt.x)
+                        .attr("cy", pt.y)
+                        .attr("opacity", envelope);
+                }
+            }
+
+            if (particlePools.size === 0) {
+                particleRafId = null;
+                return;
+            }
+            particleRafId = requestAnimationFrame(tick);
+        };
+        particleRafId = requestAnimationFrame(tick);
+    }
+
+    function particleCountForSpread(spread) {
+        const t = Math.min(1, Math.max(0, spread / ARROW_WIDTH_PIVOT));
+        return Math.round(
+            PARTICLE_MIN_COUNT + t * (PARTICLE_MAX_COUNT - PARTICLE_MIN_COUNT),
+        );
     }
 
     resize();
@@ -381,11 +550,26 @@ export function createMap(selector, config) {
         // Fill each country with its price color at the current hour.
         if (state.hour == null || !showcase) {
             // Reset — base state, no colors, no labels, no flows.
-            countryPaths.interrupt().attr("fill", null);
+            countryPaths
+                .interrupt()
+                .attr("fill", null)
+                .classed("is-focus-country", false);
             labelGroups.classed("is-visible", false).classed("is-focus", false);
             gFlows.selectAll("path.flow").remove();
+            // Tear the particle pools down — the rAF loop self-halts
+            // when the pool map is empty.
+            for (const pool of particlePools.values()) pool.group.remove();
+            particlePools.clear();
             return;
         }
+
+        // Highlight the focus country's own shape so the 3D-tilt CSS
+        // layer can lift it forward. `is-focus-country` is also used
+        // by the focus-target drop-shadow in the map CSS.
+        countryPaths.classed(
+            "is-focus-country",
+            (d) => d.id === state.focusCountry,
+        );
 
         labelGroups.classed("is-visible", true);
 
@@ -435,6 +619,9 @@ export function createMap(selector, config) {
 
     function destroy() {
         window.removeEventListener("resize", resize);
+        if (particleRafId != null) cancelAnimationFrame(particleRafId);
+        particleRafId = null;
+        particlePools.clear();
         svg.remove();
     }
 
