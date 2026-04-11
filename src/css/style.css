@@ -1527,27 +1527,33 @@ body.is-iris-firing .scrollytelling__map::before {
 
 /* ---------- Explorer layout ----------
  *
- * The explorer is a single viewport section. The reader enters it
- * from the last narrative step, the intro appears in the upper-left,
- * the map is fully visible in the background, and the timeline dock
- * fades in at the bottom. Reading the intro + seeing the timeline =
- * ready to interact. Further vertical scroll goes directly to the
- * footer; the timeline is meant to be scrubbed HORIZONTALLY, not
- * scrolled past vertically.
+ * The explorer section plays out in two soft beats:
+ *
+ *   Beat 1 — intro (first ~viewport)
+ *     Headline + lede in the upper-left, map + timeline behind. The
+ *     reader sees the interactive composition for the first time.
+ *
+ *   Beat 2 — outro (next ~80vh)
+ *     Intro text fades out as the reader scrolls. Map + timeline
+ *     keep their composition so it stays interactive the whole way.
+ *     This beat exists so the transition into the footer is GENTLE,
+ *     not a hard cut — giving the eye a pause before credits land.
+ *
+ * The section is 180vh total. JS drives the intro's fade-out via the
+ * same scroll handler that anchors the timeline fade-in.
  */
 
 .explorer {
     position: relative;
     z-index: 4;
-    min-height: 100vh;
+    min-height: 180vh;
     padding: 0;
     background: transparent;
     border-top: 1px solid color-mix(in srgb, var(--accent) 20%, var(--border));
 }
 
-/* Intro — fills the explorer's viewport with the headline + lede
- * anchored to the upper-left. Padding on the bottom leaves room for
- * the docked timeline strip. */
+/* Intro — fills the first viewport. Padding on the bottom leaves
+ * room for the docked timeline strip once it fades in. */
 .explorer__intro {
     min-height: 100vh;
     padding: 12vh var(--gutter) 24vh;
@@ -1555,13 +1561,17 @@ body.is-iris-firing .scrollytelling__map::before {
     /* Legibility on bare map — tight dark halo under the text. */
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7),
                  0 0 12px rgba(10, 14, 26, 0.9);
+    /* Will-change so the JS scroll handler's transform/opacity writes
+     * are promoted to GPU layers and don't jank. */
+    will-change: opacity, transform;
 }
 
-/* The spacer is no longer needed — the explorer is one viewport
- * tall now. Keep a zero-height rule so stray DOM references don't
- * collapse layout if the element is still present. */
-.explorer__spacer {
-    display: none;
+/* Outro beat — a silent 80vh lets the map + timeline breathe after
+ * the intro dissolves. No content, no background; the fixed map
+ * stays visible and the timeline stays docked. */
+.explorer__outro {
+    height: 80vh;
+    pointer-events: none;
 }
 
 /* Timeline dock — fixed to the viewport's bottom edge. The opacity
@@ -1896,13 +1906,33 @@ body.is-iris-firing .scrollytelling__map::before {
 .site-footer {
     position: relative;
     z-index: 4;
-    padding: 56px var(--gutter) 72px;
+    padding: 96px var(--gutter) 72px;
     background: var(--bg-base);
     border-top: 1px solid var(--border);
     font-size: 13px;
     color: var(--text-muted);
     line-height: 1.7;
     font-variation-settings: "opsz" 14;
+}
+
+/* Soft fade-in mask at the top of the footer. The footer's background
+ * color gradients up from transparent over the first 80px so the
+ * explorer's map doesn't hit the credits as a hard edge. */
+.site-footer::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -80px;
+    height: 80px;
+    background: linear-gradient(
+        180deg,
+        transparent 0%,
+        color-mix(in srgb, var(--bg-base) 50%, transparent) 40%,
+        var(--bg-base) 100%
+    );
+    pointer-events: none;
+    z-index: -1;
 }
 
 .site-footer__inner {

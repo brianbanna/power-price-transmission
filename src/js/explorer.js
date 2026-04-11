@@ -215,12 +215,19 @@ export function initExplorer(config) {
     // rule at its own threshold.
     const mapClock = document.querySelector("[data-map-clock]");
     const hud = document.querySelector(".hud");
-    const introHeadline = section.querySelector(".explorer__headline")
-        || section.querySelector(".explorer__intro");
+    const intro = section.querySelector(".explorer__intro");
+    const introHeadline = section.querySelector(".explorer__headline") || intro;
 
+    // Timeline fade-in band (anchored to the headline's position).
     const FADE_START = 0.75;  // headline.top / vh — fade begins (timeline: 0)
     const FADE_END   = 0.50;  // headline.top / vh — fade completes (timeline: 1)
     const HIDE_CHROME_AT = 0.65; // headline.top / vh — HUD + clock hide below this
+
+    // Intro fade-out band. As the reader scrolls past the intro, the
+    // headline rises out the top of the viewport — we fade the intro
+    // text out so the outro beat isn't a visual repeat of the intro.
+    const INTRO_FADE_OUT_START = 0.30; // headline.top / vh — intro at 100%
+    const INTRO_FADE_OUT_END   = 0.00; // headline.top / vh — intro at 0%
 
     const smoothstep = (a, b, t) => {
         const x = Math.max(0, Math.min(1, (t - a) / (b - a)));
@@ -232,25 +239,40 @@ export function initExplorer(config) {
         const vh = window.innerHeight;
 
         // Anchor: top of the headline (or the intro box as fallback).
-        // Fall back to the section itself if neither is reachable.
         const anchorRect = (introHeadline || section).getBoundingClientRect();
         const anchorTop = anchorRect.top / vh;
 
-        // Progress ramps from 0 → 1 as the anchor rises past the two
-        // thresholds. FADE_START > FADE_END because top decreases as
-        // the page scrolls down.
-        const progress = smoothstep(FADE_START, FADE_END, anchorTop);
+        // Timeline fade-in (intro enters viewport from the bottom).
+        const timelineProgress = smoothstep(FADE_START, FADE_END, anchorTop);
+
+        // Intro fade-out (intro rises off the top of the viewport).
+        // Rest at full opacity until the headline is near the top
+        // third of the screen, then lerp to 0 as it exits upward.
+        const introProgress = 1 - smoothstep(
+            INTRO_FADE_OUT_END,
+            INTRO_FADE_OUT_START,
+            anchorTop,
+        );
 
         // Extinguish opacity entirely once the explorer has left the
         // viewport completely (scrolled past, or not yet entered).
         const gone = sectionRect.bottom <= 0 || sectionRect.top > vh;
-        const opacity = gone ? 0 : progress;
+        const timelineOpacity = gone ? 0 : timelineProgress;
+        const introOpacity = gone ? 0 : introProgress;
 
         if (timelineWrap) {
-            timelineWrap.style.opacity = opacity.toFixed(3);
-            const lift = (1 - opacity) * 24;
+            timelineWrap.style.opacity = timelineOpacity.toFixed(3);
+            const lift = (1 - timelineOpacity) * 24;
             timelineWrap.style.transform = `translateY(${lift}px)`;
-            timelineWrap.style.pointerEvents = opacity > 0.45 ? "auto" : "none";
+            timelineWrap.style.pointerEvents = timelineOpacity > 0.45 ? "auto" : "none";
+        }
+
+        if (intro) {
+            // Slight lift as the intro fades so it feels like it's
+            // rising away rather than simply dissolving in place.
+            intro.style.opacity = introOpacity.toFixed(3);
+            const introLift = (1 - introOpacity) * 24;
+            intro.style.transform = `translateY(${-introLift}px)`;
         }
 
         // Chrome hides: binary, fires once the headline has risen
