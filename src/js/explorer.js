@@ -202,25 +202,58 @@ export function initExplorer(config) {
     observer.observe(section);
 
     // ---- Timeline dock + fixed chrome hiding ----
-    // Toggle is-docked on the timeline based on whether the explorer
-    // is in view. Scroll-driven (passive listener on window) rather
-    // than an IntersectionObserver because IO's async batching and
-    // first-paint quirks were causing the timeline to never initially
-    // show up on some scroll paths. A plain rect check on scroll is
-    // simpler, completely deterministic, and cheap enough since we
-    // just read bounding rects.
+    //
+    // The timeline fades IN as a function of scroll progress across a
+    // narrow band at the top of the explorer section, rather than
+    // snapping on/off when a threshold is crossed. Maps rect.top to an
+    // opacity:
+    //
+    //   rect.top >= FADE_START * vh  →  opacity 0  (timeline hidden)
+    //   rect.top <= FADE_END   * vh  →  opacity 1  (timeline fully docked)
+    //   between                      →  linear interpolation, eased
+    //
+    // Tuned so the timeline reaches full visibility right around when
+    // the intro's headline settles into the upper third of the viewport.
+    // The map clock + HUD hide binary at the halfway point so the old
+    // chrome cleanly steps aside before the timeline reaches full opacity.
     const mapClock = document.querySelector("[data-map-clock]");
     const hud = document.querySelector(".hud");
+
+    const FADE_START = 0.78;  // rect.top / vh — fade begins (timeline: 0)
+    const FADE_END   = 0.35;  // rect.top / vh — fade completes (timeline: 1)
+    const HIDE_CHROME_AT = 0.55; // rect.top / vh — HUD + clock hide below this
+
+    const smoothstep = (a, b, t) => {
+        const x = Math.max(0, Math.min(1, (t - a) / (b - a)));
+        return x * x * (3 - 2 * x);  // ease in-out
+    };
 
     const updateDock = () => {
         const rect = section.getBoundingClientRect();
         const vh = window.innerHeight;
-        // "In the explorer" if any part of the section overlaps the
-        // viewport. (top < vh) && (bottom > 0).
-        const inExplorer = rect.top < vh && rect.bottom > 0;
+
+        // Linear progress along the fade band. 0 = hidden, 1 = docked.
+        // rect.top decreases as the user scrolls down, so invert.
+        const rawTop = rect.top / vh;
+        const progress = smoothstep(FADE_START, FADE_END, rawTop);
+
+        // Extinguish opacity entirely once the explorer leaves the
+        // viewport (bottom above top, or top well past the bottom).
+        const gone = rect.bottom <= 0 || rect.top > vh;
+        const opacity = gone ? 0 : progress;
+
         if (timelineWrap) {
-            timelineWrap.classList.toggle("is-docked", inExplorer);
+            timelineWrap.style.opacity = opacity.toFixed(3);
+            // Translate-in alongside the fade for a touch of lift.
+            const lift = (1 - opacity) * 24;
+            timelineWrap.style.transform = `translateY(${lift}px)`;
+            // Pointer events only when the dock is at least ~half there.
+            timelineWrap.style.pointerEvents = opacity > 0.45 ? "auto" : "none";
         }
+
+        // Chrome hides: binary, fires when the user has moved meaningfully
+        // into the explorer (FADE_START to HIDE_CHROME_AT range).
+        const inExplorer = rect.top < vh * HIDE_CHROME_AT && rect.bottom > 0;
         if (mapClock) {
             mapClock.classList.toggle("is-hidden-by-explorer", inExplorer);
         }
@@ -228,9 +261,20 @@ export function initExplorer(config) {
             hud.classList.toggle("is-hidden-by-explorer", inExplorer);
         }
     };
+    // rAF-throttle so opacity writes happen at most once per frame.
+    let dockTicking = false;
+    const scheduleDock = () => {
+        if (dockTicking) return;
+        dockTicking = true;
+        requestAnimationFrame(() => {
+            updateDock();
+            dockTicking = false;
+        });
+    };
+
     updateDock();
-    window.addEventListener("scroll", updateDock, { passive: true });
-    window.addEventListener("resize", updateDock);
+    window.addEventListener("scroll", scheduleDock, { passive: true });
+    window.addEventListener("resize", scheduleDock);
 
     // Paint the initial UI state (handle at INITIAL_HOUR, readout set)
     // without touching the map — the map only updates once the reader

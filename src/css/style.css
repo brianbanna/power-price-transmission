@@ -1571,10 +1571,10 @@ body.is-iris-firing .scrollytelling__map::before {
     height: 100vh;
 }
 
-/* Timeline dock — fixed to the viewport's bottom edge. JS toggles the
- * is-docked class when the explorer section is intersecting the
- * viewport (or near it), and removes the class when the reader
- * scrolls past the footer. */
+/* Timeline dock — fixed to the viewport's bottom edge. The opacity
+ * and transform are driven by JS as a function of the explorer
+ * section's position in the viewport, producing a smooth fade-in
+ * tied to scroll progress (see explorer.js::updateDock). */
 .explorer__timeline-wrap {
     position: fixed;
     left: 0;
@@ -1585,15 +1585,10 @@ body.is-iris-firing .scrollytelling__map::before {
     pointer-events: none;
     opacity: 0;
     transform: translateY(24px);
-    transition:
-        opacity var(--dur-default) var(--ease-default),
-        transform var(--dur-default) var(--ease-default);
-}
-
-.explorer__timeline-wrap.is-docked {
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: auto;
+    /* No CSS transitions — the JS scroll handler writes the opacity
+     * value directly on every frame, producing a smooth fade that
+     * follows the scroll gesture exactly. */
+    will-change: opacity, transform;
 }
 
 .explorer__timeline-wrap .timeline {
