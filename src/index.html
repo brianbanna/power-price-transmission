@@ -160,23 +160,23 @@
         timeline spanning the showcase day. Phase 7.1-7.3.
     -->
     <section class="explorer" id="explorer" aria-label="Interactive explorer">
-        <!-- Stage — a single viewport-tall container. Intro pins to
-             the top-left via flex, timeline pins to the bottom via
-             margin-top: auto. Together they form one cohesive block
-             that the reader scrolls as a unit. -->
-        <div class="explorer__stage">
-            <div class="explorer__intro">
-                <p class="explorer__eyebrow mono"><span class="explorer__eyebrow-dot" aria-hidden="true"></span>Now you steer the grid</p>
-                <h2 class="explorer__headline">Scrub through <em>one day</em> of European electricity.</h2>
-                <p class="explorer__lede">
-                    Drag the playhead, or press play. The map above tracks your
-                    position across <strong class="mono">May 12, 2024</strong> — the same
-                    Sunday the story just told.
-                </p>
-            </div>
+        <div class="explorer__intro">
+            <p class="explorer__eyebrow mono"><span class="explorer__eyebrow-dot" aria-hidden="true"></span>Now you steer the grid</p>
+            <h2 class="explorer__headline">Scrub through <em>one day</em> of European electricity.</h2>
+            <p class="explorer__lede">
+                Drag the playhead, or press play. The map above tracks your
+                position across <strong class="mono">May 12, 2024</strong> — the same
+                Sunday the story just told.
+            </p>
+        </div>
 
-            <div class="explorer__timeline-wrap">
-                <div class="timeline" data-timeline>
+        <!-- Extra scroll track so the reader can keep scrolling past
+             the intro while the timeline stays docked. When they
+             scroll beyond this, the stage ends and the footer rises. -->
+        <div class="explorer__trail" aria-hidden="true"></div>
+
+        <div class="explorer__timeline-wrap">
+            <div class="timeline" data-timeline>
                 <div class="timeline__chrome">
                     <button
                         type="button"
@@ -212,7 +212,6 @@
                 </div>
 
                 <div class="timeline__hours mono" aria-hidden="true" data-timeline-hours></div>
-            </div>
             </div>
         </div>
     </section>

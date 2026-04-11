@@ -219,13 +219,21 @@ export function initExplorer(config) {
         || section.querySelector(".explorer__intro");
 
     // Timeline fade-in band (anchored to the headline's position).
-    //  FADE_START: headline.top / vh = 0.70 → headline is 30% up from
-    //  the bottom of the viewport, about to cross into the middle zone.
-    //  FADE_END:   headline.top / vh = 0.12 → headline has reached its
-    //  final top-left resting position inside the intro's top padding.
-    const FADE_START = 0.70;
-    const FADE_END   = 0.12;
-    const HIDE_CHROME_AT = 0.50; // headline.top / vh — HUD + clock hide below this
+    //
+    //   IN band  — headline enters from the bottom of the viewport
+    //     IN_START: 0.70 → headline is 30% up from the bottom
+    //     IN_END:   0.12 → headline has reached its top-left rest
+    //
+    //   OUT band — reader continues scrolling past the locked stage
+    //     OUT_START:  -0.05 → headline has just crossed the top edge
+    //     OUT_END:    -0.35 → headline is 35% above the viewport top
+    //
+    //   Between IN_END and OUT_START the timeline is fully visible.
+    const FADE_IN_START  =  0.70;
+    const FADE_IN_END    =  0.12;
+    const FADE_OUT_START = -0.05;
+    const FADE_OUT_END   = -0.35;
+    const HIDE_CHROME_AT =  0.50;
 
     const smoothstep = (a, b, t) => {
         const x = Math.max(0, Math.min(1, (t - a) / (b - a)));
@@ -240,11 +248,15 @@ export function initExplorer(config) {
         const anchorRect = (introHeadline || section).getBoundingClientRect();
         const anchorTop = anchorRect.top / vh;
 
-        // Timeline fade-in: intro enters viewport from the bottom.
-        const progress = smoothstep(FADE_START, FADE_END, anchorTop);
+        // Two smoothstep bands combined.
+        //   Fade in:  0 → 1 as anchorTop drops from IN_START → IN_END
+        //   Fade out: 1 → 0 as anchorTop drops from OUT_START → OUT_END
+        // Between them the timeline sits at full visibility.
+        const fadeIn  = smoothstep(FADE_IN_START,  FADE_IN_END,  anchorTop);
+        const fadeOut = 1 - smoothstep(FADE_OUT_START, FADE_OUT_END, anchorTop);
+        const progress = Math.min(fadeIn, fadeOut);
 
-        // Extinguish opacity entirely once the explorer has left the
-        // viewport completely (scrolled past, or not yet entered).
+        // Extinguish entirely once the explorer has left the viewport.
         const gone = sectionRect.bottom <= 0 || sectionRect.top > vh;
         const opacity = gone ? 0 : progress;
 

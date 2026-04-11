@@ -1551,39 +1551,51 @@ body.is-iris-firing .scrollytelling__map::before {
     border-top: 1px solid color-mix(in srgb, var(--accent) 20%, var(--border));
 }
 
-.explorer__stage {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-}
-
-/* Intro — top of the stage. Constrained width so the display
- * headline never sprawls across the active countries in the map. */
+/* Intro — normal flow at the top of the explorer section.
+ * Constrained width so the display headline never sprawls across
+ * the active countries in the map. */
 .explorer__intro {
-    padding: 12vh var(--gutter) 0;
+    padding: 14vh var(--gutter) 0;
     max-width: calc(520px + var(--gutter) * 2);
     /* Legibility on bare map — tight dark halo under the text. */
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7),
                  0 0 12px rgba(10, 14, 26, 0.9);
 }
 
-/* No outro spacer — the footer arrives directly after the stage.
- * Dead rule retained and zero-sized in case stray DOM references the
- * class. */
+/* Trail — empty scroll track BELOW the intro. Its only job is to
+ * give the reader scrollable distance while the fixed timeline dock
+ * stays visible. As the reader scrolls through the trail:
+ *   - intro scrolls naturally upward (document flow)
+ *   - timeline stays pinned at the viewport bottom (position:fixed)
+ *   - JS fades the timeline out as the intro exits the top of the
+ *     viewport so the footer can come in cleanly.
+ * Tuned so the reader has ~60vh of "locked-looking" scroll before
+ * the stage ends and the footer arrives. */
+.explorer__trail {
+    height: 60vh;
+    pointer-events: none;
+}
+
+/* No outro spacer — dead class retained for safety. */
 .explorer__outro {
     display: none;
 }
 
-/* Timeline wrap — bottom of the stage. `margin-top: auto` pushes it
- * to the bottom of the flex column so the intro and timeline are
- * the two endpoints of the same viewport-tall block. */
+/* Timeline wrap — fixed to the viewport's bottom edge so it stays
+ * in a consistent visual position during the fade-in. The opacity
+ * is written by the JS scroll handler as a function of the headline's
+ * position on the page. As the reader continues scrolling past the
+ * stage, the JS fades it back out so the footer can take over. */
 .explorer__timeline-wrap {
-    margin-top: auto;
-    padding: 0 var(--gutter) clamp(24px, 4vh, 56px);
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: clamp(24px, 4vh, 56px);
+    z-index: 6;
+    padding: 0 var(--gutter);
+    pointer-events: none;
     opacity: 0;
     transform: translateY(24px);
-    /* JS scroll handler writes opacity and transform directly on
-     * every frame as a function of the headline's position. */
     will-change: opacity, transform;
 }
 
