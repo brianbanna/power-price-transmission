@@ -1385,19 +1385,16 @@ body.is-iris-firing .scrollytelling__map::before {
 }
 
 /* Particles — small cyan dots streaming along the flow guide. JS owns
- * their cx/cy/opacity on every tick; CSS owns color, glow, and the
- * smoothing-out transition on cx/cy so rAF updates land as motion
- * blur rather than discrete jumps. */
+ * their transform (via translate) + opacity on every rAF tick; the
+ * group-level `#particle-glow` SVG filter in map.js handles the glow
+ * for all particles at once so individual nodes stay cheap. */
 .particle {
     fill: var(--accent);
-    filter: drop-shadow(0 0 3px color-mix(in srgb, var(--accent) 60%, transparent));
     pointer-events: none;
 }
 
 .particle--focus {
     fill: var(--accent-glow);
-    filter: drop-shadow(0 0 6px var(--accent))
-            drop-shadow(0 0 2px var(--accent-glow));
 }
 
 /* ---------- Map — labels (ISO code + live price per country) ----------

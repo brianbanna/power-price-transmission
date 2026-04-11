@@ -89,11 +89,17 @@ const ARROW_WIDTH_PIVOT = 150;
 // are pooled per flow and recycled (t wraps from 1 → 0) so the DOM
 // population stays flat once a flow is active.
 const PARTICLE_MIN_COUNT = 3;
-const PARTICLE_MAX_COUNT = 16;
-const PARTICLE_BASE_RADIUS = 1.4;
-const PARTICLE_FOCUS_RADIUS = 2.2;
+const PARTICLE_MAX_COUNT = 14;
+const PARTICLE_BASE_RADIUS = 1.6;
+const PARTICLE_FOCUS_RADIUS = 2.4;
 const PARTICLE_BASE_SPEED = 0.00035; // fraction of path length per ms
 const PARTICLE_FOCUS_SPEED = 0.00055;
+// Number of pre-sampled (x,y) points per flow path. Each particle
+// looks up its position in this table on every frame instead of
+// calling SVG getPointAtLength, which is ~50x cheaper on the main
+// thread for ~60 particles × 60fps.
+const PARTICLE_PATH_SAMPLES = 96;
+const SVG_NS = "http://www.w3.org/2000/svg";
 
 export function createMap(selector, config) {
     const container = document.querySelector(selector);
@@ -113,8 +119,10 @@ export function createMap(selector, config) {
         .attr("role", "img")
         .attr("aria-label", "Map of Switzerland, Germany, France, Italy and Austria");
 
-    // Shared <defs> block — currently holds the arrow marker used by the
-    // flow layer. Markers inherit the path's stroke via context-stroke.
+    // Shared <defs> block — holds the arrow marker + the particle glow
+    // filter. A single group-level filter on the `.particles` layer
+    // replaces ~60 individual `drop-shadow(...)` CSS filters and cuts
+    // the per-frame raster cost by roughly an order of magnitude.
     const defs = svg.append("defs");
     defs.append("marker")
         .attr("id", "flow-arrow-head")
@@ -127,6 +135,28 @@ export function createMap(selector, config) {
         .append("path")
         .attr("d", "M 0 1 L 8 5 L 0 9 z")
         .attr("fill", "context-stroke");
+
+    // Particle glow — feGaussianBlur on the alpha channel, flood to
+    // cyan, composite on top of the source. One filter, applied once
+    // to the particle group.
+    const particleFilter = defs.append("filter")
+        .attr("id", "particle-glow")
+        .attr("x", "-50%").attr("y", "-50%")
+        .attr("width", "200%").attr("height", "200%");
+    particleFilter.append("feGaussianBlur")
+        .attr("in", "SourceAlpha")
+        .attr("stdDeviation", 2)
+        .attr("result", "blur");
+    particleFilter.append("feFlood")
+        .attr("flood-color", "#22d3ee")
+        .attr("flood-opacity", 0.7)
+        .attr("result", "flood");
+    particleFilter.append("feComposite")
+        .attr("in", "flood").attr("in2", "blur").attr("operator", "in")
+        .attr("result", "glow");
+    const merge = particleFilter.append("feMerge");
+    merge.append("feMergeNode").attr("in", "glow");
+    merge.append("feMergeNode").attr("in", "SourceGraphic");
 
     const projection = d3
         .geoConicConformal()
@@ -143,7 +173,10 @@ export function createMap(selector, config) {
     const gRings = svg.append("g").attr("class", "graticule__rings");
     const gCountries = svg.append("g").attr("class", "countries");
     const gFlows = svg.append("g").attr("class", "flows");
-    const gParticles = svg.append("g").attr("class", "particles");
+    const gParticles = svg.append("g")
+        .attr("class", "particles")
+        .attr("filter", "url(#particle-glow)");
+    const gParticlesNode = gParticles.node();
     const gLabels = svg.append("g").attr("class", "labels");
     const gCartouche = svg.append("g").attr("class", "cartouche");
 
@@ -539,21 +572,22 @@ export function createMap(selector, config) {
      * Rebuild the particle pools so the set of active flows and the
      * density of each matches the current spread/focus state.
      *
-     * Existing pools for flows that are still present are reused
-     * (keeps their t-values so there's no visual reset), but their
-     * target density/speed are refreshed. Flows that disappeared get
-     * their DOM nodes removed. Flows that just appeared get a fresh
-     * pool whose particles are initialized at staggered t values so
-     * the stream doesn't clump at the origin.
+     * Each pool carries a pre-sampled (x, y) lookup table of points
+     * along its bezier path so the hot loop never has to call
+     * getPointAtLength. Existing pools for flows that persist are
+     * reused (so t-values don't reset), but their sample table and
+     * density are refreshed. Flows that disappeared get their DOM
+     * nodes removed. New flows get a fresh pool whose particles are
+     * initialized at staggered t values so the stream doesn't clump
+     * at the origin.
      */
     function syncParticlePools(flows) {
         const nextIds = new Set(flows.map((f) => f.id));
 
-        // Drop pools whose flow no longer exists this frame.
         for (const id of Array.from(particlePools.keys())) {
             if (!nextIds.has(id)) {
                 const pool = particlePools.get(id);
-                pool.group.remove();
+                pool.groupNode.remove();
                 particlePools.delete(id);
             }
         }
@@ -561,105 +595,117 @@ export function createMap(selector, config) {
         for (const flow of flows) {
             let pool = particlePools.get(flow.id);
             if (!pool) {
-                // Create the guide-path measurement node (a hidden
-                // SVG path sharing the same `d` as the visible flow
-                // guide). We read totalLength() and getPointAtLength()
-                // off this node rather than the visible one, so tween
-                // transitions on the visible path never make particles
-                // momentarily jump.
-                const measure = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                measure.setAttribute("d", flowPath(flow.fromXY, flow.toXY));
-                measure.setAttribute("fill", "none");
-                measure.setAttribute("stroke", "none");
-                // Measure path is NOT appended to DOM; getPointAtLength
-                // still works on detached SVGPathElement in modern browsers.
-                const group = gParticles.append("g").attr("class", "particle-group");
+                const groupNode = document.createElementNS(SVG_NS, "g");
+                groupNode.setAttribute("class", "particle-group");
+                gParticlesNode.appendChild(groupNode);
                 pool = {
                     id: flow.id,
-                    measure,
-                    group,
-                    length: measure.getTotalLength(),
+                    groupNode,
+                    // Float32Array of [x0, y0, x1, y1, ...] of length
+                    // PARTICLE_PATH_SAMPLES * 2.
+                    samples: new Float32Array(PARTICLE_PATH_SAMPLES * 2),
                     particles: [],
                     touchesFocus: flow.touchesFocus,
                     spread: flow.spread,
                 };
                 particlePools.set(flow.id, pool);
             } else {
-                // Refresh the measurement path so tweens land cleanly.
-                pool.measure.setAttribute("d", flowPath(flow.fromXY, flow.toXY));
-                pool.length = pool.measure.getTotalLength();
                 pool.touchesFocus = flow.touchesFocus;
                 pool.spread = flow.spread;
             }
 
-            const targetCount = particleCountForSpread(flow.spread);
-            resizeParticlePool(pool, targetCount);
+            samplePathInto(pool.samples, flow.fromXY, flow.toXY);
+            resizeParticlePool(pool, particleCountForSpread(flow.spread));
         }
 
         ensureParticleLoop();
     }
 
     function resizeParticlePool(pool, targetCount) {
-        // Grow: add new particles with staggered t so they enter
-        // smoothly across the length rather than all from the source.
+        const radius = pool.touchesFocus
+            ? PARTICLE_FOCUS_RADIUS
+            : PARTICLE_BASE_RADIUS;
+
         while (pool.particles.length < targetCount) {
             const idx = pool.particles.length;
             const t = (idx / targetCount + Math.random() * 0.02) % 1;
-            const circle = pool.group.append("circle")
-                .attr("class", "particle")
-                .attr("r", pool.touchesFocus ? PARTICLE_FOCUS_RADIUS : PARTICLE_BASE_RADIUS)
-                .attr("cx", 0)
-                .attr("cy", 0);
-            if (pool.touchesFocus) circle.classed("particle--focus", true);
-            pool.particles.push({ t, circle });
+            const node = document.createElementNS(SVG_NS, "circle");
+            node.setAttribute("class",
+                pool.touchesFocus ? "particle particle--focus" : "particle");
+            node.setAttribute("r", radius);
+            node.setAttribute("cx", "0");
+            node.setAttribute("cy", "0");
+            pool.groupNode.appendChild(node);
+            pool.particles.push({ t, node });
         }
-        // Shrink: drop trailing circles (they'll recycle on next spread).
         while (pool.particles.length > targetCount) {
             const p = pool.particles.pop();
-            p.circle.remove();
+            p.node.remove();
         }
-        // Refresh radius + class on kept particles in case focus toggled.
-        pool.particles.forEach((p) => {
-            p.circle
-                .attr("r", pool.touchesFocus ? PARTICLE_FOCUS_RADIUS : PARTICLE_BASE_RADIUS)
-                .classed("particle--focus", pool.touchesFocus);
-        });
+        // Focus state might have flipped — refresh r/class on kept nodes.
+        for (const p of pool.particles) {
+            p.node.setAttribute("r", radius);
+            p.node.setAttribute("class",
+                pool.touchesFocus ? "particle particle--focus" : "particle");
+        }
     }
 
     function ensureParticleLoop() {
         if (particleRafId != null) return;
         particleLastTs = null;
         const tick = (ts) => {
-            if (particleLastTs == null) particleLastTs = ts;
-            const dt = Math.min(64, ts - particleLastTs);
-            particleLastTs = ts;
-
-            for (const pool of particlePools.values()) {
-                if (!pool.length) continue;
-                const speed = pool.touchesFocus
-                    ? PARTICLE_FOCUS_SPEED
-                    : PARTICLE_BASE_SPEED;
-                for (const p of pool.particles) {
-                    p.t += dt * speed;
-                    if (p.t >= 1) p.t -= 1;
-                    // Fade in at t~0, peak mid-path, fade out near t~1.
-                    // sin(pi * t) gives a clean 0→1→0 envelope.
-                    const envelope = Math.sin(Math.PI * p.t);
-                    const pt = pool.measure.getPointAtLength(p.t * pool.length);
-                    p.circle
-                        .attr("cx", pt.x)
-                        .attr("cy", pt.y)
-                        .attr("opacity", envelope);
-                }
-            }
-
             if (particlePools.size === 0) {
                 particleRafId = null;
                 return;
             }
+            if (particleLastTs == null) particleLastTs = ts;
+            const dt = Math.min(64, ts - particleLastTs);
+            particleLastTs = ts;
+
+            const lastIdx = PARTICLE_PATH_SAMPLES - 1;
+            for (const pool of particlePools.values()) {
+                const speed = pool.touchesFocus
+                    ? PARTICLE_FOCUS_SPEED
+                    : PARTICLE_BASE_SPEED;
+                const samples = pool.samples;
+                for (const p of pool.particles) {
+                    p.t += dt * speed;
+                    if (p.t >= 1) p.t -= 1;
+                    // sin(pi * t): clean 0→1→0 envelope along the path.
+                    const envelope = Math.sin(Math.PI * p.t);
+                    const i = (p.t * lastIdx) | 0;
+                    const node = p.node;
+                    // Single transform write + style opacity — two
+                    // mutations per particle per frame, no d3 wrapping.
+                    node.setAttribute(
+                        "transform",
+                        `translate(${samples[i * 2]},${samples[i * 2 + 1]})`,
+                    );
+                    node.style.opacity = envelope;
+                }
+            }
+
             particleRafId = requestAnimationFrame(tick);
         };
         particleRafId = requestAnimationFrame(tick);
+    }
+
+    /**
+     * Pre-sample a bezier flow path between two points into a
+     * typed-array lookup table. Uses a detached <path> element to
+     * call getPointAtLength once per sample; the detached path is
+     * discarded after sampling.
+     */
+    function samplePathInto(samples, fromXY, toXY) {
+        const measure = document.createElementNS(SVG_NS, "path");
+        measure.setAttribute("d", flowPath(fromXY, toXY));
+        const len = measure.getTotalLength();
+        const last = PARTICLE_PATH_SAMPLES - 1;
+        for (let i = 0; i <= last; i++) {
+            const pt = measure.getPointAtLength((i / last) * len);
+            samples[i * 2] = pt.x;
+            samples[i * 2 + 1] = pt.y;
+        }
     }
 
     function particleCountForSpread(spread) {
@@ -695,7 +741,7 @@ export function createMap(selector, config) {
             gFlows.selectAll("path.flow").remove();
             // Tear the particle pools down — the rAF loop self-halts
             // when the pool map is empty.
-            for (const pool of particlePools.values()) pool.group.remove();
+            for (const pool of particlePools.values()) pool.groupNode.remove();
             particlePools.clear();
             return;
         }
