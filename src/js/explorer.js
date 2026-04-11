@@ -9,7 +9,7 @@ const HOURS = 24;
 const FOCUS_COUNTRY = "CH";   // Default sidebar subject — the protagonist
 const PLAYBACK_INTERVAL_MS = 600;  // 1 hour per 600ms ≈ 14 seconds full day
 const VISIBILITY_THRESHOLD = 0.15; // How far into the explorer before it "activates"
-const INITIAL_HOUR = 13;      // Pick up where Step 3 left off — the peak moment
+const INITIAL_HOUR = 0;       // Start at midnight — reader scrubs forward from calm baseline
 
 const SELECTORS = {
     section: "#explorer",
