@@ -64,6 +64,12 @@ export function initExplorer(config) {
         active: false,  // has the reader scrolled the explorer into view?
     };
 
+    // Delay before the pulse hint fires once the reader has crossed
+    // into the explorer. Gives the intro headline time to land so
+    // the chrome doesn't steal attention from the copy.
+    const HINT_DELAY_MS = 1600;
+    let hintTimer = null;
+
     function render() {
         const pct = (state.hour / (HOURS - 1)) * 100;
         fill.style.width = `${pct}%`;
@@ -120,6 +126,12 @@ export function initExplorer(config) {
     const markTouched = () => {
         timeline.classList.add("is-touched");
         timeline.classList.remove("is-hinting");
+        // Also cancel any pending hint-delay timer so a late touch
+        // during the 1.6s delay doesn't produce a stale pulse.
+        if (hintTimer) {
+            clearTimeout(hintTimer);
+            hintTimer = null;
+        }
     };
 
     playBtn?.addEventListener("click", () => {
@@ -251,10 +263,17 @@ export function initExplorer(config) {
         }
 
         // Arm the hint once when the reader crosses into the explorer.
+        // Delayed ~1.6s so the headline lands before the chrome pings.
         // Skips silently if the timeline has already been touched.
         if (inExplorer && !hintArmed && !timeline.classList.contains("is-touched")) {
             hintArmed = true;
-            timeline.classList.add("is-hinting");
+            hintTimer = setTimeout(() => {
+                // Guard: reader may have touched the timeline during
+                // the delay (e.g., pressed space). Check again.
+                if (!timeline.classList.contains("is-touched")) {
+                    timeline.classList.add("is-hinting");
+                }
+            }, HINT_DELAY_MS);
         }
     };
 

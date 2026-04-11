@@ -1678,6 +1678,48 @@ body.is-iris-firing .scrollytelling__map::before {
     margin: 0;
 }
 
+/* Inline "try this" cue — an editorial callout in the intro that
+ * gives the reader a specific destination worth scrubbing to, so
+ * the timeline becomes an invitation rather than just an affordance. */
+.explorer__cue {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin: 28px 0 0;
+    padding: 16px 20px 16px 18px;
+    font-size: clamp(14px, 1vw, 16px);
+    line-height: 1.55;
+    color: var(--text-secondary);
+    background: color-mix(in srgb, var(--accent) 6%, transparent);
+    border-left: 2px solid var(--accent);
+    border-radius: 0 2px 2px 0;
+    max-width: 52ch;
+    font-variation-settings: "opsz" 16, "SOFT" 15;
+}
+
+.explorer__cue strong {
+    color: var(--accent-bright);
+    font-weight: 500;
+}
+
+.explorer__cue em {
+    font-style: italic;
+    color: var(--accent-glow);
+    font-variation-settings: "opsz" 144, "SOFT" 45;
+}
+
+.explorer__cue-marker {
+    flex-shrink: 0;
+    color: var(--accent);
+    font-size: 15px;
+    font-weight: 700;
+    opacity: 0.85;
+    /* Subtle breathing pulse to draw the eye, tied to the global
+     * 1Hz heartbeat so it feels of-a-piece rather than arbitrary. */
+    transform: translateX(calc(var(--beat) * 3px));
+    transition: transform 200ms var(--ease-default);
+}
+
 /* ---------- Timeline scrubber ---------- */
 
 .timeline {
