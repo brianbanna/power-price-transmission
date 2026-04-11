@@ -13,6 +13,7 @@ const INITIAL_HOUR = 13;      // Pick up where Step 3 left off — the peak mome
 
 const SELECTORS = {
     section: "#explorer",
+    timelineWrap: ".explorer__timeline-wrap",
     timeline: "[data-timeline]",
     play: "[data-timeline-play]",
     track: "[data-timeline-track]",
@@ -27,6 +28,7 @@ export function initExplorer(config) {
     const section = document.querySelector(SELECTORS.section);
     if (!section) return null;
 
+    const timelineWrap = document.querySelector(SELECTORS.timelineWrap);
     const timeline = section.querySelector(SELECTORS.timeline);
     const playBtn = section.querySelector(SELECTORS.play);
     const track = section.querySelector(SELECTORS.track);
@@ -198,6 +200,31 @@ export function initExplorer(config) {
         { threshold: [0, VISIBILITY_THRESHOLD, 0.5, 1] },
     );
     observer.observe(section);
+
+    // ---- Timeline dock + fixed chrome hiding ----
+    // Separate observer with threshold 0 so the timeline docks as
+    // soon as ANY pixel of the explorer touches the viewport, not
+    // only when 15% is visible. At the same time, hide the big map
+    // clock (its hour is redundant with the timeline readout) and
+    // the upper-right HUD (the explorer owns the narrative now).
+    const mapClock = document.querySelector("[data-map-clock]");
+    const hud = document.querySelector(".hud");
+    const dockObserver = new IntersectionObserver(
+        ([entry]) => {
+            const inExplorer = entry.isIntersecting;
+            if (timelineWrap) {
+                timelineWrap.classList.toggle("is-docked", inExplorer);
+            }
+            if (mapClock) {
+                mapClock.classList.toggle("is-hidden-by-explorer", inExplorer);
+            }
+            if (hud) {
+                hud.classList.toggle("is-hidden-by-explorer", inExplorer);
+            }
+        },
+        { threshold: 0 },
+    );
+    dockObserver.observe(section);
 
     // Paint the initial UI state (handle at INITIAL_HOUR, readout set)
     // without touching the map — the map only updates once the reader

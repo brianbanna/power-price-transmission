@@ -264,7 +264,8 @@ strong {
     transform: translateY(0);
 }
 
-.hud.is-hidden-by-footer {
+.hud.is-hidden-by-footer,
+.hud.is-hidden-by-explorer {
     opacity: 0 !important;
     transform: translateY(-8px) !important;
     pointer-events: none;
@@ -331,7 +332,8 @@ strong {
     transform: translateY(0);
 }
 
-.map-clock.is-hidden-by-footer {
+.map-clock.is-hidden-by-footer,
+.map-clock.is-hidden-by-explorer {
     opacity: 0;
     transform: translateY(16px);
     pointer-events: none;
@@ -1523,44 +1525,80 @@ body.is-iris-firing .scrollytelling__map::before {
  * itself adds nothing between them and the map.
  */
 
+/* ---------- Explorer layout ----------
+ *
+ * Two beats in one tall section:
+ *
+ *   Beat 1 — "Now you steer the grid" (the intro)
+ *     Full viewport. Intro text is centered and given room to breathe.
+ *     Map is fully visible behind it. Timeline is docked at the bottom
+ *     (sticky) but quiet — the reader hasn't been asked to interact yet.
+ *
+ *   Beat 2 — The scrubber itself
+ *     Reader has scrolled past the intro. Map has its own breathing
+ *     room. Timeline remains docked at the bottom via position:sticky.
+ *     The reader can scrub from here; this is the interactive moment.
+ *
+ * Section height is ~200vh so both beats have room.
+ */
+
 .explorer {
     position: relative;
     z-index: 4;
-    min-height: 100vh;
-    padding: 72px var(--gutter) 56px;
+    min-height: 200vh;
+    padding: 0;
     background: transparent;
-    /* Single hairline at the top to signal the mode shift. */
     border-top: 1px solid color-mix(in srgb, var(--accent) 20%, var(--border));
-    /* Three-row grid: intro pins top, flex middle lets the map
-     * breathe, timeline pins bottom. This prevents the intro from
-     * sprawling over the active countries mid-viewport. */
-    display: grid;
-    grid-template-rows: auto 1fr auto;
-    gap: 48px;
 }
 
-/* No top-darken gradient — the 1px accent hairline alone marks the
- * section boundary. The map stays fully visible in the explorer. */
-
-/* Three distinct wrapper rows inside the explorer grid — intro on top,
- * spacer in the middle (inherits the 1fr and stays empty), timeline
- * strip at the bottom. The inner max-width applies to each one
- * independently so they all align to the same center column. */
-.explorer__intro,
-.explorer__timeline-wrap {
-    max-width: var(--content-max);
-    margin-inline: auto;
-    width: 100%;
-}
-
+/* Beat 1 — intro. One full viewport, center-aligned column of copy
+ * anchored to the left gutter. The copy is constrained to 520px so
+ * the display headline never sprawls across the active countries. */
 .explorer__intro {
-    /* Constrain width so the display headline never sprawls over the
-     * active countries at the center of the map. */
-    max-width: 460px;
-    /* Legibility on bare map — tight dark halo under the text so any
-     * country color behind it doesn't compete with the prose. */
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6),
-                 0 0 12px rgba(10, 14, 26, 0.85);
+    min-height: 100vh;
+    padding: 12vh var(--gutter) 18vh;
+    max-width: calc(520px + var(--gutter) * 2);
+    /* Legibility on bare map — tight dark halo under the text. */
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7),
+                 0 0 12px rgba(10, 14, 26, 0.9);
+}
+
+/* Beat 2 — empty spacer that gives the map a full viewport of its own
+ * before the section ends. The timeline is sticky throughout, so
+ * scrolling through this spacer keeps the timeline pinned while the
+ * intro floats away above it. */
+.explorer__spacer {
+    height: 100vh;
+}
+
+/* Timeline dock — fixed to the viewport's bottom edge. JS toggles the
+ * is-docked class when the explorer section is intersecting the
+ * viewport (or near it), and removes the class when the reader
+ * scrolls past the footer. */
+.explorer__timeline-wrap {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: clamp(24px, 4vh, 56px);
+    z-index: 6;
+    padding: 0 var(--gutter);
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(24px);
+    transition:
+        opacity var(--dur-default) var(--ease-default),
+        transform var(--dur-default) var(--ease-default);
+}
+
+.explorer__timeline-wrap.is-docked {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.explorer__timeline-wrap .timeline {
+    max-width: var(--content-max);
+    margin: 0 auto;
 }
 
 .explorer__eyebrow {
