@@ -203,25 +203,24 @@ export function initExplorer(config) {
 
     // ---- Timeline dock + fixed chrome hiding ----
     //
-    // The timeline fades IN as a function of scroll progress across a
-    // narrow band at the top of the explorer section, rather than
-    // snapping on/off when a threshold is crossed. Maps rect.top to an
-    // opacity:
+    // Tracks the intro HEADLINE (not the whole section) as the fade
+    // anchor. The timeline starts fading in the moment the headline
+    // reaches 25% up from the bottom of the viewport, and is fully
+    // visible when the headline is at the middle of the viewport.
     //
-    //   rect.top >= FADE_START * vh  →  opacity 0  (timeline hidden)
-    //   rect.top <= FADE_END   * vh  →  opacity 1  (timeline fully docked)
-    //   between                      →  linear interpolation, eased
+    //   headline.top >= 0.75 * vh  →  opacity 0  (headline still below)
+    //   headline.top <= 0.50 * vh  →  opacity 1  (headline at mid-screen)
     //
-    // Tuned so the timeline reaches full visibility right around when
-    // the intro's headline settles into the upper third of the viewport.
-    // The map clock + HUD hide binary at the halfway point so the old
-    // chrome cleanly steps aside before the timeline reaches full opacity.
+    // Chrome (HUD + big clock) hides with the same headline-anchored
+    // rule at its own threshold.
     const mapClock = document.querySelector("[data-map-clock]");
     const hud = document.querySelector(".hud");
+    const introHeadline = section.querySelector(".explorer__headline")
+        || section.querySelector(".explorer__intro");
 
-    const FADE_START = 0.78;  // rect.top / vh — fade begins (timeline: 0)
-    const FADE_END   = 0.35;  // rect.top / vh — fade completes (timeline: 1)
-    const HIDE_CHROME_AT = 0.55; // rect.top / vh — HUD + clock hide below this
+    const FADE_START = 0.75;  // headline.top / vh — fade begins (timeline: 0)
+    const FADE_END   = 0.50;  // headline.top / vh — fade completes (timeline: 1)
+    const HIDE_CHROME_AT = 0.65; // headline.top / vh — HUD + clock hide below this
 
     const smoothstep = (a, b, t) => {
         const x = Math.max(0, Math.min(1, (t - a) / (b - a)));
@@ -229,36 +228,39 @@ export function initExplorer(config) {
     };
 
     const updateDock = () => {
-        const rect = section.getBoundingClientRect();
+        const sectionRect = section.getBoundingClientRect();
         const vh = window.innerHeight;
 
-        // Linear progress along the fade band. 0 = hidden, 1 = docked.
-        // rect.top decreases as the user scrolls down, so invert.
-        const rawTop = rect.top / vh;
-        const progress = smoothstep(FADE_START, FADE_END, rawTop);
+        // Anchor: top of the headline (or the intro box as fallback).
+        // Fall back to the section itself if neither is reachable.
+        const anchorRect = (introHeadline || section).getBoundingClientRect();
+        const anchorTop = anchorRect.top / vh;
 
-        // Extinguish opacity entirely once the explorer leaves the
-        // viewport (bottom above top, or top well past the bottom).
-        const gone = rect.bottom <= 0 || rect.top > vh;
+        // Progress ramps from 0 → 1 as the anchor rises past the two
+        // thresholds. FADE_START > FADE_END because top decreases as
+        // the page scrolls down.
+        const progress = smoothstep(FADE_START, FADE_END, anchorTop);
+
+        // Extinguish opacity entirely once the explorer has left the
+        // viewport completely (scrolled past, or not yet entered).
+        const gone = sectionRect.bottom <= 0 || sectionRect.top > vh;
         const opacity = gone ? 0 : progress;
 
         if (timelineWrap) {
             timelineWrap.style.opacity = opacity.toFixed(3);
-            // Translate-in alongside the fade for a touch of lift.
             const lift = (1 - opacity) * 24;
             timelineWrap.style.transform = `translateY(${lift}px)`;
-            // Pointer events only when the dock is at least ~half there.
             timelineWrap.style.pointerEvents = opacity > 0.45 ? "auto" : "none";
         }
 
-        // Chrome hides: binary, fires when the user has moved meaningfully
-        // into the explorer (FADE_START to HIDE_CHROME_AT range).
-        const inExplorer = rect.top < vh * HIDE_CHROME_AT && rect.bottom > 0;
+        // Chrome hides: binary, fires once the headline has risen
+        // meaningfully into the viewport.
+        const chromeHidden = !gone && anchorTop < HIDE_CHROME_AT;
         if (mapClock) {
-            mapClock.classList.toggle("is-hidden-by-explorer", inExplorer);
+            mapClock.classList.toggle("is-hidden-by-explorer", chromeHidden);
         }
         if (hud) {
-            hud.classList.toggle("is-hidden-by-explorer", inExplorer);
+            hud.classList.toggle("is-hidden-by-explorer", chromeHidden);
         }
     };
     // rAF-throttle so opacity writes happen at most once per frame.
