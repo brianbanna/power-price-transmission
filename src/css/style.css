@@ -1628,6 +1628,21 @@ body.is-iris-firing .scrollytelling__map::before {
     margin-top: auto;
     padding: 0 var(--gutter) 0;
     z-index: 6;
+    /* Fades in synced with the explorer headline becoming visible.
+     * Default state is invisible; the .is-visible class is toggled
+     * by an IntersectionObserver in explorer.js watching the
+     * .explorer__headline element. */
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 900ms var(--ease-cinematic),
+                transform 900ms var(--ease-cinematic);
+    pointer-events: none;
+}
+
+.explorer__timeline-wrap.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
 }
 
 .explorer__timeline-wrap .timeline {
@@ -1836,7 +1851,11 @@ body.is-iris-firing .scrollytelling__map::before {
     height: 36px;
     cursor: grab;
     user-select: none;
-    touch-action: none;
+    /* `pan-y` lets the browser handle vertical scroll natively while
+     * we take horizontal pan events for drag-scrubbing. Using `none`
+     * would swallow all touch gestures and block page scroll whenever
+     * a finger touched the track. */
+    touch-action: pan-y;
     outline: none;
 }
 

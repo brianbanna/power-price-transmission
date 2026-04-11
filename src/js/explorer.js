@@ -290,6 +290,30 @@ export function initExplorer(config) {
     window.addEventListener("scroll", scheduleChrome, { passive: true });
     window.addEventListener("resize", scheduleChrome);
 
+    // ---- Timeline fade-in synced to the headline ----
+    //
+    // Watch the explorer headline. When it crosses into the viewport
+    // (~30% visible), add `.is-visible` to the timeline wrap so the
+    // CSS opacity + transform transition fades the timeline up at the
+    // same beat the title appears. The reader perceives the title and
+    // the scrubber as appearing together as one composition.
+    //
+    // Once visible, stays visible for the lifetime of the page so
+    // scrolling back doesn't make the timeline blink.
+    const headlineEl = section.querySelector(".explorer__headline");
+    if (headlineEl && timelineWrap) {
+        const fadeObserver = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    timelineWrap.classList.add("is-visible");
+                    fadeObserver.disconnect();
+                }
+            },
+            { threshold: 0.35 },
+        );
+        fadeObserver.observe(headlineEl);
+    }
+
     // Paint the initial UI state (handle at INITIAL_HOUR, readout set)
     // without touching the map — the map only updates once the reader
     // actually scrolls the explorer into view.
