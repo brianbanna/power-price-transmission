@@ -202,29 +202,35 @@ export function initExplorer(config) {
     observer.observe(section);
 
     // ---- Timeline dock + fixed chrome hiding ----
-    // Separate observer with threshold 0 so the timeline docks as
-    // soon as ANY pixel of the explorer touches the viewport, not
-    // only when 15% is visible. At the same time, hide the big map
-    // clock (its hour is redundant with the timeline readout) and
-    // the upper-right HUD (the explorer owns the narrative now).
+    // Toggle is-docked on the timeline based on whether the explorer
+    // is in view. Scroll-driven (passive listener on window) rather
+    // than an IntersectionObserver because IO's async batching and
+    // first-paint quirks were causing the timeline to never initially
+    // show up on some scroll paths. A plain rect check on scroll is
+    // simpler, completely deterministic, and cheap enough since we
+    // just read bounding rects.
     const mapClock = document.querySelector("[data-map-clock]");
     const hud = document.querySelector(".hud");
-    const dockObserver = new IntersectionObserver(
-        ([entry]) => {
-            const inExplorer = entry.isIntersecting;
-            if (timelineWrap) {
-                timelineWrap.classList.toggle("is-docked", inExplorer);
-            }
-            if (mapClock) {
-                mapClock.classList.toggle("is-hidden-by-explorer", inExplorer);
-            }
-            if (hud) {
-                hud.classList.toggle("is-hidden-by-explorer", inExplorer);
-            }
-        },
-        { threshold: 0 },
-    );
-    dockObserver.observe(section);
+
+    const updateDock = () => {
+        const rect = section.getBoundingClientRect();
+        const vh = window.innerHeight;
+        // "In the explorer" if any part of the section overlaps the
+        // viewport. (top < vh) && (bottom > 0).
+        const inExplorer = rect.top < vh && rect.bottom > 0;
+        if (timelineWrap) {
+            timelineWrap.classList.toggle("is-docked", inExplorer);
+        }
+        if (mapClock) {
+            mapClock.classList.toggle("is-hidden-by-explorer", inExplorer);
+        }
+        if (hud) {
+            hud.classList.toggle("is-hidden-by-explorer", inExplorer);
+        }
+    };
+    updateDock();
+    window.addEventListener("scroll", updateDock, { passive: true });
+    window.addEventListener("resize", updateDock);
 
     // Paint the initial UI state (handle at INITIAL_HOUR, readout set)
     // without touching the map — the map only updates once the reader
