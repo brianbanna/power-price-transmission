@@ -1527,12 +1527,20 @@ body.is-iris-firing .scrollytelling__map::before {
 
 /* ---------- Explorer layout ----------
  *
- * Single-viewport composition: intro upper-left, map behind (map is
- * position:fixed globally), timeline at the bottom. The intro and
- * timeline are both in normal document flow — they scroll naturally
- * with the page. An empty outro spacer below the timeline adds room
- * between the locked-in composition and the footer so the reader
- * can scroll "out" of the explorer without slamming into credits.
+ * The explorer has two structural parts:
+ *
+ *   .explorer__stage   — exactly one viewport tall. Flex column with
+ *                        the intro at the top and the timeline at
+ *                        the bottom (pushed there by margin-top:auto).
+ *                        When the reader scrolls the stage into view,
+ *                        intro and timeline are visible SIMULTANEOUSLY,
+ *                        one at the top of the viewport and one at
+ *                        the bottom. As the reader continues scrolling,
+ *                        the whole stage drifts upward as a single
+ *                        cohesive block.
+ *
+ *   .explorer__outro   — empty 70vh scroll track between the stage
+ *                        and the footer so the hand-off isn't abrupt.
  */
 
 .explorer {
@@ -1541,18 +1549,17 @@ body.is-iris-firing .scrollytelling__map::before {
     padding: 0;
     background: transparent;
     border-top: 1px solid color-mix(in srgb, var(--accent) 20%, var(--border));
-    /* Grid-based layout so the intro sits at the top and the timeline
-     * at the bottom of a single viewport, with the outro as a scroll
-     * track below. */
+}
+
+.explorer__stage {
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
 }
 
-/* Intro — normal flow. Reads as a full-viewport hero for the explorer
- * mode. When the reader keeps scrolling past the intro, it naturally
- * drifts upward with the page, along with the timeline below it. */
+/* Intro — top of the stage. Constrained width so the display
+ * headline never sprawls across the active countries in the map. */
 .explorer__intro {
-    min-height: 70vh;
     padding: 12vh var(--gutter) 0;
     max-width: calc(520px + var(--gutter) * 2);
     /* Legibility on bare map — tight dark halo under the text. */
@@ -1560,18 +1567,19 @@ body.is-iris-firing .scrollytelling__map::before {
                  0 0 12px rgba(10, 14, 26, 0.9);
 }
 
-/* Outro — empty scroll track between the timeline and the footer so
+/* Outro — empty scroll track between the stage and the footer so
  * the hand-off doesn't feel like a cliff. */
 .explorer__outro {
-    height: 60vh;
+    height: 70vh;
     pointer-events: none;
 }
 
-/* Timeline wrap — normal document flow inside the explorer, sitting
- * below the intro. As the reader scrolls, it moves naturally with
- * the intro above it, so the whole composition lifts together. */
+/* Timeline wrap — bottom of the stage. `margin-top: auto` pushes it
+ * to the bottom of the flex column so the intro and timeline are
+ * the two endpoints of the same viewport-tall block. */
 .explorer__timeline-wrap {
-    padding: 4vh var(--gutter) 0;
+    margin-top: auto;
+    padding: 0 var(--gutter) clamp(24px, 4vh, 56px);
     opacity: 0;
     transform: translateY(24px);
     /* JS scroll handler writes opacity and transform directly on
