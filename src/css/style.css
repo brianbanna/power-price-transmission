@@ -1527,48 +1527,41 @@ body.is-iris-firing .scrollytelling__map::before {
 
 /* ---------- Explorer layout ----------
  *
- * Two beats in one tall section:
- *
- *   Beat 1 — "Now you steer the grid" (the intro)
- *     Full viewport. Intro text is centered and given room to breathe.
- *     Map is fully visible behind it. Timeline is docked at the bottom
- *     (sticky) but quiet — the reader hasn't been asked to interact yet.
- *
- *   Beat 2 — The scrubber itself
- *     Reader has scrolled past the intro. Map has its own breathing
- *     room. Timeline remains docked at the bottom via position:sticky.
- *     The reader can scrub from here; this is the interactive moment.
- *
- * Section height is ~200vh so both beats have room.
+ * The explorer is a single viewport section. The reader enters it
+ * from the last narrative step, the intro appears in the upper-left,
+ * the map is fully visible in the background, and the timeline dock
+ * fades in at the bottom. Reading the intro + seeing the timeline =
+ * ready to interact. Further vertical scroll goes directly to the
+ * footer; the timeline is meant to be scrubbed HORIZONTALLY, not
+ * scrolled past vertically.
  */
 
 .explorer {
     position: relative;
     z-index: 4;
-    min-height: 200vh;
+    min-height: 100vh;
     padding: 0;
     background: transparent;
     border-top: 1px solid color-mix(in srgb, var(--accent) 20%, var(--border));
 }
 
-/* Beat 1 — intro. One full viewport, center-aligned column of copy
- * anchored to the left gutter. The copy is constrained to 520px so
- * the display headline never sprawls across the active countries. */
+/* Intro — fills the explorer's viewport with the headline + lede
+ * anchored to the upper-left. Padding on the bottom leaves room for
+ * the docked timeline strip. */
 .explorer__intro {
     min-height: 100vh;
-    padding: 12vh var(--gutter) 18vh;
+    padding: 12vh var(--gutter) 24vh;
     max-width: calc(520px + var(--gutter) * 2);
     /* Legibility on bare map — tight dark halo under the text. */
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7),
                  0 0 12px rgba(10, 14, 26, 0.9);
 }
 
-/* Beat 2 — empty spacer that gives the map a full viewport of its own
- * before the section ends. The timeline is sticky throughout, so
- * scrolling through this spacer keeps the timeline pinned while the
- * intro floats away above it. */
+/* The spacer is no longer needed — the explorer is one viewport
+ * tall now. Keep a zero-height rule so stray DOM references don't
+ * collapse layout if the element is still present. */
 .explorer__spacer {
-    height: 100vh;
+    display: none;
 }
 
 /* Timeline dock — fixed to the viewport's bottom edge. The opacity
