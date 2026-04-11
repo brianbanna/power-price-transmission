@@ -855,6 +855,12 @@ strong {
     z-index: 0;
     background: var(--bg-base);
     overflow: hidden;
+    /* Perspective on the sticky container — children tilt with
+     * --map-tilt driven from scroll position. Only the <svg> itself
+     * picks up the rotation; the circadian tint + vignette stay flat
+     * as atmospheric layers, which reads as "ground under sky". */
+    perspective: 2400px;
+    perspective-origin: 50% 38%;
 }
 
 /* Circadian tint layer — unchanged, sits above the map SVG. */
@@ -879,6 +885,29 @@ strong {
      * saturation for map-focused beats (hero reveal, explorer). */
     filter: saturate(1) brightness(1);
     transition: filter var(--dur-default) var(--ease-default);
+    /* 3D tilt driven by scroll. --map-tilt is written by
+     * setupMapTilt() in main.js; ranges 0 (flat, hero) → 1 (peak
+     * moment, ~11°) → holds lower through the explorer. The
+     * origin sits below the visual center so the tilt feels like
+     * the northern edge of the map rising to meet the reader. */
+    transform: rotateX(calc(var(--map-tilt, 0) * 11deg));
+    transform-origin: 50% 62%;
+    will-change: transform;
+}
+
+/* When the reader is at the peak moment (Step 3), the focus country
+ * physically lifts off the plane — a subtle translateY + scale +
+ * cyan drop-shadow reads as "rising" because of the surrounding
+ * rotateX tilt. transform-box: fill-box lets us scale the SVG path
+ * around its own center rather than the SVG coordinate origin. */
+.country.is-focus-country {
+    transform-box: fill-box;
+    transform-origin: center;
+    transform: translateY(-6px) scale(1.018);
+    filter: drop-shadow(0 10px 16px color-mix(in srgb, var(--accent-glow) 32%, transparent))
+            drop-shadow(0 0 24px color-mix(in srgb, var(--accent) 40%, transparent));
+    transition: transform var(--dur-default) var(--ease-overshoot),
+                filter var(--dur-default) var(--ease-default);
 }
 
 body.is-narrative-active .scrollytelling__map svg {

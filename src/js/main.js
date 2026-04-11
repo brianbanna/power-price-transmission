@@ -21,6 +21,7 @@ async function init() {
     setupCursorLight();
     setupSpotTape(showcase);
     setupCircadianTint();
+    setupMapTilt();
     setupIrisWipe();
     setupFooterHide();
 
@@ -136,6 +137,79 @@ function setupCircadianTint() {
     };
     update();
     window.addEventListener("scroll", update, { passive: true });
+}
+
+/**
+ * Map tilt — a scroll-driven 3D perspective rotation on the sticky
+ * map SVG. Nothing happens in the hero (the map is hidden behind it);
+ * as the reader enters the scene and approaches the peak-moment card,
+ * the map rotates ~11° on the X axis, as if tipping up to face the
+ * reader. The tilt eases back down through the explorer.
+ *
+ * The raw signal comes from the scene's bounding rect so the curve
+ * survives layout changes without recalculation.
+ *
+ * Implementation note: this is a pure presentation layer — the tilt
+ * value is written to `--map-tilt` on `:root`, and the CSS transform
+ * on `.scene__map svg` multiplies it by the max angle. No DOM writes
+ * happen per-frame except the single custom-property update.
+ */
+const MAP_TILT_MAX = 1;
+const MAP_TILT_EXPLORER = 0.42;
+
+function setupMapTilt() {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const scene = document.querySelector(".scene");
+    const peakCard = document.querySelector('.step[data-step="3"]');
+    if (!scene) return;
+    const root = document.documentElement;
+
+    let ticking = false;
+    const update = () => {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(() => {
+            const vh = window.innerHeight;
+            const sceneRect = scene.getBoundingClientRect();
+
+            // Scene hasn't entered the viewport — map is effectively
+            // hidden behind the hero. Keep the tilt at 0 so the first
+            // reveal lands on a flat plane.
+            if (sceneRect.top > vh * 0.65) {
+                root.style.setProperty("--map-tilt", "0");
+                ticking = false;
+                return;
+            }
+
+            // Peak target — the tilt crescendoes when the peak-moment
+            // card (Step 3) is centered in the viewport. That's the
+            // beat where CH drops below DE in the narrative copy.
+            let tilt = 0.2; // baseline entry tilt once scene is visible
+            if (peakCard) {
+                const peakRect = peakCard.getBoundingClientRect();
+                const peakCenter = peakRect.top + peakRect.height / 2;
+                const distFromMid = Math.abs(peakCenter - vh * 0.5);
+                // Gaussian-ish falloff: full tilt when card is centered,
+                // decaying to ~0.3 beyond ±60% of viewport height.
+                const proximity = Math.max(0, 1 - distFromMid / (vh * 0.6));
+                tilt = Math.max(tilt, proximity * MAP_TILT_MAX);
+            }
+
+            // Past the narrative, the explorer wants a gentler persistent
+            // tilt so the scrubbing reader feels like they're looking
+            // "into" the map rather than straight at it.
+            if (sceneRect.bottom < vh * 0.9 && sceneRect.bottom > 0) {
+                tilt = Math.max(tilt, MAP_TILT_EXPLORER);
+            }
+
+            root.style.setProperty("--map-tilt", tilt.toFixed(3));
+            ticking = false;
+        });
+    };
+
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
 }
 
 /**
