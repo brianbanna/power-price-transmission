@@ -1160,7 +1160,14 @@ body.is-iris-firing .scrollytelling__map::before {
             drop-shadow(0 0 2px var(--accent-glow));
 }
 
-/* ---------- Narrative column ---------- */
+/* ---------- Narrative column ----------
+ *
+ * The bottom padding is intentionally short (40vh instead of 100vh)
+ * so the emotional peak of Step 3 — the −145.12 hero number — flows
+ * into the explorer intro quickly. Agent E's insight: the reader's
+ * emotional momentum from the reveal shouldn't be spent on empty
+ * scroll. The scrubber is the reveal's proof; don't make them wait.
+ */
 
 .scene__narrative,
 .scrollytelling__narrative {
@@ -1169,7 +1176,7 @@ body.is-iris-firing .scrollytelling__map::before {
     pointer-events: none;
     max-width: var(--narrative-col);
     margin-left: var(--gutter);
-    padding-block: 45vh 100vh;
+    padding-block: 45vh 40vh;
     display: flex;
     flex-direction: column;
     gap: 70vh;
@@ -1590,7 +1597,7 @@ body.is-iris-firing .scrollytelling__map::before {
 }
 
 .explorer__intro {
-    padding: 14vh var(--gutter) 0;
+    padding: 10vh var(--gutter) 0;
     max-width: calc(520px + var(--gutter) * 2);
     /* Legibility on bare map — tight dark halo under the text. */
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7),
