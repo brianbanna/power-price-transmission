@@ -860,15 +860,19 @@ strong {
 
 .hero__coldopen {
     position: absolute;
-    left: 50%;
-    bottom: clamp(180px, 22vh, 260px);
-    transform: translate(-50%, 14px) scale(0.96);
+    /* Land in the empty right-hand half of the hero, vertically
+     * aligned with the middle of the title block. The title is
+     * max-width: 14ch on the left, so this zone is clear. */
+    right: clamp(40px, 5vw, 120px);
+    top: clamp(180px, 24%, 300px);
+    transform: translate(12px, -8px) scale(0.96);
     opacity: 0;
     pointer-events: none;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 14px;
+    align-items: flex-end;
+    text-align: right;
+    gap: 12px;
     transition: opacity 480ms var(--ease-cinematic),
                 transform 600ms var(--ease-cinematic);
     z-index: 5;
@@ -876,14 +880,21 @@ strong {
 
 .hero__coldopen.is-showing {
     opacity: 1;
-    transform: translate(-50%, 0) scale(1);
+    transform: translate(0, 0) scale(1);
 }
 
 .hero__coldopen.is-fading {
     opacity: 0;
-    transform: translate(-50%, -18px) scale(0.96);
+    transform: translate(0, -18px) scale(0.96);
     transition: opacity 720ms var(--ease-cinematic),
                 transform 820ms var(--ease-cinematic);
+}
+
+/* On narrow viewports the title wraps wide and there's no room in
+ * the right gutter for the counter without crashing into the title.
+ * Hide it — the letter-by-letter reveal alone carries the moment. */
+@media (max-width: 1180px) {
+    .hero__coldopen { display: none; }
 }
 
 .hero__coldopen-eyebrow {
@@ -917,7 +928,7 @@ strong {
 }
 
 .hero__coldopen-value {
-    font-size: clamp(48px, 7.5vw, 112px);
+    font-size: clamp(42px, 5.5vw, 84px);
     font-weight: 400;
     letter-spacing: -0.02em;
     line-height: 0.9;
@@ -927,7 +938,7 @@ strong {
     /* The value tween rewrites the text every frame — min-width keeps
      * the surrounding geometry from jittering as digits switch. */
     min-width: 8ch;
-    text-align: center;
+    text-align: right;
     display: inline-block;
 }
 
