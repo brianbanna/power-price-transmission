@@ -826,25 +826,39 @@ strong {
     50%      { opacity: 0.5; transform: scale(0.9); }
 }
 
-/* ---------- Scrollytelling (map-dominant) ---------- */
+/* ---------- Scene (shared parent of narrative + explorer) ----------
+ *
+ * The map is `position: sticky` within this container. It stays
+ * pinned as the reader scrolls the narrative cards and the explorer
+ * intro, and naturally releases when the scene ends and the footer
+ * begins. No JS tricks, no opacity hacks, no fixed-vs-flow conflicts.
+ *
+ * Legacy class names `.scrollytelling` and `.scrollytelling__map` are
+ * aliased to `.scene` and `.scene__map` below for backward-compat with
+ * any JS selectors still referencing them.
+ */
 
-.scrollytelling {
+.scene {
     position: relative;
     width: 100%;
 }
 
+.scene__map,
 .scrollytelling__map {
-    position: fixed;
-    inset: 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    /* Zero effective height in flow — the narrative and explorer
+     * stack normally on top of the sticky map rather than below it.
+     * This is the canonical "sticky background" trick. */
+    margin-bottom: -100vh;
     z-index: 0;
     background: var(--bg-base);
     overflow: hidden;
 }
 
-/* Circadian tint layer — a soft-light color wash driven by scroll
- * position via the --atmos-tint custom property. Sits above the map
- * SVG but below the vignette + grain, so it colors the countries
- * without ever competing with the price colors that land in Phase 3. */
+/* Circadian tint layer — unchanged, sits above the map SVG. */
+.scene__map .circadian,
 .scrollytelling__map .circadian {
     position: absolute;
     inset: 0;
@@ -855,6 +869,7 @@ strong {
     transition: background 700ms var(--ease-default);
 }
 
+.scene__map svg,
 .scrollytelling__map svg {
     display: block;
     width: 100%;
@@ -1147,6 +1162,7 @@ body.is-iris-firing .scrollytelling__map::before {
 
 /* ---------- Narrative column ---------- */
 
+.scene__narrative,
 .scrollytelling__narrative {
     position: relative;
     z-index: 3;
@@ -1543,17 +1559,36 @@ body.is-iris-firing .scrollytelling__map::before {
  *                        and the footer so the hand-off isn't abrupt.
  */
 
+/* ---------- Explorer (inside the scene) ----------
+ *
+ * The explorer is a 100vh section that sits below the narrative
+ * inside the same `.scene` container as the sticky map. Structure:
+ *
+ *   .scene__explorer    — 100vh relative-positioned section
+ *   .explorer__intro    — normal flow, rides the top of the section
+ *   .explorer__timeline-wrap — position:sticky bottom, docks to
+ *                              viewport bottom while the section is
+ *                              scrolling through the viewport
+ *
+ * When the reader enters the explorer, the intro enters naturally
+ * and the sticky timeline docks. They both ride together with the
+ * rest of the document. When the section ends, the timeline un-docks
+ * and the scene ends — the sticky map slides away and the footer
+ * takes over. No fade JS, no position:fixed fights.
+ */
+
+.scene__explorer,
 .explorer {
     position: relative;
     z-index: 4;
+    min-height: 100vh;
     padding: 0;
     background: transparent;
     border-top: 1px solid color-mix(in srgb, var(--accent) 20%, var(--border));
+    display: flex;
+    flex-direction: column;
 }
 
-/* Intro — normal flow at the top of the explorer section.
- * Constrained width so the display headline never sprawls across
- * the active countries in the map. */
 .explorer__intro {
     padding: 14vh var(--gutter) 0;
     max-width: calc(520px + var(--gutter) * 2);
@@ -1562,41 +1597,30 @@ body.is-iris-firing .scrollytelling__map::before {
                  0 0 12px rgba(10, 14, 26, 0.9);
 }
 
-/* Trail — empty scroll track BELOW the intro. Its only job is to
- * give the reader scrollable distance while the fixed timeline dock
- * stays visible. As the reader scrolls through the trail:
- *   - intro scrolls naturally upward (document flow)
- *   - timeline stays pinned at the viewport bottom (position:fixed)
- *   - JS fades the timeline out as the intro exits the top of the
- *     viewport so the footer can come in cleanly.
- * Tuned so the reader has ~60vh of "locked-looking" scroll before
- * the stage ends and the footer arrives. */
-.explorer__trail {
-    height: 60vh;
-    pointer-events: none;
-}
-
-/* No outro spacer — dead class retained for safety. */
-.explorer__outro {
+/* Legacy classes that are no longer in the HTML — kept as zero-sized
+ * no-ops so stray references don't break. */
+.explorer__trail,
+.explorer__outro,
+.explorer__stage,
+.explorer__spacer {
     display: none;
 }
 
-/* Timeline wrap — fixed to the viewport's bottom edge so it stays
- * in a consistent visual position during the fade-in. The opacity
- * is written by the JS scroll handler as a function of the headline's
- * position on the page. As the reader continues scrolling past the
- * stage, the JS fades it back out so the footer can take over. */
+/* Timeline wrap — sticky to the explorer section's bottom edge.
+ * When the reader scrolls the explorer into view, this docks to the
+ * viewport bottom. When the explorer ends, it naturally un-docks
+ * and the footer rises. No JS fade, no fixed-position fight — the
+ * browser does the work via native sticky positioning.
+ *
+ * `margin-top: auto` pushes the wrap to the bottom of the explorer's
+ * flex column, so the bottom of the wrap is at the bottom of the
+ * section. `bottom: clamp(...)` applies the sticky offset. */
 .explorer__timeline-wrap {
-    position: fixed;
-    left: 0;
-    right: 0;
+    position: sticky;
     bottom: clamp(24px, 4vh, 56px);
+    margin-top: auto;
+    padding: 0 var(--gutter) 0;
     z-index: 6;
-    padding: 0 var(--gutter);
-    pointer-events: none;
-    opacity: 0;
-    transform: translateY(24px);
-    will-change: opacity, transform;
 }
 
 .explorer__timeline-wrap .timeline {
@@ -2073,6 +2097,7 @@ body.is-iris-firing .scrollytelling__map::before {
         font-size: clamp(48px, 12vw, 88px);
     }
 
+    .scene__narrative,
     .scrollytelling__narrative {
         margin-inline: 16px;
         padding-block: 30vh 60vh;

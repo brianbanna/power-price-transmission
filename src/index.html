@@ -99,8 +99,16 @@
         </div>
     </header>
 
-    <div class="scrollytelling">
-        <aside class="scrollytelling__map" id="map-container" aria-label="Map of central European electricity prices">
+    <!--
+        Scene — the shared parent container of the narrative + explorer.
+        The map is `position: sticky` within the scene, so it stays
+        pinned as the reader scrolls through the narrative AND the
+        explorer, then naturally releases when the scene ends and the
+        footer begins. This is the single architectural insight that
+        replaces all the old fade-based workarounds.
+    -->
+    <div class="scene">
+        <aside class="scene__map" id="map-container" aria-label="Map of central European electricity prices">
             <!-- Map canvas. Populated by js/map.js. -->
             <div class="circadian" aria-hidden="true"></div>
         </aside>
@@ -109,7 +117,7 @@
              Populated by js/narrative.js when a step activates. -->
         <svg class="leader-overlay" id="leader-overlay" aria-hidden="true"></svg>
 
-        <main class="scrollytelling__narrative" id="narrative">
+        <main class="scene__narrative" id="narrative">
             <article class="step" data-step="1" data-hour="0" data-country="CH" data-timestamp="2024-05-12 00:00 CET" data-meta="Midnight baseline">
                 <p class="step__eyebrow mono"><span class="step__number">01</span> A Sunday in spring</p>
                 <h2 class="step__headline">At midnight, the grid <em>breathes</em> in rhythm.</h2>
@@ -152,69 +160,66 @@
                 <div class="step__chart" data-step-chart aria-hidden="true"></div>
             </article>
         </main>
-    </div>
 
-    <!--
-        Explorer — a "now you steer the grid" mode that keeps the map
-        visible in the background and gives the reader a scrubbable
-        timeline spanning the showcase day. Phase 7.1-7.3.
-    -->
-    <section class="explorer" id="explorer" aria-label="Interactive explorer">
-        <div class="explorer__intro">
-            <p class="explorer__eyebrow mono"><span class="explorer__eyebrow-dot" aria-hidden="true"></span>Now you steer the grid</p>
-            <h2 class="explorer__headline">Scrub through <em>one day</em> of European electricity.</h2>
-            <p class="explorer__lede">
-                Drag the playhead, or press play. The map above tracks your
-                position across <strong class="mono">May 12, 2024</strong> — the same
-                Sunday the story just told.
-            </p>
-        </div>
-
-        <!-- Extra scroll track so the reader can keep scrolling past
-             the intro while the timeline stays docked. When they
-             scroll beyond this, the stage ends and the footer rises. -->
-        <div class="explorer__trail" aria-hidden="true"></div>
-
-        <div class="explorer__timeline-wrap">
-            <div class="timeline" data-timeline>
-                <div class="timeline__chrome">
-                    <button
-                        type="button"
-                        class="timeline__play"
-                        data-timeline-play
-                        aria-label="Play timeline"
-                    >
-                        <svg class="timeline__play-icon" viewBox="0 0 24 24" aria-hidden="true">
-                            <path class="timeline__play-shape" d="M7 4 L20 12 L7 20 Z"></path>
-                        </svg>
-                    </button>
-
-                    <div class="timeline__readout">
-                        <p class="timeline__readout-label mono">Hour</p>
-                        <p class="timeline__readout-value mono" data-timeline-hour>00:00</p>
-                    </div>
-
-                    <div class="timeline__legend mono" aria-hidden="true">
-                        <span>Drag to scrub</span>
-                        <span class="timeline__legend-sep">·</span>
-                        <span>Space to play</span>
-                    </div>
-                </div>
-
-                <div class="timeline__track" data-timeline-track tabindex="0" role="slider" aria-label="Hour of day" aria-valuemin="0" aria-valuemax="23" aria-valuenow="0">
-                    <div class="timeline__rail"></div>
-                    <div class="timeline__ticks" data-timeline-ticks></div>
-                    <div class="timeline__fill" data-timeline-fill></div>
-                    <div class="timeline__handle" data-timeline-handle>
-                        <div class="timeline__handle-dot"></div>
-                        <div class="timeline__handle-ring"></div>
-                    </div>
-                </div>
-
-                <div class="timeline__hours mono" aria-hidden="true" data-timeline-hours></div>
+        <!--
+            Explorer — lives INSIDE the same scene as the narrative so
+            the sticky map stays in place as the reader enters it. The
+            timeline is itself `position: sticky; bottom: 32px` so it
+            docks to the viewport while the reader is in the explorer,
+            and naturally un-docks when the explorer ends.
+        -->
+        <section class="scene__explorer" id="explorer" aria-label="Interactive explorer">
+            <div class="explorer__intro">
+                <p class="explorer__eyebrow mono"><span class="explorer__eyebrow-dot" aria-hidden="true"></span>Now you steer the grid</p>
+                <h2 class="explorer__headline">Scrub through <em>one day</em> of European electricity.</h2>
+                <p class="explorer__lede">
+                    Drag the playhead, or press play. The map above tracks your
+                    position across <strong class="mono">May 12, 2024</strong> — the same
+                    Sunday the story just told.
+                </p>
             </div>
-        </div>
-    </section>
+
+            <div class="explorer__timeline-wrap">
+                <div class="timeline" data-timeline>
+                    <div class="timeline__chrome">
+                        <button
+                            type="button"
+                            class="timeline__play"
+                            data-timeline-play
+                            aria-label="Play timeline"
+                        >
+                            <svg class="timeline__play-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                <path class="timeline__play-shape" d="M7 4 L20 12 L7 20 Z"></path>
+                            </svg>
+                        </button>
+
+                        <div class="timeline__readout">
+                            <p class="timeline__readout-label mono">Hour</p>
+                            <p class="timeline__readout-value mono" data-timeline-hour>00:00</p>
+                        </div>
+
+                        <div class="timeline__legend mono" aria-hidden="true">
+                            <span>Drag to scrub</span>
+                            <span class="timeline__legend-sep">·</span>
+                            <span>Space to play</span>
+                        </div>
+                    </div>
+
+                    <div class="timeline__track" data-timeline-track tabindex="0" role="slider" aria-label="Hour of day" aria-valuemin="0" aria-valuemax="23" aria-valuenow="0">
+                        <div class="timeline__rail"></div>
+                        <div class="timeline__ticks" data-timeline-ticks></div>
+                        <div class="timeline__fill" data-timeline-fill></div>
+                        <div class="timeline__handle" data-timeline-handle>
+                            <div class="timeline__handle-dot"></div>
+                            <div class="timeline__handle-ring"></div>
+                        </div>
+                    </div>
+
+                    <div class="timeline__hours mono" aria-hidden="true" data-timeline-hours></div>
+                </div>
+            </div>
+        </section>
+    </div>
 
     <footer class="site-footer">
         <div class="site-footer__inner">
