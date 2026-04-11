@@ -17,6 +17,8 @@ async function init() {
     initNarrative("#narrative", { map, showcase });
     initExplorer({ map, showcase });
 
+    setupHeroTitleReveal();
+    setupHeroColdOpen();
     setupHeroParallax();
     setupCursorLight();
     setupSpotTape(showcase);
@@ -137,6 +139,144 @@ function setupCircadianTint() {
     };
     update();
     window.addEventListener("scroll", update, { passive: true });
+}
+
+/**
+ * Hero title reveal — split each title line into per-character spans
+ * so the reveal feels like the letters are being struck one at a time
+ * in Fraunces, rather than whole lines sliding up in unison.
+ *
+ * The walker preserves any wrapping element (`<em>`, the `.hero__amp`,
+ * the terminal mark) so their styling continues to apply. Whitespace
+ * is left as plain text and doesn't get its own span — spaces don't
+ * need to animate, and keeping them as text nodes means the browser
+ * handles line-breaking naturally.
+ *
+ * Per-line base delays stagger the start; per-char intra-line delays
+ * stagger each letter by CHAR_STAGGER_MS so longer lines take longer
+ * to finish.
+ */
+const TITLE_LINE_BASE_DELAYS_MS = [400, 780, 1160];
+const TITLE_CHAR_STAGGER_MS = 36;
+
+function setupHeroTitleReveal() {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const lines = Array.from(document.querySelectorAll(".hero__title-line"));
+    if (lines.length === 0) return;
+
+    lines.forEach((line, lineIdx) => {
+        const baseDelay = TITLE_LINE_BASE_DELAYS_MS[lineIdx] ?? 400;
+        let charIdx = 0;
+
+        const walk = (node) => {
+            // Text node — wrap each non-space char in a char span; leave
+            // whitespace as plain text so the browser can wrap lines.
+            if (node.nodeType === Node.TEXT_NODE) {
+                const text = node.textContent;
+                if (!text) return [];
+                const frag = document.createDocumentFragment();
+                for (const ch of text) {
+                    if (ch === " " || ch === "\u00A0") {
+                        frag.appendChild(document.createTextNode(ch));
+                        continue;
+                    }
+                    const span = document.createElement("span");
+                    span.className = "hero__title-char";
+                    span.textContent = ch;
+                    span.style.setProperty(
+                        "--char-delay",
+                        `${baseDelay + charIdx * TITLE_CHAR_STAGGER_MS}ms`,
+                    );
+                    charIdx += 1;
+                    frag.appendChild(span);
+                }
+                node.parentNode.replaceChild(frag, node);
+                return;
+            }
+
+            // Element node — recurse into children (clone array since
+            // the mutation swaps children as we go).
+            if (node.nodeType === Node.ELEMENT_NODE) {
+                // Skip the decorative terminal mark — it already has
+                // its own treatment and doesn't need to be split.
+                if (node.classList?.contains("hero__title-mark")) return;
+                const children = Array.from(node.childNodes);
+                for (const child of children) walk(child);
+            }
+        };
+
+        walk(line);
+        line.classList.add("is-split");
+    });
+}
+
+/**
+ * Hero cold-open teaser — after the title has fully landed (~2.3s in),
+ * a single large price materializes, counts the reader from €45
+ * (the midnight baseline) down to −€145.12 (the Sunday trough), holds
+ * briefly, then fades out. The whole sequence is ~2.2s and plays once
+ * per page load.
+ *
+ * The value tween is cubic-eased so the number doesn't feel like a
+ * uniform drop — it accelerates through the negative crossing and
+ * slows as it approaches the final reading, echoing a real market
+ * moving through a shock.
+ */
+const COLDOPEN_START_DELAY_MS = 2300;
+const COLDOPEN_TWEEN_DELAY_MS = 450;
+const COLDOPEN_TWEEN_DUR_MS = 1100;
+const COLDOPEN_HOLD_MS = 520;
+const COLDOPEN_FADE_DELAY_MS =
+    COLDOPEN_START_DELAY_MS + COLDOPEN_TWEEN_DELAY_MS + COLDOPEN_TWEEN_DUR_MS + COLDOPEN_HOLD_MS;
+const COLDOPEN_START_VALUE = 45;
+const COLDOPEN_END_VALUE = -145.12;
+
+function setupHeroColdOpen() {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const el = document.querySelector("[data-hero-coldopen]");
+    if (!el) return;
+    const valueEl = el.querySelector("[data-coldopen-value]");
+    if (!valueEl) return;
+
+    // Start at €45 so the first frame the reader sees matches the
+    // baseline. The tween kicks in COLDOPEN_TWEEN_DELAY_MS after the
+    // element has appeared.
+    valueEl.textContent = formatColdOpenValue(COLDOPEN_START_VALUE);
+
+    setTimeout(() => el.classList.add("is-showing"), COLDOPEN_START_DELAY_MS);
+
+    setTimeout(() => {
+        const start = performance.now();
+        const tick = (now) => {
+            const t = Math.min(1, (now - start) / COLDOPEN_TWEEN_DUR_MS);
+            // easeInOutCubic — accelerates through the zero crossing,
+            // decelerates onto the final reading.
+            const eased = t < 0.5
+                ? 4 * t * t * t
+                : 1 - Math.pow(-2 * t + 2, 3) / 2;
+            const v = COLDOPEN_START_VALUE + (COLDOPEN_END_VALUE - COLDOPEN_START_VALUE) * eased;
+            valueEl.textContent = formatColdOpenValue(v);
+            if (v < 0 && !el.classList.contains("is-crashing")) {
+                el.classList.add("is-crashing");
+            }
+            if (t < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+    }, COLDOPEN_START_DELAY_MS + COLDOPEN_TWEEN_DELAY_MS);
+
+    setTimeout(() => {
+        el.classList.remove("is-showing");
+        el.classList.add("is-fading");
+        // Remove the element from the layout after the fade finishes
+        // so it stops intercepting nothing and keeps the DOM tidy.
+        setTimeout(() => el.remove(), 900);
+    }, COLDOPEN_FADE_DELAY_MS);
+}
+
+function formatColdOpenValue(value) {
+    const abs = Math.abs(value).toFixed(2);
+    const sign = value < 0 ? "\u2212" : "";
+    return `${sign}\u20AC${abs}`;
 }
 
 /**

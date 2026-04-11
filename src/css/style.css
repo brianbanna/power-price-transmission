@@ -604,14 +604,43 @@ strong {
 
 .hero__title-line {
     display: block;
+}
+
+/* Per-character reveal — each letter starts invisible, displaced
+ * downward, and softly blurred, then lands in sequence. The per-char
+ * `animation-delay` is written inline by splitHeroTitleIntoLetters()
+ * in main.js so staggering tracks the actual character count.
+ *
+ * When main.js has NOT yet split the line (reduced-motion, or a race
+ * with DOMContentLoaded), the line-level fallback reveal runs on the
+ * whole line instead so no content is ever invisible. */
+.hero__title-line:not(.is-split) {
     opacity: 0;
     transform: translateY(24px);
     animation: heroLineReveal 1200ms var(--ease-cinematic) forwards;
 }
 
-.hero__title-line:nth-child(1) { animation-delay: 400ms; }
-.hero__title-line:nth-child(2) { animation-delay: 600ms; }
-.hero__title-line:nth-child(3) { animation-delay: 800ms; }
+.hero__title-line:not(.is-split):nth-child(1) { animation-delay: 400ms; }
+.hero__title-line:not(.is-split):nth-child(2) { animation-delay: 600ms; }
+.hero__title-line:not(.is-split):nth-child(3) { animation-delay: 800ms; }
+
+.hero__title-char {
+    display: inline-block;
+    opacity: 0;
+    transform: translateY(22px);
+    filter: blur(6px);
+    animation: heroCharReveal 900ms var(--ease-cinematic) forwards;
+    animation-delay: var(--char-delay, 0ms);
+    will-change: opacity, transform, filter;
+}
+
+@keyframes heroCharReveal {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+    }
+}
 
 .hero__title em {
     font-style: italic;
@@ -819,6 +848,124 @@ strong {
 @keyframes scrollRulePulse {
     0%, 100% { transform: scaleX(0.6); opacity: 0.5; }
     50%      { transform: scaleX(1);   opacity: 1; }
+}
+
+/* ---------- Hero cold-open teaser ----------
+ *
+ * A single large price briefly flashes after the title has landed,
+ * counting the reader from the midnight baseline (~€45) down to the
+ * Sunday trough (−€145.12). Overlays the hero without pushing layout.
+ * Class toggles (is-showing → is-holding → is-fading) are driven from
+ * setupHeroColdOpen() in main.js. */
+
+.hero__coldopen {
+    position: absolute;
+    left: 50%;
+    bottom: clamp(180px, 22vh, 260px);
+    transform: translate(-50%, 14px) scale(0.96);
+    opacity: 0;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    transition: opacity 480ms var(--ease-cinematic),
+                transform 600ms var(--ease-cinematic);
+    z-index: 5;
+}
+
+.hero__coldopen.is-showing {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+}
+
+.hero__coldopen.is-fading {
+    opacity: 0;
+    transform: translate(-50%, -18px) scale(0.96);
+    transition: opacity 720ms var(--ease-cinematic),
+                transform 820ms var(--ease-cinematic);
+}
+
+.hero__coldopen-eyebrow {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--accent) 70%, var(--text-secondary));
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 400ms var(--ease-cinematic) 120ms,
+                transform 400ms var(--ease-cinematic) 120ms;
+}
+
+.hero__coldopen.is-showing .hero__coldopen-eyebrow {
+    opacity: 1;
+    transform: none;
+}
+
+.hero__coldopen-number {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 10px;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-variation-settings: "opsz" 144, "SOFT" 40;
+    color: var(--accent-glow);
+    text-shadow:
+        0 0 24px color-mix(in srgb, var(--accent) 45%, transparent),
+        0 0 2px var(--accent-glow);
+}
+
+.hero__coldopen-value {
+    font-size: clamp(48px, 7.5vw, 112px);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 0.9;
+    font-variation-settings: "opsz" 144, "SOFT" 30;
+    font-style: normal;
+    font-family: var(--font-display);
+    /* The value tween rewrites the text every frame — min-width keeps
+     * the surrounding geometry from jittering as digits switch. */
+    min-width: 8ch;
+    text-align: center;
+    display: inline-block;
+}
+
+.hero__coldopen.is-crashing .hero__coldopen-value {
+    color: var(--accent-glow);
+    filter: drop-shadow(0 0 22px color-mix(in srgb, var(--accent) 60%, transparent));
+}
+
+.hero__coldopen-unit {
+    font-size: clamp(14px, 1.4vw, 22px);
+    font-style: normal;
+    font-family: var(--font-mono);
+    color: color-mix(in srgb, var(--accent) 60%, var(--text-secondary));
+    letter-spacing: 0.08em;
+    transform: translateY(-0.1em);
+}
+
+.hero__coldopen-rule {
+    display: block;
+    width: clamp(120px, 16vw, 220px);
+    height: 1px;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        color-mix(in srgb, var(--accent) 50%, transparent) 50%,
+        transparent 100%
+    );
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform 640ms var(--ease-cinematic) 160ms;
+}
+
+.hero__coldopen.is-showing .hero__coldopen-rule {
+    transform: scaleX(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hero__coldopen { display: none; }
 }
 
 @keyframes pulse {

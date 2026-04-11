@@ -96,6 +96,21 @@
                 <span>Scroll to begin</span>
                 <span class="hero__scroll-rule"></span>
             </p>
+
+            <!--
+                Cold-open teaser — a single large price briefly flashes
+                after the title has landed, counting down from the
+                midnight baseline to the Sunday trough. Populated and
+                animated by setupHeroColdOpen() in main.js.
+            -->
+            <div class="hero__coldopen" data-hero-coldopen aria-hidden="true">
+                <span class="hero__coldopen-eyebrow mono">13:00 CET · 12 May 2024 · Switzerland</span>
+                <div class="hero__coldopen-number">
+                    <span class="hero__coldopen-value mono" data-coldopen-value>€45.00</span>
+                    <span class="hero__coldopen-unit mono">/MWh</span>
+                </div>
+                <span class="hero__coldopen-rule" aria-hidden="true"></span>
+            </div>
         </div>
     </header>
 
