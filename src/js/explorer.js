@@ -18,6 +18,7 @@ const INITIAL_HOUR = 0;       // Start at midnight — reader scrubs forward fro
 // touch devices where scroll-jacking feels hostile.
 const SCROLL_CAPTURE_PX_PER_HOUR = 120; // accumulated deltaY pixels per 1-hour advance
 const SCROLL_CAPTURE_RELEASE_MS = 900;  // dwell at hour 23 before freeing scroll
+const SCROLL_CAPTURE_ENTRY_DELAY_MS = 700; // brief dwell after arriving before lock engages
 const IS_TOUCH = window.matchMedia("(pointer: coarse)").matches;
 
 const SELECTORS = {
@@ -416,6 +417,15 @@ export function initExplorer(config) {
     if (!IS_TOUCH) {
         const onWheel = (e) => {
             if (!scrollState.locked) return;
+
+            // At hour 0 scrolling UP releases the lock so the reader
+            // can return to the narrative without getting stuck.
+            if (state.hourFloat <= 0.01 && e.deltaY < 0) {
+                scrollState.locked = false;
+                section.classList.remove("is-scroll-locked");
+                return; // let the page scroll normally
+            }
+
             e.preventDefault();
 
             markStarted();
@@ -452,14 +462,33 @@ export function initExplorer(config) {
 
         document.addEventListener("wheel", onWheel, { passive: false });
 
-        // Activate the lock when the explorer enters the viewport.
+        // Activate the lock when the explorer enters the viewport,
+        // with a brief delay so the reader can read the intro copy.
+        let lockDelayTimer = null;
         const lockObserver = new IntersectionObserver(
             ([entry]) => {
                 if (entry.isIntersecting && !scrollState.completed) {
-                    scrollState.locked = true;
-                    section.classList.add("is-scroll-locked");
-                } else if (!entry.isIntersecting && scrollState.locked) {
-                    scrollState.locked = false;
+                    if (!scrollState.locked && !lockDelayTimer) {
+                        lockDelayTimer = setTimeout(() => {
+                            lockDelayTimer = null;
+                            const rect = section.getBoundingClientRect();
+                            if (rect.top < window.innerHeight * 0.6
+                                && rect.bottom > 0
+                                && !scrollState.completed) {
+                                scrollState.locked = true;
+                                section.classList.add("is-scroll-locked");
+                            }
+                        }, SCROLL_CAPTURE_ENTRY_DELAY_MS);
+                    }
+                } else {
+                    if (lockDelayTimer) {
+                        clearTimeout(lockDelayTimer);
+                        lockDelayTimer = null;
+                    }
+                    if (scrollState.locked) {
+                        scrollState.locked = false;
+                        section.classList.remove("is-scroll-locked");
+                    }
                 }
             },
             { threshold: 0.4 },

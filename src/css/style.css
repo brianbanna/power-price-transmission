@@ -1635,17 +1635,6 @@ body.is-iris-firing .scrollytelling__map::before {
     max-width: 540px;
 }
 
-/* When the shock card activates, it physically crosses the golden
- * rule line the reader internalized from the hero — the grid breaks
- * when the price breaks. The left padding compensates so the inner
- * content doesn't shift; only the card's outer edge crosses. */
-.step--shock.is-active {
-    margin-left: calc(var(--gutter) * -0.3);
-    padding-left: calc(40px + var(--gutter) * 0.3);
-    transition: margin-left 600ms var(--ease-cinematic),
-                padding-left 600ms var(--ease-cinematic);
-}
-
 /* Steps 4–5 match the shock card width so the progression
  * from 460→540→540 reads as intentional widening, not a regression. */
 .step--wide {
