@@ -14,6 +14,7 @@
 
 import * as d3 from "d3";
 import scrollama from "scrollama";
+import { createCalendarHeatmap } from "./charts/calendar_heatmap.js";
 
 const ACTIVE_OFFSET = 0.80;
 const HUD_PROGRESS_SELECTOR = "[data-hud-timestamp]";
@@ -60,6 +61,24 @@ export function initNarrative(selector, config) {
     // current hour highlighted.
     if (config.showcase) {
         steps.forEach((step) => renderStepSparkline(step, config.showcase));
+    }
+
+    // Step 4 gets a calendar heatmap instead of (or in addition to) the
+    // sparkline. Two instances stack vertically: DE first, then CH.
+    if (config.calendarData) {
+        const heatmapContainer = container.querySelector('[data-step-chart="heatmap"]');
+        if (heatmapContainer) {
+            createCalendarHeatmap(heatmapContainer, {
+                data: config.calendarData,
+                country: "DE",
+                label: "Germany — 846 negative hours",
+            });
+            createCalendarHeatmap(heatmapContainer, {
+                data: config.calendarData,
+                country: "CH",
+                label: "Switzerland — 529 negative hours",
+            });
+        }
     }
 
     // Render chapter ticks on the progress bar — one per step, positioned

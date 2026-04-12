@@ -1603,6 +1603,17 @@ body.is-iris-firing .scrollytelling__map::before {
     max-width: 540px;
 }
 
+/* Step 4 (heatmap) needs a wider card to fit the 24-column grid. */
+.step--wide {
+    max-width: 520px;
+}
+
+.step__chart--heatmap {
+    overflow-x: auto;
+    overflow-y: hidden;
+    max-height: 620px;
+}
+
 .step__hero-number {
     display: flex;
     align-items: baseline;
@@ -1860,6 +1871,80 @@ body.is-iris-firing .scrollytelling__map::before {
 .spark__country {
     fill: color-mix(in srgb, var(--accent) 65%, var(--text-secondary));
     font-weight: 600;
+}
+
+/* ---------- Calendar heatmap (Phase 5 — Step 4) ----------
+ *
+ * A dense hour × day grid rendered to <canvas> and wrapped in a thin
+ * DOM structure for axis labels and tooltip. Sits inside a narrative
+ * step card's .step__chart container. Two instances stack vertically
+ * (DE above, CH below) when Step 4 is active.
+ */
+
+.cal-heatmap {
+    display: inline-block;
+    margin-bottom: 16px;
+}
+
+.cal-heatmap__title {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--accent);
+    margin: 0 0 6px;
+}
+
+.cal-heatmap__canvas {
+    display: block;
+    border-radius: 2px;
+}
+
+.cal-heatmap__hours {
+    position: absolute;
+    top: 6px;
+    display: flex;
+    justify-content: space-between;
+    pointer-events: none;
+}
+
+.cal-heatmap__hour-label {
+    position: absolute;
+    transform: translateX(-50%);
+    font-size: 8px;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+}
+
+.cal-heatmap__months {
+    position: absolute;
+    left: 0;
+    width: 40px;
+    pointer-events: none;
+}
+
+.cal-heatmap__month-label {
+    position: absolute;
+    right: 4px;
+    font-size: 7px;
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    line-height: 1;
+}
+
+.cal-heatmap__tip {
+    position: absolute;
+    padding: 4px 8px;
+    font-size: 10px;
+    color: var(--text-primary);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 /* ---------- Explorer (Phase 7) ----------

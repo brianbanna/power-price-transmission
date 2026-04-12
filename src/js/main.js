@@ -8,13 +8,14 @@ import { loadJSON } from "./utils/data.js";
 // own rendering; this file only coordinates their lifecycle.
 
 async function init() {
-    const [topology, showcase] = await Promise.all([
+    const [topology, showcase, calendarData] = await Promise.all([
         loadJSON("map.topojson"),
         loadJSON("showcase_day.json"),
+        loadJSON("calendar_heatmap.json"),
     ]);
 
     const map = createMap("#map-container", { topology, showcase });
-    initNarrative("#narrative", { map, showcase });
+    initNarrative("#narrative", { map, showcase, calendarData });
     initExplorer({ map, showcase });
 
     setupHeroTitleReveal();
