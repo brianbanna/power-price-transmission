@@ -182,6 +182,32 @@ export function initNarrative(selector, config) {
             }
         });
 
+    // Jump-scroll safety net — Scrollama uses IntersectionObserver,
+    // which evaluates only the final viewport state after a scroll.
+    // If the reader jumps from the explorer (or any deep position)
+    // straight to y=0, Step 1 never crosses a threshold, onStepExit
+    // never fires, and the HUD / clock stay visible over the hero.
+    // This lightweight scroll check detects "we're at the very top
+    // AND the HUD is still visible" and forces the full cleanup.
+    // Once cleaned up the guard (`hud.classList.contains("is-visible")`)
+    // prevents redundant work on subsequent scroll events.
+    const checkScrollReset = () => {
+        if (window.scrollY > 120) return;
+        if (!hud?.classList.contains("is-visible")) return;
+        steps.forEach((s) => s.classList.remove("is-active"));
+        document.body.classList.remove(NARRATIVE_ACTIVE_CLASS);
+        hud.classList.remove("is-visible");
+        if (mapClock) {
+            mapClock.classList.remove("is-visible");
+            mapClock.classList.remove("is-peak");
+        }
+        if (leaderCtl) leaderCtl.hide();
+        if (config.map && typeof config.map.update === "function") {
+            config.map.update({ hour: null, focusCountry: null });
+        }
+    };
+    window.addEventListener("scroll", checkScrollReset, { passive: true });
+
     // Global scroll progress → the 2px bar at the top of the viewport.
     if (progressBar) {
         const updateProgress = () => {
