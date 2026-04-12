@@ -9,7 +9,7 @@
 import * as d3 from "d3";
 import * as topojson from "topojson-client";
 
-import { priceColor } from "./utils/colors.js";
+import { priceColor, renewableColor } from "./utils/colors.js";
 
 // Conic conformal centered on central Europe (see design_system.md §Map
 // projection). Tuned so the five focus countries fill the viewport with
@@ -488,6 +488,7 @@ export function createMap(selector, config) {
         hour: null,
         focusCountry: null,
         highlightCountries: [],
+        colorMode: "price", // "price" or "renewable"
     };
 
     // Populated on every resize; read by drawFlows().
@@ -814,7 +815,10 @@ export function createMap(selector, config) {
         // contour properties.)
         countryPaths.attr("fill", (d) => {
             const entry = showcase.countries?.[d.id]?.[state.hour];
-            return entry ? priceColor(entry.price) : null;
+            if (!entry) return null;
+            return state.colorMode === "renewable"
+                ? renewableColor(entry.renewable_share)
+                : priceColor(entry.price);
         });
 
         // Update label text + focus state. The focus country gets the

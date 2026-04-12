@@ -52,6 +52,23 @@ export function priceContinuous(price) {
     return _continuousScale(price);
 }
 
+// Renewable share scale — green gradient from 0% to 100%.
+let _renewableScale = null;
+
+export function renewableColor(share) {
+    if (share == null || Number.isNaN(share)) return "#1c2235";
+    if (!_renewableScale) {
+        const { scaleLinear, interpolateRgb } = window.d3 || {};
+        if (!scaleLinear) return "#10b981";
+        _renewableScale = scaleLinear()
+            .domain([0, 0.3, 0.6, 1.0])
+            .range(["#64748b", "#0e7490", "#34d399", "#a7f3d0"])
+            .interpolate(interpolateRgb)
+            .clamp(true);
+    }
+    return _renewableScale(share);
+}
+
 export const GENERATION_COLORS = {
     solar:   "#fbbf24",
     wind:    "#34d399",   // emerald — shifted from #10b981 to avoid accent-cyan confusion under desaturation

@@ -286,6 +286,20 @@ export function initExplorer(config) {
         }
     });
 
+    // ---- Color mode toggle (price / renewable %) ----
+    const modeBtns = section.querySelectorAll("[data-mode]");
+    modeBtns.forEach((btn) => {
+        btn.addEventListener("click", () => {
+            const mode = btn.dataset.mode || "price";
+            modeBtns.forEach((b) => b.classList.toggle("is-active", b === btn));
+            if (config.map?.update) {
+                config.map.update({ colorMode: mode });
+                // Re-push current hour so the fill repaints.
+                pushMap(state.hour);
+            }
+        });
+    });
+
     // ---- Speed control (1x / 2x / 4x) ----
     const speedBtns = section.querySelectorAll("[data-speed]");
     speedBtns.forEach((btn) => {

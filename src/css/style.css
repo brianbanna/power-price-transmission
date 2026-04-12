@@ -2706,6 +2706,38 @@ body.is-iris-firing .scrollytelling__map::before {
     font-feature-settings: "zero", "ss02";
 }
 
+.timeline__mode {
+    display: inline-flex;
+    gap: 2px;
+    background: var(--bg-base);
+    border-radius: 4px;
+    padding: 2px;
+    border: 1px solid var(--border);
+}
+
+.timeline__mode-btn {
+    padding: 3px 10px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: color var(--dur-fast), background var(--dur-fast);
+}
+
+.timeline__mode-btn:hover {
+    color: var(--text-secondary);
+}
+
+.timeline__mode-btn.is-active {
+    color: var(--accent);
+    background: var(--bg-elevated);
+}
+
 .timeline__speed {
     display: inline-flex;
     gap: 2px;
