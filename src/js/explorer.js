@@ -11,14 +11,14 @@ const MS_PER_HOUR = 760;      // Playback cadence — ~18s for the full day
 const VISIBILITY_THRESHOLD = 0.15; // How far into the explorer before it "activates"
 const INITIAL_HOUR = 0;       // Start at midnight — reader scrubs forward from calm baseline
 
-// Scroll-capture — when the explorer timeline is docked, wheel events
-// drive the timeline scrubber instead of scrolling the page. The reader
-// "scrolls through the day" before they can continue. Releasing happens
-// once hour 23 is reached and a short dwell has passed. Skipped on
-// touch devices where scroll-jacking feels hostile.
-const SCROLL_CAPTURE_PX_PER_HOUR = 120; // accumulated deltaY pixels per 1-hour advance
-const SCROLL_CAPTURE_RELEASE_MS = 900;  // dwell at hour 23 before freeing scroll
-const SCROLL_CAPTURE_ENTRY_DELAY_MS = 700; // brief dwell after arriving before lock engages
+// Scroll pause — when the explorer enters the viewport, page scroll
+// is blocked for a few seconds to draw the reader's attention to the
+// timeline. The lock releases automatically after the pause OR
+// immediately if the reader interacts with the timeline (drag, play,
+// keyboard). No scroll-jacking — the wheel never drives the timeline.
+// Skipped on touch devices.
+const SCROLL_PAUSE_DELAY_MS = 600;  // delay before the pause engages
+const SCROLL_PAUSE_DURATION_MS = 3500; // how long scroll is blocked
 const IS_TOUCH = window.matchMedia("(pointer: coarse)").matches;
 
 const SELECTORS = {
@@ -397,103 +397,69 @@ export function initExplorer(config) {
         fadeObserver.observe(headlineEl);
     }
 
-    // ---- Scroll capture ----
+    // ---- Scroll pause ----
     //
-    // When the timeline is docked and the reader hasn't completed the
-    // day, wheel events are intercepted and routed into the timeline
-    // scrubber. The page doesn't scroll — the reader "scrolls through
-    // the day." Once they reach hour 23, a brief dwell releases the
-    // lock and normal scrolling resumes. A "keep scrolling" prompt
-    // appears after completion so the reader knows the lock is lifted.
+    // A brief scroll freeze when the explorer enters the viewport.
+    // The page stops scrolling for ~3.5 seconds, drawing the reader's
+    // attention to the timeline and the "scroll to move through the
+    // day" prompt. The lock releases automatically after the pause,
+    // OR immediately if the reader interacts with the timeline
+    // (click play, drag, or keyboard). No scroll-jacking — the wheel
+    // never drives the timeline.
     //
-    // Skipped on touch devices where scroll-jacking is hostile.
-    const scrollState = {
-        locked: false,
-        completed: false,
-        accum: 0,           // accumulated deltaY pixels since last hour tick
-        releaseTimer: null,
-    };
+    // Fires only once per page load so scrolling back through the
+    // explorer later is free.
+    const scrollPause = { active: false, fired: false };
 
     if (!IS_TOUCH) {
         const onWheel = (e) => {
-            if (!scrollState.locked) return;
-
-            // At hour 0 scrolling UP releases the lock so the reader
-            // can return to the narrative without getting stuck.
-            if (state.hourFloat <= 0.01 && e.deltaY < 0) {
-                scrollState.locked = false;
-                section.classList.remove("is-scroll-locked");
-                return; // let the page scroll normally
-            }
-
+            if (!scrollPause.active) return;
             e.preventDefault();
-
-            markStarted();
-            markTouched();
-
-            // Accumulate deltaY and convert to fractional hour advancement.
-            scrollState.accum += e.deltaY;
-            const hourDelta = scrollState.accum / SCROLL_CAPTURE_PX_PER_HOUR;
-            if (Math.abs(hourDelta) >= 0.05) {
-                const next = Math.max(0, Math.min(
-                    HOURS - 1,
-                    state.hourFloat + hourDelta,
-                ));
-                state.hourFloat = next;
-                const intHour = Math.min(HOURS - 1, Math.floor(next + 1e-6));
-                if (intHour !== state.hour) {
-                    state.hour = intHour;
-                    pushMap(intHour);
-                }
-                renderUI();
-                scrollState.accum = 0;
-            }
-
-            // Reached the end of the day — release the lock after a dwell.
-            if (state.hourFloat >= HOURS - 1 && !scrollState.completed) {
-                scrollState.completed = true;
-                section.classList.add("is-scroll-complete");
-                scrollState.releaseTimer = setTimeout(() => {
-                    scrollState.locked = false;
-                    section.classList.add("is-scroll-released");
-                }, SCROLL_CAPTURE_RELEASE_MS);
-            }
         };
-
         document.addEventListener("wheel", onWheel, { passive: false });
 
-        // Activate the lock when the explorer enters the viewport,
-        // with a brief delay so the reader can read the intro copy.
-        let lockDelayTimer = null;
-        const lockObserver = new IntersectionObserver(
+        // Release the pause — called by the auto-timer and by any
+        // timeline interaction (play, drag, keyboard).
+        const releasePause = () => {
+            scrollPause.active = false;
+            section.classList.remove("is-scroll-locked");
+            section.classList.add("is-scroll-released");
+        };
+
+        // Hook into markTouched so any timeline interaction releases.
+        const origMarkTouched = markTouched;
+        markTouched = () => {
+            origMarkTouched();
+            if (scrollPause.active) releasePause();
+        };
+
+        // One-shot observer: pause scroll when the explorer first
+        // enters the viewport, then disconnect.
+        const pauseObserver = new IntersectionObserver(
             ([entry]) => {
-                if (entry.isIntersecting && !scrollState.completed) {
-                    if (!scrollState.locked && !lockDelayTimer) {
-                        lockDelayTimer = setTimeout(() => {
-                            lockDelayTimer = null;
-                            const rect = section.getBoundingClientRect();
-                            if (rect.top < window.innerHeight * 0.6
-                                && rect.bottom > 0
-                                && !scrollState.completed) {
-                                scrollState.locked = true;
-                                section.classList.add("is-scroll-locked");
-                            }
-                        }, SCROLL_CAPTURE_ENTRY_DELAY_MS);
-                    }
-                } else {
-                    if (lockDelayTimer) {
-                        clearTimeout(lockDelayTimer);
-                        lockDelayTimer = null;
-                    }
-                    if (scrollState.locked) {
-                        scrollState.locked = false;
-                        section.classList.remove("is-scroll-locked");
-                    }
-                }
+                if (!entry.isIntersecting || scrollPause.fired) return;
+                scrollPause.fired = true;
+                pauseObserver.disconnect();
+
+                // Brief delay so the reader finishes arriving.
+                setTimeout(() => {
+                    // Guard: reader may have already interacted or
+                    // scrolled away during the delay.
+                    const rect = section.getBoundingClientRect();
+                    if (rect.top > window.innerHeight * 0.7 || rect.bottom < 0) return;
+
+                    scrollPause.active = true;
+                    section.classList.add("is-scroll-locked");
+
+                    // Auto-release after the pause duration.
+                    setTimeout(() => {
+                        if (scrollPause.active) releasePause();
+                    }, SCROLL_PAUSE_DURATION_MS);
+                }, SCROLL_PAUSE_DELAY_MS);
             },
-            { threshold: 0.4 },
+            { threshold: 0.3 },
         );
-        lockObserver.observe(section);
+        pauseObserver.observe(section);
     }
 
     // Paint the initial UI state (handle at INITIAL_HOUR, readout set)
