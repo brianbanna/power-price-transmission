@@ -1560,7 +1560,7 @@ body.is-iris-firing .scrollytelling__map::before {
     opacity: 0.55;
     transform: translateY(16px) scale(0.985);
     transition:
-        opacity var(--dur-default) var(--ease-default),
+        opacity var(--dur-default) var(--ease-default) 600ms,
         transform var(--dur-default) var(--ease-default),
         border-color var(--dur-default) var(--ease-default),
         box-shadow var(--dur-default) var(--ease-default);
@@ -1590,6 +1590,9 @@ body.is-iris-firing .scrollytelling__map::before {
 .step.is-active {
     opacity: 1;
     transform: translateY(0) scale(1);
+    /* Override the 600ms delay on the inactive rule — the entering
+     * card should brighten immediately, only the LEAVING card dwells. */
+    transition-delay: 0ms;
     border-color: color-mix(in srgb, var(--step-accent, var(--accent)) 18%, var(--border-glass));
     border-top-color: color-mix(in srgb, var(--step-accent, var(--accent)) 24%, rgba(255, 255, 255, 0.12));
     box-shadow:
