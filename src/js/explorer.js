@@ -11,7 +11,7 @@ import { createDailyProfile } from "./charts/daily_profile.js";
 
 const HOURS = 24;
 const FOCUS_COUNTRY = "CH";   // Default sidebar subject — the protagonist
-const MS_PER_HOUR = 760;      // Playback cadence — ~18s for the full day
+const MS_PER_HOUR_BASE = 760; // Playback cadence at 1x — ~18s for the full day
 const VISIBILITY_THRESHOLD = 0.15; // How far into the explorer before it "activates"
 const INITIAL_HOUR = 0;       // Start at midnight — reader scrubs forward from calm baseline
 
@@ -72,20 +72,14 @@ export function initExplorer(config) {
     }
 
     const state = {
-        // Discrete hour — drives map.update and the aria readout.
         hour: INITIAL_HOUR,
-        // Continuous hour position — drives the visual fill/handle so
-        // progress slides smoothly between integer hours instead of
-        // snapping once per second.
         hourFloat: INITIAL_HOUR,
         playing: false,
         rafId: null,
         lastFrameTs: null,
-        // has the reader scrolled the explorer into view?
         active: false,
-        // True after the first play click or scrub. Until then the
-        // map stays empty and the reader is forced to press play.
         started: false,
+        speedMultiplier: 1,
     };
 
     // Delay before the pulse hint fires once the reader has crossed
@@ -171,7 +165,7 @@ export function initExplorer(config) {
             if (state.lastFrameTs == null) state.lastFrameTs = ts;
             const dt = Math.min(64, ts - state.lastFrameTs);
             state.lastFrameTs = ts;
-            let next = state.hourFloat + dt / MS_PER_HOUR;
+            let next = state.hourFloat + (dt * state.speedMultiplier) / MS_PER_HOUR_BASE;
             if (next >= HOURS - 1) next = HOURS - 1;
             state.hourFloat = next;
             const intHour = Math.min(HOURS - 1, Math.floor(next + 1e-6));
@@ -290,6 +284,16 @@ export function initExplorer(config) {
                 togglePlay();
                 break;
         }
+    });
+
+    // ---- Speed control (1x / 2x / 4x) ----
+    const speedBtns = section.querySelectorAll("[data-speed]");
+    speedBtns.forEach((btn) => {
+        btn.addEventListener("click", () => {
+            const multiplier = Number(btn.dataset.speed) || 1;
+            state.speedMultiplier = multiplier;
+            speedBtns.forEach((b) => b.classList.toggle("is-active", b === btn));
+        });
     });
 
     // ---- Global spacebar play/pause when the explorer is in view ----
