@@ -7,7 +7,7 @@
 
 const HOURS = 24;
 const FOCUS_COUNTRY = "CH";   // Default sidebar subject — the protagonist
-const PLAYBACK_INTERVAL_MS = 600;  // 1 hour per 600ms ≈ 14 seconds full day
+const MS_PER_HOUR = 760;      // Playback cadence — ~18s for the full day
 const VISIBILITY_THRESHOLD = 0.15; // How far into the explorer before it "activates"
 const INITIAL_HOUR = 0;       // Start at midnight — reader scrubs forward from calm baseline
 
@@ -58,10 +58,20 @@ export function initExplorer(config) {
     }
 
     const state = {
+        // Discrete hour — drives map.update and the aria readout.
         hour: INITIAL_HOUR,
+        // Continuous hour position — drives the visual fill/handle so
+        // progress slides smoothly between integer hours instead of
+        // snapping once per second.
+        hourFloat: INITIAL_HOUR,
         playing: false,
-        playTimer: null,
-        active: false,  // has the reader scrolled the explorer into view?
+        rafId: null,
+        lastFrameTs: null,
+        // has the reader scrolled the explorer into view?
+        active: false,
+        // True after the first play click or scrub. Until then the
+        // map stays empty and the reader is forced to press play.
+        started: false,
     };
 
     // Delay before the pulse hint fires once the reader has crossed
@@ -70,23 +80,52 @@ export function initExplorer(config) {
     const HINT_DELAY_MS = 1600;
     let hintTimer = null;
 
-    function render() {
-        const pct = (state.hour / (HOURS - 1)) * 100;
+    // Purely visual sync of the fill bar, handle, readout, and aria.
+    // Does NOT touch the map — that happens only when the integer
+    // hour actually changes, to avoid spamming 800ms transitions.
+    function renderUI() {
+        const frac = state.hourFloat / (HOURS - 1);
+        const pct = Math.max(0, Math.min(100, frac * 100));
         fill.style.width = `${pct}%`;
         handle.style.left = `${pct}%`;
-        readout.textContent = `${String(state.hour).padStart(2, "0")}:00`;
-        track.setAttribute("aria-valuenow", String(state.hour));
-        track.setAttribute("aria-valuetext", `${String(state.hour).padStart(2, "0")}:00 hours`);
+        const intHour = Math.min(HOURS - 1, Math.floor(state.hourFloat + 1e-6));
+        readout.textContent = `${String(intHour).padStart(2, "0")}:00`;
+        track.setAttribute("aria-valuenow", String(intHour));
+        track.setAttribute("aria-valuetext", `${String(intHour).padStart(2, "0")}:00 hours`);
+    }
+
+    function clearMap() {
         if (config.map?.update) {
-            config.map.update({ hour: state.hour, focusCountry: FOCUS_COUNTRY });
+            config.map.update({ hour: null, focusCountry: null });
         }
+    }
+
+    function pushMap(hour) {
+        if (config.map?.update) {
+            config.map.update({ hour, focusCountry: FOCUS_COUNTRY });
+        }
+    }
+
+    function markStarted() {
+        if (state.started) return;
+        state.started = true;
+        timeline.classList.remove("is-waiting");
+        if (section) section.classList.remove("is-waiting");
     }
 
     function setHour(h) {
         const clamped = Math.max(0, Math.min(HOURS - 1, Math.round(h)));
-        if (clamped === state.hour) return;
-        state.hour = clamped;
-        render();
+        state.hourFloat = clamped;
+        markStarted();
+        if (clamped !== state.hour) {
+            state.hour = clamped;
+            pushMap(clamped);
+        } else {
+            // Same hour — still push in case the map was in empty
+            // state (first interaction after explorer entry).
+            pushMap(clamped);
+        }
+        renderUI();
     }
 
     function play() {
@@ -94,11 +133,39 @@ export function initExplorer(config) {
         state.playing = true;
         timeline.classList.add("is-playing");
         playBtn?.setAttribute("aria-label", "Pause timeline");
-        state.playTimer = setInterval(() => {
-            const next = (state.hour + 1) % HOURS;
-            state.hour = next;
-            render();
-        }, PLAYBACK_INTERVAL_MS);
+        if (!state.started) {
+            markStarted();
+            // Kick off at hour 0 for a clean "from the beginning" feel.
+            state.hourFloat = 0;
+            state.hour = 0;
+            pushMap(0);
+            renderUI();
+        }
+        state.lastFrameTs = null;
+        const tick = (ts) => {
+            if (!state.playing) return;
+            if (state.lastFrameTs == null) state.lastFrameTs = ts;
+            const dt = Math.min(64, ts - state.lastFrameTs);
+            state.lastFrameTs = ts;
+            let next = state.hourFloat + dt / MS_PER_HOUR;
+            if (next >= HOURS - 1) next = HOURS - 1;
+            state.hourFloat = next;
+            const intHour = Math.min(HOURS - 1, Math.floor(next + 1e-6));
+            if (intHour !== state.hour) {
+                state.hour = intHour;
+                pushMap(intHour);
+            }
+            renderUI();
+            // Auto-pause cleanly when we reach the end rather than
+            // wrapping back to midnight — the reader gets a definite
+            // "day is over" beat instead of an infinite loop.
+            if (next >= HOURS - 1) {
+                pause();
+                return;
+            }
+            state.rafId = requestAnimationFrame(tick);
+        };
+        state.rafId = requestAnimationFrame(tick);
     }
 
     function pause() {
@@ -106,9 +173,9 @@ export function initExplorer(config) {
         state.playing = false;
         timeline.classList.remove("is-playing");
         playBtn?.setAttribute("aria-label", "Play timeline");
-        if (state.playTimer) {
-            clearInterval(state.playTimer);
-            state.playTimer = null;
+        if (state.rafId != null) {
+            cancelAnimationFrame(state.rafId);
+            state.rafId = null;
         }
     }
 
@@ -222,9 +289,15 @@ export function initExplorer(config) {
             state.active = entry.isIntersecting && entry.intersectionRatio >= VISIBILITY_THRESHOLD;
 
             if (state.active && !wasActive) {
-                // First time entering — render the initial state so the
-                // map picks up hour 0 for the showcase day.
-                render();
+                // First time entering — wipe the map so the narrative
+                // colours from Step 3 are gone and the reader is
+                // confronted with a blank canvas. They have to press
+                // play (or scrub) to start the day.
+                if (!state.started) {
+                    clearMap();
+                    timeline.classList.add("is-waiting");
+                    section.classList.add("is-waiting");
+                }
             } else if (!state.active && wasActive) {
                 // Left the explorer view — auto-pause playback.
                 pause();
@@ -316,12 +389,8 @@ export function initExplorer(config) {
 
     // Paint the initial UI state (handle at INITIAL_HOUR, readout set)
     // without touching the map — the map only updates once the reader
-    // actually scrolls the explorer into view.
-    const pct = (state.hour / (HOURS - 1)) * 100;
-    fill.style.width = `${pct}%`;
-    handle.style.left = `${pct}%`;
-    readout.textContent = `${String(state.hour).padStart(2, "0")}:00`;
-    track.setAttribute("aria-valuenow", String(state.hour));
+    // actually presses play or starts scrubbing.
+    renderUI();
 
     return {
         play,

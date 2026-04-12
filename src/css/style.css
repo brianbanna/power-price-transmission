@@ -2101,6 +2101,32 @@ body.is-iris-firing .scrollytelling__map::before {
     transform: scale(0.96);
 }
 
+/* Waiting for the first click — the play button radiates a slow
+ * accent pulse so the reader can't miss it. Class is applied by
+ * explorer.js on entry and removed the moment they interact. */
+.timeline.is-waiting .timeline__play {
+    animation: playWait 1900ms var(--ease-cinematic) infinite;
+    background: color-mix(in srgb, var(--accent) 18%, var(--bg-elevated));
+    border-color: var(--accent);
+}
+
+.timeline.is-waiting .timeline__play-shape {
+    fill: var(--accent-glow);
+}
+
+@keyframes playWait {
+    0%, 100% {
+        box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 42%, transparent),
+                    0 0 18px color-mix(in srgb, var(--accent) 28%, transparent);
+        transform: scale(1);
+    }
+    50% {
+        box-shadow: 0 0 0 14px color-mix(in srgb, var(--accent) 0%, transparent),
+                    0 0 26px color-mix(in srgb, var(--accent) 40%, transparent);
+        transform: scale(1.05);
+    }
+}
+
 .timeline__play-icon {
     width: 18px;
     height: 18px;
