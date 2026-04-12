@@ -3200,6 +3200,79 @@ body.is-iris-firing .scrollytelling__map::before {
     }
 }
 
+/* ---------- Wide viewport / zoomed-out scaling ----------
+ *
+ * At browser zoom < 100% or on ultrawide monitors (>1800px effective
+ * viewport), fixed-px text becomes microscopic and the layout floats
+ * in too much empty space. Scale up the base font, layout tokens, and
+ * small UI text proportionally. */
+
+@media (min-width: 1800px) {
+    :root {
+        --content-max: 1600px;
+        --narrative-col: 540px;
+        --gutter: clamp(40px, 5vw, 120px);
+    }
+
+    body { font-size: 19px; }
+
+    /* Small mono UI text — floor at 11px so nothing is microscopic */
+    .hud__label, .hud__meta,
+    .map-clock__label, .map-clock__date,
+    .hero__masthead-item, .hero__tape-label, .hero__tape-quote,
+    .hero__byline, .hero__date, .hero__scroll-hint,
+    .step__eyebrow, .step__number,
+    .timeline__legend, .timeline__mode-label,
+    .timeline__mode-btn, .timeline__speed-btn,
+    .explorer__eyebrow, .explorer__scroll-prompt,
+    .site-footer__kicker, .site-footer__coda,
+    .sidebar__stat-label,
+    .cal-heatmap__title, .cal-heatmap__tab,
+    .cal-heatmap__hour-label, .cal-heatmap__month-label,
+    .gen-stack__title, .gen-stack__legend-text,
+    .gen-stack__axis-label,
+    .daily-profile__title, .daily-profile__axis-label,
+    .daily-profile__country-label, .daily-profile__month-label,
+    .cartouche__compass-letter, .cartouche__scale-label,
+    .cartouche__scale-origin, .cartouche__scale-end,
+    .cartouche__edge-label,
+    .label__code {
+        font-size: 11px;
+    }
+
+    .label__price { font-size: 16px; }
+    .label.is-focus .label__price { font-size: 22px; }
+
+    .step { max-width: 540px; }
+    .step--shock, .step--wide { max-width: 620px; }
+    .step__headline { font-size: 38px; }
+
+    .explorer__headline { font-size: clamp(42px, 5.5vw, 72px); }
+    .explorer__sidebar { width: clamp(360px, 28vw, 480px); }
+
+    .map-clock__hour { font-size: clamp(80px, 11vw, 160px); }
+    .timeline__readout-value { font-size: 24px; }
+    .hud__value { font-size: 14px; }
+
+    .map-tip { font-size: 12px; padding: 6px 12px; }
+    .cal-heatmap__tip { font-size: 11px; }
+}
+
+@media (min-width: 2200px) {
+    :root {
+        --content-max: 1800px;
+        --narrative-col: 600px;
+    }
+
+    body { font-size: 21px; }
+
+    .step { max-width: 600px; }
+    .step--shock, .step--wide { max-width: 680px; }
+
+    .label__price { font-size: 18px; }
+    .label.is-focus .label__price { font-size: 24px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
     *, *::before, *::after {
