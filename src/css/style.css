@@ -352,7 +352,7 @@ strong {
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.22em;
-    color: color-mix(in srgb, var(--accent) 70%, var(--text-muted));
+    color: var(--chrome);
     margin: 0 0 10px 0;
 }
 
@@ -513,6 +513,9 @@ strong {
     margin: 0 auto;
     width: 100%;
     z-index: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
 }
 
 /* Thin warm-gold vertical rule down the left edge of the hero interior.
@@ -697,7 +700,7 @@ strong {
 .hero__lede {
     font-size: clamp(18px, 1.5vw, 22px);
     line-height: 1.5;
-    color: color-mix(in srgb, var(--text-primary) 75%, var(--text-secondary));
+    color: color-mix(in srgb, var(--text-primary) 88%, var(--text-secondary));
     max-width: 56ch;
     margin-bottom: 72px;
     font-variation-settings: "opsz" 24, "SOFT" 20;
@@ -715,7 +718,7 @@ strong {
     display: flex;
     align-items: baseline;
     gap: 32px;
-    margin-bottom: 36px;
+    margin-bottom: 48px;
     opacity: 0;
     animation: fadeUp 1200ms var(--ease-cinematic) 1400ms forwards;
     flex-wrap: wrap;
@@ -1495,7 +1498,7 @@ body.is-iris-firing .scrollytelling__map::before {
     /* Tight dark stroke for legibility against any country fill color */
     paint-order: stroke;
     stroke: var(--bg-base);
-    stroke-width: 2.5;
+    stroke-width: 3.5;
     stroke-linejoin: round;
 }
 
@@ -1695,7 +1698,7 @@ body.is-iris-firing .scrollytelling__map::before {
 }
 
 .step__hero-currency {
-    font-size: 0.32em;
+    font-size: 0.36em;
     font-style: normal;
     font-variation-settings: "opsz" 24, "wght" 400;
     color: color-mix(in srgb, var(--accent-glow) 60%, transparent);
@@ -2354,7 +2357,7 @@ body.is-iris-firing .scrollytelling__map::before {
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.16em;
-    color: var(--accent);
+    color: var(--chrome);
     margin: 0 0 28px 0;
 }
 
@@ -2362,7 +2365,7 @@ body.is-iris-firing .scrollytelling__map::before {
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: var(--accent);
+    background: var(--chrome);
     box-shadow:
         0 0 calc(8px + var(--beat) * 12px) color-mix(in srgb, var(--accent) calc(50% + var(--beat) * 50%), transparent),
         0 0 2px var(--accent-glow);
@@ -2704,6 +2707,20 @@ body.is-iris-firing .scrollytelling__map::before {
     letter-spacing: 0.02em;
     font-variant-numeric: tabular-nums;
     font-feature-settings: "zero", "ss02";
+}
+
+.timeline__mode-group {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.timeline__mode-label {
+    font-size: 9px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
 }
 
 .timeline__mode {
@@ -3122,7 +3139,7 @@ body.is-iris-firing .scrollytelling__map::before {
     width: 3px;
     height: 3px;
     border-radius: 50%;
-    background: color-mix(in srgb, var(--accent) 45%, transparent);
+    background: color-mix(in srgb, var(--chrome) 55%, transparent);
     flex-shrink: 0;
 }
 

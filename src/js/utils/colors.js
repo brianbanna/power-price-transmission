@@ -35,15 +35,15 @@ export function priceContinuous(price) {
         const { scaleLinear, interpolateRgb } = window.d3 || {};
         if (!scaleLinear) return priceColor(price); // fallback
         _continuousScale = scaleLinear()
-            .domain([-200, -100, -50, 0, 50, 100, 200, 400])
+            .domain([-200, -100, -50, 0, 40, 75, 150, 300])
             .range([
-                "#e0f7ff",   // ice-white extreme
+                "#e0f7ff",   // ice-white extreme negative
                 "#67e8f9",   // bright cyan
                 "#22d3ee",   // accent cyan
                 "#0e7490",   // dark cyan (zero-crossing, negative side)
-                "#78716c",   // warm stone (zero-crossing, positive side)
-                "#fb923c",   // muted orange
-                "#ef4444",   // red
+                "#78716c",   // warm stone (baseline ~40 EUR)
+                "#e8a460",   // warm amber (visible from ~75 EUR)
+                "#ef4444",   // red (expensive)
                 "#991b1b",   // deep red
             ])
             .interpolate(interpolateRgb)

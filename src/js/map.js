@@ -88,7 +88,7 @@ const ARROW_WIDTH_PIVOT = 150;
 // handful of particles; the 150 EUR peak-moment shocks swarm. Particles
 // are pooled per flow and recycled (t wraps from 1 → 0) so the DOM
 // population stays flat once a flow is active.
-const PARTICLE_MIN_COUNT = 3;
+const PARTICLE_MIN_COUNT = 4;
 const PARTICLE_MAX_COUNT = 14;
 const PARTICLE_BASE_RADIUS = 1.6;
 const PARTICLE_FOCUS_RADIUS = 2.4;

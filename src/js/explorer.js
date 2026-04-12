@@ -22,7 +22,7 @@ const INITIAL_HOUR = 0;       // Start at midnight — reader scrubs forward fro
 // keyboard). No scroll-jacking — the wheel never drives the timeline.
 // Skipped on touch devices.
 const SCROLL_PAUSE_DELAY_MS = 600;  // delay before the pause engages
-const SCROLL_PAUSE_DURATION_MS = 3500; // how long scroll is blocked
+const SCROLL_PAUSE_DURATION_MS = 2000; // how long scroll is blocked
 const IS_TOUCH = window.matchMedia("(pointer: coarse)").matches;
 
 const SELECTORS = {
@@ -331,12 +331,11 @@ export function initExplorer(config) {
             state.active = entry.isIntersecting && entry.intersectionRatio >= VISIBILITY_THRESHOLD;
 
             if (state.active && !wasActive) {
-                // First time entering — wipe the map so the narrative
-                // colours from Step 3 are gone and the reader is
-                // confronted with a blank canvas. They have to press
-                // play (or scrub) to start the day.
+                // First time entering — show the map at hour 0
+                // (midnight, calm baseline) so the reader sees content
+                // immediately rather than a confusing blank state.
                 if (!state.started) {
-                    clearMap();
+                    pushMap(0);
                     timeline.classList.add("is-waiting");
                     section.classList.add("is-waiting");
                 }
