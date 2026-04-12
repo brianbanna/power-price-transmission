@@ -40,8 +40,8 @@ export function priceContinuous(price) {
                 "#e0f7ff",   // ice-white extreme
                 "#67e8f9",   // bright cyan
                 "#22d3ee",   // accent cyan
-                "#0e7490",   // dark cyan (zero-crossing)
-                "#475569",   // neutral slate
+                "#0e7490",   // dark cyan (zero-crossing, negative side)
+                "#78716c",   // warm stone (zero-crossing, positive side)
                 "#fb923c",   // muted orange
                 "#ef4444",   // red
                 "#991b1b",   // deep red

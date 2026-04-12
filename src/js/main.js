@@ -177,8 +177,8 @@ function setupCircadianTint() {
  * stagger each letter by CHAR_STAGGER_MS so longer lines take longer
  * to finish.
  */
-const TITLE_LINE_BASE_DELAYS_MS = [400, 780, 1160];
-const TITLE_CHAR_STAGGER_MS = 36;
+const TITLE_LINE_BASE_DELAYS_MS = [300, 550, 800];
+const TITLE_CHAR_STAGGER_MS = 28;
 
 function setupHeroTitleReveal() {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -243,8 +243,8 @@ function setupHeroTitleReveal() {
  * slows as it approaches the final reading, echoing a real market
  * moving through a shock.
  */
-const COLDOPEN_START_DELAY_MS = 2300;
-const COLDOPEN_TWEEN_DELAY_MS = 450;
+const COLDOPEN_START_DELAY_MS = 1800;
+const COLDOPEN_TWEEN_DELAY_MS = 350;
 const COLDOPEN_TWEEN_DUR_MS = 1100;
 const COLDOPEN_START_VALUE = 45;
 const COLDOPEN_END_VALUE = -145.12;
@@ -446,7 +446,7 @@ function formatPrice(value) {
  * becomes transparent by the time it has scrolled half out of view
  * so the map underneath reveals cleanly.
  */
-const HERO_REVEAL_DURATION_MS = 3100;
+const HERO_REVEAL_DURATION_MS = 2400;
 
 function setupHeroParallax() {
     const hero = document.querySelector(".hero");

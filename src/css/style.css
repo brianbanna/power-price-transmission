@@ -21,12 +21,12 @@
 
 :root {
     --beat: 0;
-    animation: beat 1100ms cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    animation: beat 1400ms cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 @keyframes beat {
     0%, 100% { --beat: 0; }
-    45%      { --beat: 1; }
+    40%      { --beat: 1; }
 }
 
 /* ---------- Tokens ---------- */
@@ -44,7 +44,7 @@
     /* Text — warm whites, muted blue-greys */
     --text-primary: #f5f7fa;
     --text-secondary: #8b95a7;
-    --text-muted: #525a6b;
+    --text-muted: #6b7280;
     --text-ghost: #2f3647;
 
     /* Accent — electric cyan with an ice-white extreme */
@@ -184,8 +184,9 @@ a:focus-visible {
 
 em {
     font-style: italic;
-    /* Fraunces italic has beautiful calligraphic character at display sizes */
-    font-variation-settings: "opsz" 144, "SOFT" 30;
+    /* Fraunces italic at body optical size — display-size contexts
+     * (hero title, cold-open, footer closing) override to opsz 144. */
+    font-variation-settings: "opsz" 24, "SOFT" 30;
 }
 
 strong {
@@ -689,7 +690,7 @@ strong {
 .hero__lede {
     font-size: clamp(18px, 1.5vw, 22px);
     line-height: 1.5;
-    color: var(--text-secondary);
+    color: color-mix(in srgb, var(--text-primary) 75%, var(--text-secondary));
     max-width: 56ch;
     margin-bottom: 72px;
     font-variation-settings: "opsz" 24, "SOFT" 20;
@@ -795,7 +796,7 @@ strong {
 }
 
 .hero__date {
-    color: var(--text-ghost);
+    color: var(--text-muted);
 }
 
 .hero__scroll-hint {
@@ -1158,11 +1159,9 @@ body.is-iris-firing .scrollytelling__map::before {
     width: 100vw;
     height: 100vh;
     pointer-events: none;
-    /* Above everything on the map layer (map=0, vignette=1, grain=2,
-     * circadian=3) but below the narrative cards (narrative col=3, but
-     * cards paint their own z-stack). Use 4 to sit on top of the map
-     * stacking context unambiguously. */
-    z-index: 4;
+    /* Above the map (z=0) but below the narrative cards and explorer
+     * so the leader line never paints over the explorer intro. */
+    z-index: 2;
     overflow: visible;
 }
 
@@ -1385,14 +1384,14 @@ body.is-iris-firing .scrollytelling__map::before {
     transform-box: fill-box;
     transform-origin: center;
     /* All animated properties share the same curve so fill, stroke,
-     * and glow arrive together as one beat — no contour lagging
-     * behind the background colour. */
+     * and glow arrive together as one beat. 500ms with ease-default
+     * (fast start) matches FT/Bloomberg scroll-synced transitions. */
     transition:
-        fill var(--dur-default) var(--ease-cinematic),
-        transform var(--dur-default) var(--ease-cinematic),
-        filter var(--dur-default) var(--ease-cinematic),
-        stroke var(--dur-default) var(--ease-cinematic),
-        stroke-width var(--dur-default) var(--ease-cinematic);
+        fill 500ms var(--ease-default),
+        transform 500ms var(--ease-default),
+        filter 500ms var(--ease-default),
+        stroke 500ms var(--ease-default),
+        stroke-width 500ms var(--ease-default);
 }
 
 .country.is-highlight {
@@ -1623,9 +1622,10 @@ body.is-iris-firing .scrollytelling__map::before {
     max-width: 540px;
 }
 
-/* Step 4 (heatmap) and Step 5 (gen stack) need wider cards. */
+/* Steps 4–5 match the shock card width so the progression
+ * from 460→540→540 reads as intentional widening, not a regression. */
 .step--wide {
-    max-width: 520px;
+    max-width: 540px;
 }
 
 .step__chart--heatmap {
@@ -1791,6 +1791,7 @@ body.is-iris-firing .scrollytelling__map::before {
     line-height: 1.6;
     color: var(--text-secondary);
     font-variation-settings: "opsz" 18, "SOFT" 25;
+    text-wrap: pretty;
 }
 
 .step__body strong {
@@ -1984,9 +1985,9 @@ body.is-iris-firing .scrollytelling__map::before {
 .cal-heatmap__month-label {
     position: absolute;
     right: 4px;
-    font-size: 7px;
+    font-size: 8px;
     color: var(--text-muted);
-    letter-spacing: 0.06em;
+    letter-spacing: 0.10em;
     text-transform: uppercase;
     line-height: 1;
 }
@@ -2083,7 +2084,7 @@ body.is-iris-firing .scrollytelling__map::before {
 
 .gen-stack__legend-text {
     font-family: var(--font-mono);
-    font-size: 7px;
+    font-size: 8px;
     fill: var(--text-muted);
     letter-spacing: 0.06em;
     text-transform: uppercase;

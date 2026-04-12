@@ -146,7 +146,7 @@ function renderChart(holder, chartData, country) {
             ctx.fillRect(
                 MARGIN.left + h * CELL_W,
                 y0,
-                CELL_W - 0.5,
+                CELL_W - 1,
                 Math.max(CELL_H, 1),
             );
         }
