@@ -22,7 +22,7 @@ List targets:
 Preprocessing rules
 -------------------
 These rules are shared across every target and are the result of the
-dataset exploration pass (see `.claude/data_exploration.md`):
+dataset exploration pass (see project data exploration notes):
 
 1. **Focus countries only.** Drop every row where `country` is not in
    `{CH, DE_LU, FR, IT_NORD, AT}`.
@@ -352,7 +352,7 @@ def build_calendar_heatmap(df: pd.DataFrame) -> None:
     }
     save_json(payload, "calendar_heatmap.json")
 
-    # Sanity checks tied to the exploration pass in `.claude/data_exploration.md`.
+    # Sanity checks tied to the initial dataset exploration pass.
     total_hours = {c: sum(len(d[c]) for d in days) for c in countries}
     neg_hours = {
         c: sum(1 for d in days for price in d[c] if price < 0)
