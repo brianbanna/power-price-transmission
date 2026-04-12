@@ -2105,6 +2105,119 @@ body.is-iris-firing .scrollytelling__map::before {
     font-variation-settings: normal;
 }
 
+/* ---------- Daily profile chart (Phase 6 — Steps 6-7) ---------- */
+
+.daily-profile {
+    display: inline-block;
+    margin-bottom: 16px;
+}
+
+.daily-profile__title {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--chrome);
+    margin: 0 0 6px;
+}
+
+.daily-profile__svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+}
+
+.daily-profile__zero {
+    stroke: color-mix(in srgb, var(--text-muted) 50%, transparent);
+    stroke-width: 0.8;
+    stroke-dasharray: 3 3;
+}
+
+.daily-profile__ghost {
+    fill: none;
+    stroke: color-mix(in srgb, var(--text-muted) 40%, transparent);
+    stroke-width: 1;
+    stroke-dasharray: 3 3;
+}
+
+.daily-profile__area {
+    fill: color-mix(in srgb, var(--accent) 12%, transparent);
+    stroke: none;
+}
+
+.daily-profile__line {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    filter: drop-shadow(0 0 4px color-mix(in srgb, var(--accent) 40%, transparent));
+}
+
+.daily-profile__month-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 600;
+    fill: var(--accent);
+    letter-spacing: 0.08em;
+    font-variation-settings: normal;
+}
+
+.daily-profile__axis text {
+    font-family: var(--font-mono);
+    font-size: 8px;
+    fill: var(--text-muted);
+    letter-spacing: 0.04em;
+    font-variation-settings: normal;
+}
+
+.daily-profile__axis-label {
+    font-family: var(--font-mono);
+    font-size: 8px;
+    fill: var(--text-muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-variation-settings: normal;
+}
+
+/* Compact mode — small multiples for Step 7 */
+.daily-profile--compact {
+    margin-bottom: 8px;
+}
+
+.daily-profile--compact .daily-profile__line {
+    stroke-width: 1.4;
+    filter: none;
+}
+
+.daily-profile--compact .daily-profile__area {
+    fill: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+/* Small multiples grid for Step 7 */
+.small-multiples {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px 12px;
+    max-width: 500px;
+}
+
+@media (max-width: 900px) {
+    .small-multiples {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.daily-profile__country-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 700;
+    fill: var(--chrome);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-variation-settings: normal;
+}
+
 /* ---------- Explorer (Phase 7) ----------
  *
  * A "steer the grid" mode. The map stays FULLY visible in the fixed

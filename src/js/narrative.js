@@ -16,6 +16,7 @@ import * as d3 from "d3";
 import scrollama from "scrollama";
 import { createCalendarHeatmap } from "./charts/calendar_heatmap.js";
 import { createGenerationStack } from "./charts/generation_stack.js";
+import { createDailyProfile } from "./charts/daily_profile.js";
 
 const ACTIVE_OFFSET = 0.80;
 const HUD_PROGRESS_SELECTOR = "[data-hud-timestamp]";
@@ -96,6 +97,47 @@ export function initNarrative(selector, config) {
                     label: "Germany — 12 May 2024",
                 });
             }
+        }
+    }
+
+    // Step 6 — duck curve: Germany's daily profile animated month by
+    // month. The ghost line shows the annual average while the active
+    // line morphs through each month's shape, revealing the deepening
+    // midday dip.
+    let duckCtl = null;
+    if (config.profilesData?.countries?.DE) {
+        const duckContainer = container.querySelector('[data-step-chart="duck"]');
+        if (duckContainer) {
+            duckCtl = createDailyProfile(duckContainer, {
+                profiles: config.profilesData.countries.DE,
+                country: "DE",
+                label: "Germany — monthly price profile",
+            });
+        }
+    }
+
+    // Step 7 — small multiples: compact daily profiles for all 5
+    // countries, showing their annual-average shape side by side.
+    if (config.profilesData?.countries) {
+        const multiContainer = container.querySelector('[data-step-chart="multiples"]');
+        if (multiContainer) {
+            const multiWrap = document.createElement("div");
+            multiWrap.className = "small-multiples";
+            for (const [code, lbl] of [
+                ["DE", "Germany"], ["FR", "France"], ["CH", "Switzerland"],
+                ["AT", "Austria"], ["IT", "Italy"],
+            ]) {
+                const profiles = config.profilesData.countries[code];
+                if (profiles) {
+                    createDailyProfile(multiWrap, {
+                        profiles,
+                        country: code,
+                        label: lbl,
+                        compact: true,
+                    });
+                }
+            }
+            multiContainer.appendChild(multiWrap);
         }
     }
 
@@ -201,6 +243,14 @@ export function initNarrative(selector, config) {
             // Trigger generation-stack reveal when Step 5 enters.
             if (element.dataset.step === "5" && genStackCtl) {
                 genStackCtl.reveal();
+            }
+
+            // Trigger duck-curve month animation when Step 6 enters.
+            if (element.dataset.step === "6" && duckCtl) {
+                const months = Object.keys(
+                    config.profilesData?.countries?.DE?.monthly || {},
+                );
+                duckCtl.animateMonths(months, 500);
             }
         })
         .onStepExit(({ element, direction }) => {
