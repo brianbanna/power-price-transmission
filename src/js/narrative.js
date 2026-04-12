@@ -65,20 +65,21 @@ export function initNarrative(selector, config) {
         steps.forEach((step) => renderStepSparkline(step, config.showcase));
     }
 
-    // Step 4 gets a calendar heatmap with a DE/CH toggle. One country
-    // at a time keeps the card height manageable and the cells legible
-    // at 2px per day.
+    // Step 4 gets a calendar heatmap with a DE/CH toggle. Loaded
+    // lazily — the data may arrive after init via injectCalendarHeatmap.
+    const heatmapContainer = container.querySelector('[data-step-chart="heatmap"]');
+    function injectCalendarHeatmap(calendarData) {
+        if (!heatmapContainer || !calendarData?.days?.length) return;
+        createCalendarHeatmap(heatmapContainer, {
+            data: calendarData,
+            countries: [
+                { code: "DE", label: "Germany — 846 negative hours" },
+                { code: "CH", label: "Switzerland — 529 negative hours" },
+            ],
+        });
+    }
     if (config.calendarData) {
-        const heatmapContainer = container.querySelector('[data-step-chart="heatmap"]');
-        if (heatmapContainer) {
-            createCalendarHeatmap(heatmapContainer, {
-                data: config.calendarData,
-                countries: [
-                    { code: "DE", label: "Germany — 846 negative hours" },
-                    { code: "CH", label: "Switzerland — 529 negative hours" },
-                ],
-            });
-        }
+        injectCalendarHeatmap(config.calendarData);
     }
 
     // Step 5 gets a generation stack chart for Germany on the showcase
@@ -357,6 +358,7 @@ export function initNarrative(selector, config) {
     return {
         steps,
         scroller,
+        injectCalendarHeatmap,
     };
 }
 

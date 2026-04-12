@@ -8,16 +8,30 @@ import { loadJSON } from "./utils/data.js";
 // own rendering; this file only coordinates their lifecycle.
 
 async function init() {
-    const [topology, showcase, calendarData, profilesData] = await Promise.all([
+    // Core data loads eagerly — needed for the hero tape and the first
+    // scroll beat. Calendar heatmap (182KB) is deferred until the
+    // narrative has initialized so it doesn't block first paint.
+    const [topology, showcase, profilesData] = await Promise.all([
         loadJSON("map.topojson"),
         loadJSON("showcase_day.json"),
-        loadJSON("calendar_heatmap.json"),
         loadJSON("daily_profiles.json"),
     ]);
 
     const map = createMap("#map-container", { topology, showcase });
-    initNarrative("#narrative", { map, showcase, calendarData, profilesData });
+
+    // Start the narrative without the heatmap data — Steps 1-3, 5-7
+    // don't need it. The heatmap for Step 4 will be injected once the
+    // deferred load completes (typically before the reader reaches it).
+    const narrative = initNarrative("#narrative", { map, showcase, calendarData: null, profilesData });
     initExplorer({ map, showcase, profilesData });
+
+    // Deferred: load the calendar heatmap data in the background and
+    // inject it into the narrative's Step 4 container when ready.
+    loadJSON("calendar_heatmap.json").then((calendarData) => {
+        if (calendarData && narrative?.injectCalendarHeatmap) {
+            narrative.injectCalendarHeatmap(calendarData);
+        }
+    });
 
     setupHeroTitleReveal();
     setupHeroColdOpen();
