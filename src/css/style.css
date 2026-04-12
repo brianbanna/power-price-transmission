@@ -1073,6 +1073,7 @@ strong {
     filter: drop-shadow(0 0 14px color-mix(in srgb, var(--accent) 35%, transparent));
 }
 
+body.is-narrative-active .scene__map svg,
 body.is-narrative-active .scrollytelling__map svg {
     filter: saturate(0.55) brightness(0.82);
 }
@@ -1086,6 +1087,7 @@ body.is-narrative-active .scrollytelling__map svg {
     --grain-intensity: 0.035;
 }
 
+.scene__map::before,
 .scrollytelling__map::before {
     content: "";
     position: absolute;
@@ -1108,6 +1110,7 @@ body.is-iris-firing {
     --grain-intensity: 0.09;
 }
 
+body.is-iris-firing .scene__map::before,
 body.is-iris-firing .scrollytelling__map::before {
     transition: background 700ms cubic-bezier(0.65, 0, 0.35, 1);
 }
@@ -1132,6 +1135,7 @@ body.is-iris-firing .scrollytelling__map::before {
 }
 
 /* Grain overlay on the map for atmosphere */
+.scene__map::after,
 .scrollytelling__map::after {
     content: "";
     position: absolute;
