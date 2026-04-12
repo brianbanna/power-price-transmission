@@ -15,6 +15,7 @@
 import * as d3 from "d3";
 import scrollama from "scrollama";
 import { createCalendarHeatmap } from "./charts/calendar_heatmap.js";
+import { createGenerationStack } from "./charts/generation_stack.js";
 
 const ACTIVE_OFFSET = 0.80;
 const HUD_PROGRESS_SELECTOR = "[data-hud-timestamp]";
@@ -78,6 +79,25 @@ export function initNarrative(selector, config) {
                 country: "CH",
                 label: "Switzerland — 529 negative hours",
             });
+        }
+    }
+
+    // Step 5 gets a generation stack chart for Germany on the showcase
+    // day. The reveal animation fires when the step enters the active
+    // zone, so the stack sweeps open left-to-right as the reader
+    // arrives at the card.
+    let genStackCtl = null;
+    if (config.showcase) {
+        const genContainer = container.querySelector('[data-step-chart="genstack"]');
+        if (genContainer) {
+            const deSeries = config.showcase.countries?.DE;
+            if (deSeries) {
+                genStackCtl = createGenerationStack(genContainer, {
+                    series: deSeries,
+                    country: "DE",
+                    label: "Germany — 12 May 2024",
+                });
+            }
         }
     }
 
@@ -178,6 +198,11 @@ export function initNarrative(selector, config) {
                     focusCountry,
                     highlightCountries,
                 });
+            }
+
+            // Trigger generation-stack reveal when Step 5 enters.
+            if (element.dataset.step === "5" && genStackCtl) {
+                genStackCtl.reveal();
             }
         })
         .onStepExit(({ element, direction }) => {
