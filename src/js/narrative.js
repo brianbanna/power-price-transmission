@@ -64,20 +64,18 @@ export function initNarrative(selector, config) {
         steps.forEach((step) => renderStepSparkline(step, config.showcase));
     }
 
-    // Step 4 gets a calendar heatmap instead of (or in addition to) the
-    // sparkline. Two instances stack vertically: DE first, then CH.
+    // Step 4 gets a calendar heatmap with a DE/CH toggle. One country
+    // at a time keeps the card height manageable and the cells legible
+    // at 2px per day.
     if (config.calendarData) {
         const heatmapContainer = container.querySelector('[data-step-chart="heatmap"]');
         if (heatmapContainer) {
             createCalendarHeatmap(heatmapContainer, {
                 data: config.calendarData,
-                country: "DE",
-                label: "Germany — 846 negative hours",
-            });
-            createCalendarHeatmap(heatmapContainer, {
-                data: config.calendarData,
-                country: "CH",
-                label: "Switzerland — 529 negative hours",
+                countries: [
+                    { code: "DE", label: "Germany — 846 negative hours" },
+                    { code: "CH", label: "Switzerland — 529 negative hours" },
+                ],
             });
         }
     }

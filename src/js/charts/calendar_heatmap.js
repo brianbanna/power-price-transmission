@@ -1,24 +1,29 @@
 // Calendar heatmap — renders a dense hour × day grid of electricity
-// prices for a single country. Canvas-backed for performance (~13K
-// cells). D3 scales drive the layout maths; thin DOM elements handle
-// the axes and tooltip.
+// prices for one or two countries with a tab toggle. Canvas-backed
+// for performance (~13K cells per country). D3 scales drive the
+// layout maths; thin DOM elements handle the axes and tooltip.
 //
 // Usage:
 //   const hm = createCalendarHeatmap("#container", {
-//       data,          // the full calendar_heatmap.json object
-//       country: "DE", // "CH" or "DE"
-//       label: "Germany",
+//       data,                         // calendar_heatmap.json object
+//       countries: [                  // one or two entries
+//           { code: "DE", label: "Germany — 846 negative hours" },
+//           { code: "CH", label: "Switzerland — 529 negative hours" },
+//       ],
 //   });
 //   hm.destroy();
 
 import { priceContinuous } from "../utils/colors.js";
 
-// Layout constants — tuned for the ~460px narrative card width.
 const CELL_W = 13;
-const CELL_H = 1.0;
-const MONTH_GAP = 4;
+const CELL_H = 2.0;
+const MONTH_GAP = 5;
 const MARGIN = { top: 32, right: 8, bottom: 20, left: 44 };
 const HOUR_LABELS = [0, 6, 12, 18, 23];
+const MONTH_NAMES = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
 
 export function createCalendarHeatmap(selector, config) {
     const container =
@@ -27,48 +32,99 @@ export function createCalendarHeatmap(selector, config) {
             : selector;
     if (!container) return null;
 
-    const { data, country, label } = config;
-    if (!data?.days?.length) return null;
+    const { data, countries } = config;
+    if (!data?.days?.length || !countries?.length) return null;
 
-    // Filter to days that have data for this country and are full
-    // (skip the final partial day if it only has 1 hour).
-    const days = data.days.filter(
-        (d) => d[country]?.length >= 23,
-    );
+    // Wrapper div for the whole component (tabs + chart).
+    const wrapper = document.createElement("div");
+    wrapper.className = "cal-heatmap";
+    wrapper.style.position = "relative";
 
-    // Group days by month for the y-axis gap insertion.
+    // Tab bar (only rendered when there are 2+ countries).
+    let activeIdx = 0;
+    const tabs = [];
+    if (countries.length > 1) {
+        const tabBar = document.createElement("div");
+        tabBar.className = "cal-heatmap__tabs mono";
+        countries.forEach((c, i) => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "cal-heatmap__tab";
+            btn.textContent = c.code;
+            btn.setAttribute("aria-label", c.label);
+            if (i === 0) btn.classList.add("is-active");
+            btn.addEventListener("click", () => switchTo(i));
+            tabBar.appendChild(btn);
+            tabs.push(btn);
+        });
+        wrapper.appendChild(tabBar);
+    }
+
+    // Title line — updates when switching countries.
+    const titleEl = document.createElement("p");
+    titleEl.className = "cal-heatmap__title mono";
+    titleEl.textContent = countries[0].label;
+    wrapper.appendChild(titleEl);
+
+    // Chart holder — contains canvas + overlays, swapped on toggle.
+    const chartHolder = document.createElement("div");
+    chartHolder.className = "cal-heatmap__holder";
+    wrapper.appendChild(chartHolder);
+
+    // Pre-build chart data for each country once.
+    const chartDataByIdx = countries.map((c) => prepareChartData(data, c.code));
+
+    // Render the first country.
+    let currentChart = null;
+    function switchTo(idx) {
+        if (currentChart) currentChart.teardown();
+        activeIdx = idx;
+        tabs.forEach((t, i) => t.classList.toggle("is-active", i === idx));
+        titleEl.textContent = countries[idx].label;
+        currentChart = renderChart(chartHolder, chartDataByIdx[idx], countries[idx].code);
+    }
+    switchTo(0);
+
+    container.appendChild(wrapper);
+
+    function destroy() {
+        if (currentChart) currentChart.teardown();
+        wrapper.remove();
+    }
+
+    return { el: wrapper, destroy, switchTo };
+}
+
+function prepareChartData(data, country) {
+    const days = data.days.filter((d) => d[country]?.length >= 23);
     const months = [];
     let currentMonth = null;
     let yOffset = 0;
     for (const day of days) {
-        const m = day.date.slice(0, 7); // "2024-01"
+        const m = day.date.slice(0, 7);
         if (m !== currentMonth) {
             if (currentMonth !== null) yOffset += MONTH_GAP;
-            months.push({ key: m, startY: yOffset, startIdx: months.length ? days.indexOf(day) : 0 });
+            months.push({ key: m, startY: yOffset });
             currentMonth = m;
         }
-        day._y = yOffset;
+        day[`_y_${country}`] = yOffset;
         yOffset += CELL_H;
     }
+    return { days, months, gridH: yOffset };
+}
+
+function renderChart(holder, chartData, country) {
+    const { days, months, gridH } = chartData;
+    // Remove any previous children cleanly.
+    while (holder.firstChild) holder.removeChild(holder.firstChild);
 
     const gridW = 24 * CELL_W;
-    const gridH = yOffset;
     const totalW = MARGIN.left + gridW + MARGIN.right;
     const totalH = MARGIN.top + gridH + MARGIN.bottom;
 
-    // Wrapper div for the whole chart.
-    const wrapper = document.createElement("div");
-    wrapper.className = "cal-heatmap";
-    wrapper.style.width = `${totalW}px`;
-    wrapper.style.position = "relative";
+    holder.style.width = `${totalW}px`;
 
-    // Country label above the chart.
-    const titleEl = document.createElement("p");
-    titleEl.className = "cal-heatmap__title mono";
-    titleEl.textContent = label || country;
-    wrapper.appendChild(titleEl);
-
-    // Canvas for the grid cells.
+    // Canvas
     const dpr = window.devicePixelRatio || 1;
     const canvas = document.createElement("canvas");
     canvas.className = "cal-heatmap__canvas";
@@ -76,15 +132,15 @@ export function createCalendarHeatmap(selector, config) {
     canvas.height = totalH * dpr;
     canvas.style.width = `${totalW}px`;
     canvas.style.height = `${totalH}px`;
-    wrapper.appendChild(canvas);
+    holder.appendChild(canvas);
 
     const ctx = canvas.getContext("2d");
     ctx.scale(dpr, dpr);
 
-    // Draw every cell.
+    const yKey = `_y_${country}`;
     for (const day of days) {
         const prices = day[country];
-        const y0 = MARGIN.top + day._y;
+        const y0 = MARGIN.top + day[yKey];
         for (let h = 0; h < prices.length && h < 24; h++) {
             ctx.fillStyle = priceContinuous(prices[h]);
             ctx.fillRect(
@@ -96,7 +152,7 @@ export function createCalendarHeatmap(selector, config) {
         }
     }
 
-    // Hour axis labels (top).
+    // Hour labels (top)
     const hourRow = document.createElement("div");
     hourRow.className = "cal-heatmap__hours mono";
     hourRow.style.left = `${MARGIN.left}px`;
@@ -108,16 +164,12 @@ export function createCalendarHeatmap(selector, config) {
         span.style.left = `${(h / 23) * 100}%`;
         hourRow.appendChild(span);
     }
-    wrapper.appendChild(hourRow);
+    holder.appendChild(hourRow);
 
-    // Month labels (left side).
+    // Month labels (left)
     const monthCol = document.createElement("div");
     monthCol.className = "cal-heatmap__months mono";
     monthCol.style.top = `${MARGIN.top}px`;
-    const MONTH_NAMES = [
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-    ];
     for (const m of months) {
         const [, mm] = m.key.split("-");
         const span = document.createElement("span");
@@ -126,15 +178,13 @@ export function createCalendarHeatmap(selector, config) {
         span.style.top = `${m.startY}px`;
         monthCol.appendChild(span);
     }
-    wrapper.appendChild(monthCol);
+    holder.appendChild(monthCol);
 
-    // Tooltip — shows date, hour, and price on hover. Hit-testing is
-    // simple arithmetic: mouse position → (hour, dayIndex) via the
-    // known cell dimensions and month-gap offsets.
+    // Tooltip
     const tip = document.createElement("div");
     tip.className = "cal-heatmap__tip mono";
     tip.style.display = "none";
-    wrapper.appendChild(tip);
+    holder.appendChild(tip);
 
     const onMove = (e) => {
         const rect = canvas.getBoundingClientRect();
@@ -145,13 +195,12 @@ export function createCalendarHeatmap(selector, config) {
             return;
         }
         const hour = Math.min(23, Math.floor(mx / CELL_W));
-        // Binary search for the day at this y coordinate.
         let lo = 0;
         let hi = days.length - 1;
         let dayIdx = -1;
         while (lo <= hi) {
             const mid = (lo + hi) >> 1;
-            const dy = days[mid]._y;
+            const dy = days[mid][yKey];
             if (my >= dy && my < dy + CELL_H) { dayIdx = mid; break; }
             if (my < dy) hi = mid - 1; else lo = mid + 1;
         }
@@ -163,7 +212,6 @@ export function createCalendarHeatmap(selector, config) {
         const abs = Math.abs(price).toFixed(1);
         tip.textContent = `${day.date} ${String(hour).padStart(2, "0")}:00  ${sign}\u20AC${abs}`;
         tip.style.display = "";
-        // Position the tooltip above the cursor, clamped to the wrapper.
         const tx = Math.min(totalW - 140, Math.max(0, mx + MARGIN.left - 60));
         const ty = Math.max(0, my + MARGIN.top - 24);
         tip.style.left = `${tx}px`;
@@ -172,12 +220,10 @@ export function createCalendarHeatmap(selector, config) {
     canvas.addEventListener("pointermove", onMove);
     canvas.addEventListener("pointerleave", () => { tip.style.display = "none"; });
 
-    container.appendChild(wrapper);
-
-    function destroy() {
+    function teardown() {
         canvas.removeEventListener("pointermove", onMove);
-        wrapper.remove();
+        while (holder.firstChild) holder.removeChild(holder.firstChild);
     }
 
-    return { el: wrapper, destroy };
+    return { teardown };
 }

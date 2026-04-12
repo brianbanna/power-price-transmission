@@ -1616,15 +1616,14 @@ body.is-iris-firing .scrollytelling__map::before {
     max-width: 540px;
 }
 
-/* Step 4 (heatmap) needs a wider card to fit the 24-column grid. */
+/* Step 4 (heatmap) and Step 5 (gen stack) need wider cards. */
 .step--wide {
     max-width: 520px;
 }
 
 .step__chart--heatmap {
     overflow-x: auto;
-    overflow-y: hidden;
-    max-height: 620px;
+    overflow-y: auto;
 }
 
 .step__hero-number {
@@ -1897,6 +1896,45 @@ body.is-iris-firing .scrollytelling__map::before {
 .cal-heatmap {
     display: inline-block;
     margin-bottom: 16px;
+}
+
+/* DE / CH toggle tabs above the heatmap grid. */
+.cal-heatmap__tabs {
+    display: inline-flex;
+    gap: 2px;
+    margin-bottom: 10px;
+    background: var(--bg-base);
+    border-radius: 4px;
+    padding: 2px;
+    border: 1px solid var(--border);
+}
+
+.cal-heatmap__tab {
+    padding: 4px 14px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: color var(--dur-fast), background var(--dur-fast);
+}
+
+.cal-heatmap__tab:hover {
+    color: var(--text-secondary);
+}
+
+.cal-heatmap__tab.is-active {
+    color: var(--accent);
+    background: var(--bg-elevated);
+}
+
+.cal-heatmap__holder {
+    position: relative;
 }
 
 .cal-heatmap__title {
