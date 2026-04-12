@@ -2394,14 +2394,14 @@ body.is-iris-firing .scrollytelling__map::before {
 .site-footer {
     position: relative;
     z-index: 4;
-    padding: 120px var(--gutter) 80px;
+    padding: 120px var(--gutter) 64px;
     background: var(--bg-base);
     border-top: 1px solid var(--border);
     font-size: 14px;
     color: var(--text-secondary);
     line-height: 1.65;
     font-variation-settings: "opsz" 16;
-    min-height: 80vh;
+    min-height: 64vh;
 }
 
 /* No footer top-mask — under the sticky-scene architecture the map
