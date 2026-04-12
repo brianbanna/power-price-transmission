@@ -261,7 +261,7 @@ function setupHeroTitleReveal() {
 const COLDOPEN_START_DELAY_MS = 1800;
 const COLDOPEN_TWEEN_DELAY_MS = 350;
 const COLDOPEN_TWEEN_DUR_MS = 1100;
-const COLDOPEN_START_VALUE = 45;
+const COLDOPEN_START_VALUE = 57.93; // CH midnight price on the showcase day
 const COLDOPEN_END_VALUE = -145.12;
 
 function setupHeroColdOpen() {
