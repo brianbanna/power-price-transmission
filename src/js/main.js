@@ -355,7 +355,11 @@ function setupMapTilt() {
                     const peakRect = peakCard.getBoundingClientRect();
                     const peakCenter = peakRect.top + peakRect.height / 2;
                     const distFromMid = Math.abs(peakCenter - vh * 0.5);
-                    const proximity = Math.max(0, 1 - distFromMid / (vh * 0.6));
+                    // Wider window (1.0×vh vs 0.6×vh) spreads the tilt
+                    // ramp over more scroll distance so the visual
+                    // displacement (~11px) accumulates gradually instead
+                    // of jumping abruptly near Step 3.
+                    const proximity = Math.max(0, 1 - distFromMid / (vh * 1.0));
                     tilt = Math.max(tilt, proximity * MAP_TILT_MAX);
                 }
                 if (sceneRect.bottom < vh * 0.9 && sceneRect.bottom > 0) {

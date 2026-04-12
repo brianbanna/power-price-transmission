@@ -1045,11 +1045,12 @@ strong {
     transition: filter var(--dur-default) var(--ease-default);
     /* 3D tilt driven by scroll. --map-tilt is written by
      * setupMapTilt() in main.js; ranges 0 (flat, hero) → 1 (peak
-     * moment, ~11°) → holds lower through the explorer. The
-     * origin sits below the visual center so the tilt feels like
-     * the northern edge of the map rising to meet the reader. */
-    transform: rotateX(calc(var(--map-tilt, 0) * 11deg));
-    transform-origin: 50% 62%;
+     * moment, 8°) → holds lower through the explorer. Origin near
+     * center so the top edge doesn't visually jump down as the
+     * tilt increases (at 62% the top-edge displacement was ~24px
+     * at max tilt; at 48% it's ~11px). */
+    transform: rotateX(calc(var(--map-tilt, 0) * 8deg));
+    transform-origin: 50% 48%;
     will-change: transform;
 }
 
