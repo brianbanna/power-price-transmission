@@ -7,14 +7,15 @@
 //   3. Update the HUD timestamp / meta so the reader always knows which
 //      moment they are looking at.
 //
-// The "active zone" is ~55% from the top of the viewport — the card
-// needs to scroll just past the middle before it lights up, which
-// matches the pace of reading rather than pure geometry.
+// The "active zone" is 80% from the top of the viewport — the card
+// fires as soon as it's risen to 20% above the bottom edge. This
+// lights the map up earlier in the reader's field of view so the
+// colours never feel lagged behind the prose.
 
 import * as d3 from "d3";
 import scrollama from "scrollama";
 
-const ACTIVE_OFFSET = 0.55;
+const ACTIVE_OFFSET = 0.80;
 const HUD_PROGRESS_SELECTOR = "[data-hud-timestamp]";
 const HUD_META_SELECTOR = "[data-hud-meta]";
 const PROGRESS_BAR_SELECTOR = ".scroll-progress__bar";
