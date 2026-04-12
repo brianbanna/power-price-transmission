@@ -1053,18 +1053,22 @@ strong {
     will-change: transform;
 }
 
-/* When the reader is at the peak moment (Step 3), the focus country
- * physically lifts off the plane — a subtle translateY + scale +
- * single cyan drop-shadow reads as "rising" because of the surrounding
- * rotateX tilt. transform-box: fill-box lets us scale the SVG path
- * around its own center rather than the SVG coordinate origin. */
+/* When a narrative card lights up its target country, the country
+ * physically lifts off the plane — a translateY + scale + double
+ * drop-shadow halo reads as "rising" because of the surrounding
+ * rotateX tilt. Stroke thickens to an ice-white halo so even small
+ * countries (Switzerland, Austria) carry the effect unambiguously.
+ *
+ * Transition is declared on `.country` above — it runs symmetrically
+ * on class add *and* class remove.
+ */
 .country.is-focus-country {
-    transform-box: fill-box;
-    transform-origin: center;
-    transform: translateY(-5px) scale(1.015);
-    filter: drop-shadow(0 8px 14px color-mix(in srgb, var(--accent-glow) 38%, transparent));
-    transition: transform var(--dur-default) var(--ease-overshoot),
-                filter var(--dur-default) var(--ease-default);
+    transform: translateY(-7px) scale(1.03);
+    filter:
+        drop-shadow(0 14px 22px color-mix(in srgb, var(--accent-glow) 48%, transparent))
+        drop-shadow(0 0 22px color-mix(in srgb, var(--accent) 55%, transparent));
+    stroke: var(--accent-glow);
+    stroke-width: 1.6;
 }
 
 body.is-narrative-active .scrollytelling__map svg {
@@ -1344,14 +1348,31 @@ body.is-iris-firing .scrollytelling__map::before {
     .cartouche { display: none; }
 }
 
-/* ---------- Map — countries (base state) ---------- */
-
+/* ---------- Map — countries (base state) ----------
+ *
+ * Every animated property lives here on the base rule (not on the
+ * focus modifier below), so that when the `is-focus-country` class
+ * is *removed* the same transition plays in reverse. Otherwise the
+ * country snaps back to its resting state the instant focus leaves.
+ *
+ * transform-box / transform-origin let the focus scale + translate
+ * pivot around each path's own bounding-box centre, rather than the
+ * SVG coordinate origin at (0, 0). Without these, scaling a country
+ * would also translate it by most of its distance from origin.
+ */
 .country {
     fill: var(--bg-surface);
     stroke: var(--border-strong);
     stroke-width: 0.8;
     stroke-linejoin: round;
-    transition: fill var(--dur-default) var(--ease-default);
+    transform-box: fill-box;
+    transform-origin: center;
+    transition:
+        fill var(--dur-default) var(--ease-default),
+        transform var(--dur-default) var(--ease-cinematic),
+        filter var(--dur-default) var(--ease-cinematic),
+        stroke var(--dur-default) var(--ease-cinematic),
+        stroke-width var(--dur-default) var(--ease-cinematic);
 }
 
 .country.is-highlight {
