@@ -304,6 +304,46 @@ export function initNarrative(selector, config) {
         }, { passive: true });
     }
 
+    // ---- Scroll-driven card opacity ----
+    //
+    // Cards dim gradually as they scroll upward out of the active zone
+    // instead of snapping to a low opacity the instant a new step
+    // enters. The active card is always full opacity. Inactive cards
+    // in the lower 75% of the viewport stay at 0.55 (readable but
+    // clearly not the focus). As they cross above the 25% line from
+    // the top they fade from 0.55 down to 0.15. This scroll handler
+    // writes inline `opacity` so it bypasses the CSS transition and
+    // tracks the scroll position per-frame.
+    let cardOpTicking = false;
+    const updateCardOpacity = () => {
+        if (cardOpTicking) return;
+        cardOpTicking = true;
+        requestAnimationFrame(() => {
+            const vh = window.innerHeight;
+            steps.forEach((step) => {
+                if (step.classList.contains("is-active")) {
+                    step.style.opacity = "1";
+                    return;
+                }
+                const rect = step.getBoundingClientRect();
+                const center = rect.top + rect.height / 2;
+                if (center > vh * 0.25) {
+                    // In the lower 75% — dimmed but readable.
+                    step.style.opacity = "0.55";
+                } else if (center > -rect.height * 0.5) {
+                    // Fading zone: 25% → above viewport.
+                    const t = Math.max(0, center / (vh * 0.25));
+                    step.style.opacity = (0.15 + t * 0.40).toFixed(2);
+                } else {
+                    step.style.opacity = "0.15";
+                }
+            });
+            cardOpTicking = false;
+        });
+    };
+    updateCardOpacity();
+    window.addEventListener("scroll", updateCardOpacity, { passive: true });
+
     return {
         steps,
         scroller,

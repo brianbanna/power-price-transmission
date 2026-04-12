@@ -1555,11 +1555,13 @@ body.is-iris-firing .scrollytelling__map::before {
         0 4px 12px -2px rgba(0, 0, 0, 0.3),
         0 1px 0 0 rgba(255, 255, 255, 0.05) inset;
 
-    /* Inactive state — quieted, slightly shrunk */
-    opacity: 0.32;
+    /* Inactive state — slightly shrunk. Opacity is now driven by a
+     * scroll-position handler in narrative.js rather than the CSS
+     * class toggle, so cards dim gradually as they scroll upward
+     * instead of snapping to 0.32 the instant a new step enters. */
+    opacity: 0.55;
     transform: translateY(16px) scale(0.985);
     transition:
-        opacity var(--dur-default) var(--ease-default),
         transform var(--dur-default) var(--ease-default),
         border-color var(--dur-default) var(--ease-default),
         box-shadow var(--dur-default) var(--ease-default);
@@ -1587,7 +1589,6 @@ body.is-iris-firing .scrollytelling__map::before {
 }
 
 .step.is-active {
-    opacity: 1;
     transform: translateY(0) scale(1);
     border-color: color-mix(in srgb, var(--step-accent, var(--accent)) 18%, var(--border-glass));
     border-top-color: color-mix(in srgb, var(--step-accent, var(--accent)) 24%, rgba(255, 255, 255, 0.12));
