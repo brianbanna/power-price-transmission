@@ -17,7 +17,7 @@ async function init() {
 
     const map = createMap("#map-container", { topology, showcase });
     initNarrative("#narrative", { map, showcase, calendarData, profilesData });
-    initExplorer({ map, showcase });
+    initExplorer({ map, showcase, profilesData });
 
     setupHeroTitleReveal();
     setupHeroColdOpen();

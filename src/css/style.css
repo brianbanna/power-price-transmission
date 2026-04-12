@@ -2484,6 +2484,114 @@ body.is-iris-firing .scrollytelling__map::before {
     opacity: 0;
 }
 
+/* ---------- Explorer sidebar ----------
+ *
+ * Slides in from the right when the reader clicks a country on the
+ * map during the explorer phase. Shows generation stack + daily
+ * profile + stats for the selected country at the current hour.
+ */
+
+.explorer__sidebar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: clamp(300px, 26vw, 400px);
+    height: 100vh;
+    background: var(--bg-surface);
+    border-left: 1px solid var(--border);
+    z-index: 20;
+    overflow-y: auto;
+    padding: 24px 24px 100px;
+    transform: translateX(100%);
+    transition: transform 400ms var(--ease-default);
+    box-shadow: -8px 0 32px rgba(0, 0, 0, 0.4);
+}
+
+.explorer__sidebar.is-open {
+    transform: translateX(0);
+}
+
+.sidebar__header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.sidebar__close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--bg-elevated);
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    transition: color var(--dur-fast), border-color var(--dur-fast);
+}
+
+.sidebar__close:hover {
+    color: var(--text-primary);
+    border-color: var(--text-muted);
+}
+
+.sidebar__country {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0;
+}
+
+.sidebar__stats {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+}
+
+.sidebar__stat {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.sidebar__stat-label {
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.sidebar__stat-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.sidebar__charts {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.sidebar__chart {
+    width: 100%;
+}
+
+@media (max-width: 900px) {
+    .explorer__sidebar {
+        width: 100vw;
+    }
+}
+
 /* ---------- Timeline scrubber ---------- */
 
 .timeline {

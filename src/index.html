@@ -252,6 +252,35 @@
                 </p>
             </div>
 
+            <aside class="explorer__sidebar" data-sidebar aria-label="Country detail panel">
+                <div class="sidebar__header">
+                    <button type="button" class="sidebar__close" data-sidebar-close aria-label="Close panel">
+                        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                            <path d="M18 6 L6 18 M6 6 L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </button>
+                    <h3 class="sidebar__country mono" data-sidebar-country>Switzerland</h3>
+                </div>
+                <div class="sidebar__stats" data-sidebar-stats>
+                    <div class="sidebar__stat">
+                        <span class="sidebar__stat-label mono">Price</span>
+                        <span class="sidebar__stat-value mono" data-sidebar-price>—</span>
+                    </div>
+                    <div class="sidebar__stat">
+                        <span class="sidebar__stat-label mono">Renewable</span>
+                        <span class="sidebar__stat-value mono" data-sidebar-renewable>—</span>
+                    </div>
+                    <div class="sidebar__stat">
+                        <span class="sidebar__stat-label mono">Spread to IT</span>
+                        <span class="sidebar__stat-value mono" data-sidebar-spread>—</span>
+                    </div>
+                </div>
+                <div class="sidebar__charts">
+                    <div class="sidebar__chart" data-sidebar-genstack></div>
+                    <div class="sidebar__chart" data-sidebar-profile></div>
+                </div>
+            </aside>
+
             <div class="explorer__timeline-wrap">
                 <div class="timeline" data-timeline>
                     <div class="timeline__chrome">

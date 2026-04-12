@@ -2,8 +2,12 @@
 //
 // Binds the timeline scrubber to the map controller so the reader can
 // drag through the 24 hours of the showcase day and see the map update
-// live. Also handles play/pause (keyboard + button) and keyboard
-// scrubbing via arrow keys on the focused track.
+// live. Also handles play/pause (keyboard + button), keyboard
+// scrubbing via arrow keys, and a right-hand sidebar panel that shows
+// generation stack + daily profile + stats for the clicked country.
+
+import { createGenerationStack } from "./charts/generation_stack.js";
+import { createDailyProfile } from "./charts/daily_profile.js";
 
 const HOURS = 24;
 const FOCUS_COUNTRY = "CH";   // Default sidebar subject — the protagonist
@@ -110,9 +114,19 @@ export function initExplorer(config) {
         }
     }
 
+    // Forward-declared sidebar state — initialized by the sidebar
+    // block near the end of initExplorer. Read by pushMap so the
+    // map focus tracks the sidebar's selected country.
+    let sidebarActiveCountry = null;
+
     function pushMap(hour) {
         if (config.map?.update) {
-            config.map.update({ hour, focusCountry: FOCUS_COUNTRY });
+            const focus = sidebarActiveCountry || FOCUS_COUNTRY;
+            config.map.update({ hour, focusCountry: focus });
+        }
+        // Keep sidebar stats in sync with timeline position.
+        if (sidebarActiveCountry) {
+            updateSidebarStats(sidebarActiveCountry, hour);
         }
     }
 
@@ -462,6 +476,110 @@ export function initExplorer(config) {
         pauseObserver.observe(section);
     }
 
+    // ---- Sidebar panel ----
+    //
+    // Click a country on the map to open a right-hand sidebar showing
+    // its generation stack and daily price profile for the current
+    // hour on the showcase day. The sidebar updates when the timeline
+    // moves and when the reader clicks a different country.
+    const sidebar = document.querySelector("[data-sidebar]");
+    const sidebarClose = document.querySelector("[data-sidebar-close]");
+    const sidebarCountry = document.querySelector("[data-sidebar-country]");
+    const sidebarPrice = document.querySelector("[data-sidebar-price]");
+    const sidebarRenewable = document.querySelector("[data-sidebar-renewable]");
+    const sidebarSpread = document.querySelector("[data-sidebar-spread]");
+    const sidebarGenContainer = document.querySelector("[data-sidebar-genstack]");
+    const sidebarProfileContainer = document.querySelector("[data-sidebar-profile]");
+
+    const COUNTRY_NAMES = {
+        CH: "Switzerland", DE: "Germany", FR: "France",
+        IT: "Italy", AT: "Austria",
+    };
+
+    let sidebarGenCtl = null;
+    let sidebarProfileCtl = null;
+    // sidebarActiveCountry is declared above pushMap (line ~120).
+
+    function updateSidebarStats(countryCode, hour) {
+        if (!showcase?.countries) return;
+        const entry = showcase.countries[countryCode]?.[hour];
+        if (!entry) return;
+        const sign = entry.price < 0 ? "\u2212" : "";
+        const abs = Math.abs(entry.price).toFixed(1);
+        if (sidebarPrice) sidebarPrice.textContent = `${sign}\u20AC${abs}`;
+        if (sidebarRenewable) {
+            sidebarRenewable.textContent = `${(entry.renewable_share * 100).toFixed(0)}%`;
+        }
+        if (sidebarSpread) {
+            const itPrice = showcase.countries.IT?.[hour]?.price;
+            if (itPrice != null) {
+                const spread = Math.abs(entry.price - itPrice).toFixed(0);
+                sidebarSpread.textContent = `\u20AC${spread}`;
+            }
+        }
+    }
+
+    function openSidebar(countryCode) {
+        if (!sidebar || !showcase?.countries?.[countryCode]) return;
+        sidebarActiveCountry = countryCode;
+        if (sidebarCountry) sidebarCountry.textContent = COUNTRY_NAMES[countryCode] || countryCode;
+
+        // Update the map focus to this country.
+        pushMap(state.hour);
+
+        updateSidebarStats(countryCode, state.hour);
+
+        // Rebuild charts for the new country.
+        if (sidebarGenCtl) { sidebarGenCtl.destroy(); sidebarGenCtl = null; }
+        if (sidebarProfileCtl) { sidebarProfileCtl.destroy(); sidebarProfileCtl = null; }
+
+        if (sidebarGenContainer) {
+            while (sidebarGenContainer.firstChild) sidebarGenContainer.removeChild(sidebarGenContainer.firstChild);
+            const series = showcase.countries[countryCode];
+            if (series) {
+                sidebarGenCtl = createGenerationStack(sidebarGenContainer, {
+                    series,
+                    country: countryCode,
+                    label: `${COUNTRY_NAMES[countryCode] || countryCode} — 12 May 2024`,
+                });
+                sidebarGenCtl.reveal();
+            }
+        }
+
+        if (sidebarProfileContainer && config.profilesData?.countries?.[countryCode]) {
+            while (sidebarProfileContainer.firstChild) sidebarProfileContainer.removeChild(sidebarProfileContainer.firstChild);
+            sidebarProfileCtl = createDailyProfile(sidebarProfileContainer, {
+                profiles: config.profilesData.countries[countryCode],
+                country: countryCode,
+                label: `Daily price profile`,
+            });
+        }
+
+        sidebar.classList.add("is-open");
+    }
+
+    function closeSidebar() {
+        if (!sidebar) return;
+        sidebar.classList.remove("is-open");
+        sidebarActiveCountry = null;
+        // Reset focus to the default protagonist.
+        pushMap(state.hour);
+    }
+
+    // Wire country clicks on the map.
+    if (sidebar) {
+        document.querySelectorAll(".country").forEach((el) => {
+            el.style.cursor = "pointer";
+            el.addEventListener("click", () => {
+                const iso = el.getAttribute("data-iso");
+                if (iso) openSidebar(iso);
+            });
+        });
+        if (sidebarClose) {
+            sidebarClose.addEventListener("click", closeSidebar);
+        }
+    }
+
     // Paint the initial UI state (handle at INITIAL_HOUR, readout set)
     // without touching the map — the map only updates once the reader
     // actually presses play or starts scrubbing.
@@ -472,5 +590,7 @@ export function initExplorer(config) {
         pause,
         togglePlay,
         setHour,
+        openSidebar,
+        closeSidebar,
     };
 }
