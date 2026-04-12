@@ -1504,11 +1504,11 @@ body.is-iris-firing .scrollytelling__map::before {
     font-variant-numeric: tabular-nums;
     font-feature-settings: "zero", "ss02";
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
     fill: var(--text-primary);
     paint-order: stroke;
     stroke: var(--bg-base);
-    stroke-width: 3;
+    stroke-width: 4;
     stroke-linejoin: round;
     transition:
         font-size var(--dur-default) var(--ease-overshoot),
