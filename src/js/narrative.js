@@ -259,7 +259,7 @@ export function initNarrative(selector, config) {
         }
         if (leaderCtl) leaderCtl.hide();
         if (config.map && typeof config.map.update === "function") {
-            config.map.update({ hour: null, focusCountry: null });
+            config.map.update({ hour: null, focusCountry: null, highlightCountries: [] });
         }
     };
     window.addEventListener("scroll", checkScrollReset, { passive: true });
@@ -572,6 +572,11 @@ function createLeaderController(svgEl, mapCtl) {
 function renderStepSparkline(stepEl, showcase) {
     const target = stepEl.querySelector("[data-step-chart]");
     if (!target) return;
+    // Steps whose chart container has a custom type (heatmap, genstack)
+    // are populated by their own dedicated component — skip them here
+    // to avoid orphaned sparkline SVGs buried under the real chart.
+    const chartType = target.getAttribute("data-step-chart");
+    if (chartType && chartType !== "true" && chartType !== "") return;
 
     const country = stepEl.dataset.country || "CH";
     const focusHour = Number(stepEl.dataset.hour ?? 0);

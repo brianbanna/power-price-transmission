@@ -883,12 +883,7 @@ strong {
     transform: translate(0, 0) scale(1);
 }
 
-.hero__coldopen.is-fading {
-    opacity: 0;
-    transform: translate(0, -18px) scale(0.96);
-    transition: opacity 720ms var(--ease-cinematic),
-                transform 820ms var(--ease-cinematic);
-}
+
 
 /* On narrow viewports the title wraps wide and there's no room in
  * the right gutter for the counter without crashing into the title.
@@ -979,10 +974,7 @@ strong {
     .hero__coldopen { display: none; }
 }
 
-@keyframes pulse {
-    0%, 100% { opacity: 1;   transform: scale(1); }
-    50%      { opacity: 0.5; transform: scale(0.9); }
-}
+
 
 /* ---------- Scene (shared parent of narrative + explorer) ----------
  *

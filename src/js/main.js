@@ -306,7 +306,7 @@ function formatColdOpenValue(value) {
  * Map tilt — a scroll-driven 3D perspective rotation on the sticky
  * map SVG. Nothing happens in the hero (the map is hidden behind it);
  * as the reader enters the scene and approaches the peak-moment card,
- * the map rotates ~11° on the X axis, as if tipping up to face the
+ * the map rotates ~8° on the X axis, as if tipping up to face the
  * reader. The tilt eases back down through the explorer.
  *
  * The raw signal comes from the scene's bounding rect so the curve
