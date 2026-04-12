@@ -245,9 +245,6 @@ function setupHeroTitleReveal() {
 const COLDOPEN_START_DELAY_MS = 2300;
 const COLDOPEN_TWEEN_DELAY_MS = 450;
 const COLDOPEN_TWEEN_DUR_MS = 1100;
-const COLDOPEN_HOLD_MS = 520;
-const COLDOPEN_FADE_DELAY_MS =
-    COLDOPEN_START_DELAY_MS + COLDOPEN_TWEEN_DELAY_MS + COLDOPEN_TWEEN_DUR_MS + COLDOPEN_HOLD_MS;
 const COLDOPEN_START_VALUE = 45;
 const COLDOPEN_END_VALUE = -145.12;
 
@@ -284,13 +281,9 @@ function setupHeroColdOpen() {
         requestAnimationFrame(tick);
     }, COLDOPEN_START_DELAY_MS + COLDOPEN_TWEEN_DELAY_MS);
 
-    setTimeout(() => {
-        el.classList.remove("is-showing");
-        el.classList.add("is-fading");
-        // Remove the element from the layout after the fade finishes
-        // so it stops intercepting nothing and keeps the DOM tidy.
-        setTimeout(() => el.remove(), 900);
-    }, COLDOPEN_FADE_DELAY_MS);
+    // No fade-out — the final value sticks so scrolling back to the
+    // top of the page finds the teaser still in place. The cold-open
+    // becomes a persistent anchor for the hero dispatch.
 }
 
 function formatColdOpenValue(value) {
@@ -457,14 +450,24 @@ function setupHeroParallax() {
     const armTimer = setTimeout(() => { armed = true; onScroll(); }, HERO_REVEAL_DURATION_MS);
 
     let ticking = false;
-    let detached = false;
+    // Quantize progress so near-identical scroll positions don't
+    // trigger redundant style writes. 60 steps ≈ 1.5% of the hero
+    // range, fine enough for smooth parallax but coarse enough to
+    // elide most scroll events once the hero has fully cleared.
+    let lastProgressStep = -1;
     const onScroll = () => {
-        if (!armed || detached) return;
+        if (!armed) return;
         if (ticking) return;
         ticking = true;
         requestAnimationFrame(() => {
             const viewport = window.innerHeight;
             const progress = Math.min(1, Math.max(0, window.scrollY / (viewport * 0.85)));
+            const step = Math.round(progress * 60);
+            if (step === lastProgressStep) {
+                ticking = false;
+                return;
+            }
+            lastProgressStep = step;
 
             // Each title line drifts up at a different rate for subtle parallax
             titleLines.forEach((line, i) => {
@@ -489,13 +492,10 @@ function setupHeroParallax() {
                 signature.style.transform = `translate3d(0, ${-progress * 14}px, 0)`;
                 signature.style.opacity = `${Math.max(0, 1 - progress * 1.1)}`;
             }
-            // Past the point where every hero element is already fully
-            // faded/translated, nothing will change visually — detach
-            // the listener entirely so scroll events stop firing it.
-            if (progress >= 1) {
-                detached = true;
-                window.removeEventListener("scroll", onScroll);
-            }
+            // Note: handler stays attached so scrolling back up to
+            // the hero re-runs the transforms in reverse and the
+            // title/lede/tape all reappear. Early detach caused a
+            // regression where the hero stayed invisible forever.
             ticking = false;
         });
     };
