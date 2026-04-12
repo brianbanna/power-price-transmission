@@ -2623,7 +2623,7 @@ body.is-iris-firing .scrollytelling__map::before {
 
 .timeline__chrome {
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     gap: 24px;
     margin-bottom: 24px;
 }
@@ -2763,6 +2763,12 @@ body.is-iris-firing .scrollytelling__map::before {
 .timeline__mode-btn.is-active {
     color: var(--accent);
     background: var(--bg-elevated);
+}
+
+.timeline__speed-group {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
 }
 
 .timeline__speed {
