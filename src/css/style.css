@@ -2316,6 +2316,66 @@ body.is-iris-firing .scrollytelling__map::before {
     transition: transform 200ms var(--ease-default);
 }
 
+/* Scroll-capture prompts — visible only during the scroll-locked
+ * exploration phase. The "scroll to move" prompt appears when the
+ * lock activates; the "day complete" prompt replaces it after the
+ * reader reaches hour 23 and the lock is about to release. */
+.explorer__scroll-prompt,
+.explorer__scroll-done {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--chrome);
+    margin-top: 24px;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 500ms var(--ease-cinematic),
+                transform 500ms var(--ease-cinematic);
+    pointer-events: none;
+}
+
+.explorer__scroll-prompt-arrow {
+    font-size: 16px;
+    animation: scrollPromptBounce 1400ms var(--ease-default) infinite;
+}
+
+@keyframes scrollPromptBounce {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(5px); }
+}
+
+.explorer__scroll-done-check {
+    color: var(--accent);
+    font-size: 14px;
+}
+
+/* Show scroll-prompt when scroll lock is active */
+.scene__explorer.is-scroll-locked .explorer__scroll-prompt {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Show day-complete prompt when the reader finishes the day */
+.scene__explorer.is-scroll-complete .explorer__scroll-prompt {
+    opacity: 0;
+    transform: translateY(-8px);
+}
+
+.scene__explorer.is-scroll-complete .explorer__scroll-done {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* After release, fade the done prompt out too */
+.scene__explorer.is-scroll-released .explorer__scroll-done {
+    opacity: 0;
+    transition-delay: 1200ms;
+}
+
 /* ---------- Timeline scrubber ---------- */
 
 .timeline {

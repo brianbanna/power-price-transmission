@@ -11,6 +11,15 @@ const MS_PER_HOUR = 760;      // Playback cadence — ~18s for the full day
 const VISIBILITY_THRESHOLD = 0.15; // How far into the explorer before it "activates"
 const INITIAL_HOUR = 0;       // Start at midnight — reader scrubs forward from calm baseline
 
+// Scroll-capture — when the explorer timeline is docked, wheel events
+// drive the timeline scrubber instead of scrolling the page. The reader
+// "scrolls through the day" before they can continue. Releasing happens
+// once hour 23 is reached and a short dwell has passed. Skipped on
+// touch devices where scroll-jacking feels hostile.
+const SCROLL_CAPTURE_PX_PER_HOUR = 120; // accumulated deltaY pixels per 1-hour advance
+const SCROLL_CAPTURE_RELEASE_MS = 900;  // dwell at hour 23 before freeing scroll
+const IS_TOUCH = window.matchMedia("(pointer: coarse)").matches;
+
 const SELECTORS = {
     section: "#explorer",
     timelineWrap: ".explorer__timeline-wrap",
@@ -385,6 +394,77 @@ export function initExplorer(config) {
             { threshold: 0.35 },
         );
         fadeObserver.observe(headlineEl);
+    }
+
+    // ---- Scroll capture ----
+    //
+    // When the timeline is docked and the reader hasn't completed the
+    // day, wheel events are intercepted and routed into the timeline
+    // scrubber. The page doesn't scroll — the reader "scrolls through
+    // the day." Once they reach hour 23, a brief dwell releases the
+    // lock and normal scrolling resumes. A "keep scrolling" prompt
+    // appears after completion so the reader knows the lock is lifted.
+    //
+    // Skipped on touch devices where scroll-jacking is hostile.
+    const scrollState = {
+        locked: false,
+        completed: false,
+        accum: 0,           // accumulated deltaY pixels since last hour tick
+        releaseTimer: null,
+    };
+
+    if (!IS_TOUCH) {
+        const onWheel = (e) => {
+            if (!scrollState.locked) return;
+            e.preventDefault();
+
+            markStarted();
+            markTouched();
+
+            // Accumulate deltaY and convert to fractional hour advancement.
+            scrollState.accum += e.deltaY;
+            const hourDelta = scrollState.accum / SCROLL_CAPTURE_PX_PER_HOUR;
+            if (Math.abs(hourDelta) >= 0.05) {
+                const next = Math.max(0, Math.min(
+                    HOURS - 1,
+                    state.hourFloat + hourDelta,
+                ));
+                state.hourFloat = next;
+                const intHour = Math.min(HOURS - 1, Math.floor(next + 1e-6));
+                if (intHour !== state.hour) {
+                    state.hour = intHour;
+                    pushMap(intHour);
+                }
+                renderUI();
+                scrollState.accum = 0;
+            }
+
+            // Reached the end of the day — release the lock after a dwell.
+            if (state.hourFloat >= HOURS - 1 && !scrollState.completed) {
+                scrollState.completed = true;
+                section.classList.add("is-scroll-complete");
+                scrollState.releaseTimer = setTimeout(() => {
+                    scrollState.locked = false;
+                    section.classList.add("is-scroll-released");
+                }, SCROLL_CAPTURE_RELEASE_MS);
+            }
+        };
+
+        document.addEventListener("wheel", onWheel, { passive: false });
+
+        // Activate the lock when the explorer enters the viewport.
+        const lockObserver = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting && !scrollState.completed) {
+                    scrollState.locked = true;
+                    section.classList.add("is-scroll-locked");
+                } else if (!entry.isIntersecting && scrollState.locked) {
+                    scrollState.locked = false;
+                }
+            },
+            { threshold: 0.4 },
+        );
+        lockObserver.observe(section);
     }
 
     // Paint the initial UI state (handle at INITIAL_HOUR, readout set)
