@@ -260,7 +260,16 @@ function setupHeroColdOpen() {
     // element has appeared.
     valueEl.textContent = formatColdOpenValue(COLDOPEN_START_VALUE);
 
-    setTimeout(() => el.classList.add("is-showing"), COLDOPEN_START_DELAY_MS);
+    setTimeout(() => {
+        // Force a synchronous reflow so the browser commits the
+        // initial opacity: 0 to the paint pipeline BEFORE the class
+        // toggle pushes it to opacity: 1. Without this, some browsers
+        // batch both states into one paint and the CSS transition
+        // never fires (the element jumps from "never rendered" to
+        // "fully visible" in a single frame, skipping the 480ms ease).
+        void el.offsetWidth;
+        el.classList.add("is-showing");
+    }, COLDOPEN_START_DELAY_MS);
 
     setTimeout(() => {
         const start = performance.now();
