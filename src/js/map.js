@@ -778,9 +778,9 @@ export function createMap(selector, config) {
             // Reset — base state, no colors, no labels, no flows.
             countryPaths
                 .interrupt()
-                .attr("fill", null)
                 .classed("is-focus-country", false)
-                .classed("is-secondary-focus", false);
+                .classed("is-secondary-focus", false)
+                .each(function () { this.style.fill = ""; });
             labelGroups.classed("is-visible", false).classed("is-focus", false);
             gFlows.selectAll("path.flow").remove();
             // Tear the particle pools down — the rAF loop self-halts
@@ -813,12 +813,19 @@ export function createMap(selector, config) {
         // (Previously a D3 `.transition()` drove fill via rAF on a
         // slightly different curve, desyncing it from the CSS-driven
         // contour properties.)
-        countryPaths.attr("fill", (d) => {
+        // Write the fill as an inline style (not an SVG attribute) so
+        // the CSS transition engine owns the interpolation on the same
+        // compositor pass as stroke/transform/filter. Setting it as an
+        // attribute caused some browsers to start the fill transition
+        // one frame later than the CSS-driven stroke transition.
+        countryPaths.each(function (d) {
             const entry = showcase.countries?.[d.id]?.[state.hour];
-            if (!entry) return null;
-            return state.colorMode === "renewable"
-                ? renewableColor(entry.renewable_share)
-                : priceColor(entry.price);
+            const color = entry
+                ? (state.colorMode === "renewable"
+                    ? renewableColor(entry.renewable_share)
+                    : priceColor(entry.price))
+                : null;
+            this.style.fill = color || "";
         });
 
         // Update label text + focus state. The focus country gets the
@@ -831,7 +838,11 @@ export function createMap(selector, config) {
                 g.select(".label__price").text("—");
                 return;
             }
-            g.select(".label__price").text(formatPrice(entry.price));
+            g.select(".label__price").text(
+                state.colorMode === "renewable"
+                    ? `${(entry.renewable_share * 100).toFixed(0)}%`
+                    : formatPrice(entry.price),
+            );
         });
 
         drawFlows();
