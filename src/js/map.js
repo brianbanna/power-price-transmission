@@ -763,16 +763,18 @@ export function createMap(selector, config) {
 
         labelGroups.classed("is-visible", true);
 
-        // Country fills share duration AND easing with the flow-arrow
-        // transition below so the whole beat lands in unison.
-        countryPaths
-            .transition()
-            .duration(800)
-            .ease(d3.easeCubicInOut)
-            .attr("fill", (d) => {
-                const entry = showcase.countries?.[d.id]?.[state.hour];
-                return entry ? priceColor(entry.price) : null;
-            });
+        // Set the fill attribute immediately — the CSS `transition:
+        // fill 800ms ease-cinematic` on `.country` handles the
+        // interpolation. This keeps fill on the exact same easing
+        // curve and start time as stroke, transform, and filter,
+        // so the colour and the contour arrive as one beat.
+        // (Previously a D3 `.transition()` drove fill via rAF on a
+        // slightly different curve, desyncing it from the CSS-driven
+        // contour properties.)
+        countryPaths.attr("fill", (d) => {
+            const entry = showcase.countries?.[d.id]?.[state.hour];
+            return entry ? priceColor(entry.price) : null;
+        });
 
         // Update label text + focus state. The focus country gets the
         // large "hero number" treatment — other countries stay compact.
