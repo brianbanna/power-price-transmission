@@ -63,6 +63,13 @@ export function initNarrative(selector, config) {
     // current hour highlighted.
     if (config.showcase) {
         steps.forEach((step) => renderStepSparkline(step, config.showcase));
+        // Step 2 gets a small generation-mix donut for Germany at hour 10
+        // showing solar dominance. Rendered inside the same chart container
+        // as the sparkline, floated to the right.
+        const step2 = container.querySelector('[data-step="2"]');
+        if (step2) {
+            renderGenDonut(step2, config.showcase, "DE", 10);
+        }
     }
 
     // Step 4 gets a calendar heatmap with a DE/CH toggle. Loaded
@@ -723,4 +730,70 @@ function renderStepSparkline(stepEl, showcase) {
         .attr("y", padding.top + 7)
         .attr("text-anchor", "start")
         .text(country);
+}
+
+
+/**
+ * Render a small generation-mix donut inside a step card, showing the
+ * proportional breakdown of solar/wind/hydro/nuclear/gas at a specific
+ * hour. Used on Step 2 to visually reinforce "solar is dominating."
+ */
+function renderGenDonut(stepEl, showcase, country, hour) {
+    const target = stepEl.querySelector("[data-step-chart]");
+    if (!target) return;
+    const entry = showcase?.countries?.[country]?.[hour];
+    if (!entry) return;
+
+    const SOURCES = [
+        { key: "solar", label: "Solar", color: "#fbbf24" },
+        { key: "wind", label: "Wind", color: "#34d399" },
+        { key: "hydro", label: "Hydro", color: "#6366f1" },
+        { key: "nuclear", label: "Nuclear", color: "#a855f7" },
+        { key: "gas", label: "Gas", color: "#f59e0b" },
+    ];
+
+    const slices = SOURCES
+        .map((s) => ({ ...s, value: entry[s.key] || 0 }))
+        .filter((s) => s.value > 0);
+
+    const total = slices.reduce((sum, s) => sum + s.value, 0);
+    if (total === 0) return;
+
+    const size = 64;
+    const outerR = size / 2 - 2;
+    const innerR = outerR * 0.55;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "gen-donut";
+    wrapper.style.cssText = "display:inline-block;float:right;margin-left:12px;";
+
+    const svg = d3.select(wrapper)
+        .append("svg")
+        .attr("viewBox", `0 0 ${size} ${size}`)
+        .attr("width", size)
+        .attr("height", size);
+
+    const g = svg.append("g")
+        .attr("transform", `translate(${size / 2},${size / 2})`);
+
+    const arc = d3.arc().innerRadius(innerR).outerRadius(outerR);
+    const pie = d3.pie().value((d) => d.value).sort(null).padAngle(0.03);
+
+    g.selectAll("path")
+        .data(pie(slices))
+        .join("path")
+        .attr("d", arc)
+        .attr("fill", (d) => d.data.color)
+        .attr("fill-opacity", 0.85);
+
+    // Center label — the dominant source percentage.
+    const dominant = slices.reduce((a, b) => (a.value > b.value ? a : b));
+    const pct = Math.round((dominant.value / total) * 100);
+    g.append("text")
+        .attr("class", "gen-donut__label")
+        .attr("text-anchor", "middle")
+        .attr("dy", "0.35em")
+        .text(`${pct}%`);
+
+    target.insertBefore(wrapper, target.firstChild);
 }

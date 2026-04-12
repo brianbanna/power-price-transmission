@@ -101,6 +101,15 @@ GENERATION_COLUMNS = [
 
 RENEWABLE_COLUMNS = ["solar", "wind_onshore", "wind_offshore", "hydro_total"]
 
+# Per-country sparse-column documentation (rule 5).
+# Columns that are always zero or absent for a given country:
+#   CH: fossil_gas=0, fossil_hard_coal=0, fossil_brown_coal_lignite=0,
+#       fossil_oil=0, biomass=0, wind_offshore=0
+#   DE: nuclear=0
+#   AT: nuclear=0, fossil_hard_coal=0, fossil_oil=0, biomass=0, wind_offshore=0
+#   IT: wind_offshore=0
+#   FR: (all columns populated)
+
 # The date the Step 1-3 scroll animation plays on. See design_spec.md §2
 # for why this Sunday in particular (CH hits -145 EUR/MWh deeper than DE).
 SHOWCASE_DATE = "2024-05-12"

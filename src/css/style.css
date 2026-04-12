@@ -1925,6 +1925,16 @@ body.is-iris-firing .scrollytelling__map::before {
     font-weight: 600;
 }
 
+/* Generation donut — small pie chart showing source mix at a
+ * specific hour. Sits inside the step chart container. */
+.gen-donut__label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    fill: var(--text-primary);
+    font-variation-settings: normal;
+}
+
 /* ---------- Calendar heatmap (Phase 5 — Step 4) ----------
  *
  * A dense hour × day grid rendered to <canvas> and wrapped in a thin
