@@ -294,6 +294,41 @@ export function createMap(selector, config) {
         .attr("class", "country")
         .attr("data-iso", (d) => d.id);
 
+    // Country hover tooltip — shows price, renewable share, and
+    // country name on mouseover. Positioned near the cursor via
+    // pointer events on the country paths. Only active when the map
+    // has a valid hour (labels are visible).
+    const tipEl = document.createElement("div");
+    tipEl.className = "map-tip mono";
+    tipEl.style.display = "none";
+    container.appendChild(tipEl);
+
+    const COUNTRY_NAMES = {
+        CH: "Switzerland", DE: "Germany", FR: "France",
+        IT: "Italy", AT: "Austria",
+    };
+
+    countryPaths
+        .on("pointerenter", function (event, d) {
+            if (state.hour == null || !showcase) return;
+            const entry = showcase.countries?.[d.id]?.[state.hour];
+            if (!entry) return;
+            const sign = entry.price < 0 ? "\u2212" : "";
+            const abs = Math.abs(entry.price).toFixed(1);
+            const ren = (entry.renewable_share * 100).toFixed(0);
+            tipEl.textContent =
+                `${COUNTRY_NAMES[d.id] || d.id}  ${sign}\u20AC${abs}/MWh  ${ren}% renewable`;
+            tipEl.style.display = "";
+        })
+        .on("pointermove", function (event) {
+            const rect = container.getBoundingClientRect();
+            tipEl.style.left = `${event.clientX - rect.left + 14}px`;
+            tipEl.style.top = `${event.clientY - rect.top - 10}px`;
+        })
+        .on("pointerleave", function () {
+            tipEl.style.display = "none";
+        });
+
     // Label groups — one per country. Each group holds two <text> nodes
     // (ISO code above, price below) plus an invisible halo rect that we
     // can show behind the label on the peak moment.

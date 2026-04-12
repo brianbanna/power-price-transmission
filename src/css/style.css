@@ -1407,6 +1407,22 @@ body.is-iris-firing .scrollytelling__map::before {
     fill: var(--bg-elevated);
 }
 
+/* ---------- Map — country hover tooltip ---------- */
+
+.map-tip {
+    position: absolute;
+    padding: 5px 10px;
+    font-size: 11px;
+    color: var(--text-primary);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
 /* ---------- Map — flow guides + particle stream ----------
  *
  * Quadratic bezier paths connecting country centroids, rendered when
