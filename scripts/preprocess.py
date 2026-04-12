@@ -462,6 +462,125 @@ def build_daily_profiles(df: pd.DataFrame) -> None:
     )
 
 
+def build_explorer_hourly(df: pd.DataFrame) -> None:
+    """Emit `explorer_hourly.json` — hourly prices and renewable share for
+    all five focus countries across the full date range.
+
+    This is the dataset the explorer timeline would use if it scraped
+    across the full 18 months instead of just the showcase day. Structure
+    is date-major: each date key maps to a dict of country arrays so the
+    frontend can load one day at a time if needed.
+
+    For the Milestone 2 prototype the explorer uses showcase_day.json
+    (single day). This full-range file is built for completeness and
+    future explorer expansion.
+    """
+    work = df.copy()
+    work["date"] = work["datetime"].dt.strftime("%Y-%m-%d")
+    work["hour"] = work["datetime"].dt.hour
+
+    dates = sorted(work["date"].unique())
+    days = []
+    for date in dates:
+        day_df = work[work["date"] == date]
+        record: dict[str, object] = {"date": date}
+        for code in FOCUS_ORDER:
+            cdf = day_df[day_df["country"] == code].sort_values("hour")
+            prices = [round(float(r["price"]), 2) for _, r in cdf.iterrows()]
+            ren = [round(float(r["renewable_share"]), 3) if not pd.isna(r["renewable_share"]) else 0 for _, r in cdf.iterrows()]
+            record[code] = {
+                "prices": prices,
+                "renewable": ren,
+            }
+        days.append(record)
+
+    payload = {
+        "start_date": dates[0],
+        "end_date": dates[-1],
+        "timezone": DISPLAY_TZ,
+        "countries": FOCUS_ORDER,
+        "days": days,
+    }
+    save_json(payload, "explorer_hourly.json")
+
+    # Sanity checks.
+    assert len(days) > 500, f"expected 500+ days, got {len(days)}"
+    sample = days[0]
+    for code in FOCUS_ORDER:
+        assert len(sample[code]["prices"]) >= 23, f"{code} day 0 has <23 hours"
+    print(f"  days: {len(days)}  countries: {FOCUS_ORDER}")
+
+
+def build_generation_stacks(df: pd.DataFrame) -> None:
+    """Emit `generation_stacks.json` — hourly generation mix per country
+    across the full date range.
+
+    Each day is a record with per-country arrays of {solar, wind, hydro,
+    nuclear, gas} values. The frontend can use this to show the generation
+    stack for any day the explorer timeline lands on.
+
+    For the Milestone 2 prototype the sidebar generation stack uses
+    showcase_day.json (single day). This full-range file is built for
+    completeness and future expansion.
+    """
+    # Simplified generation columns for the frontend.
+    GEN_MAP = {
+        "solar": "solar",
+        "wind_onshore": "wind",
+        "wind_offshore": "wind",
+        "hydro_total": "hydro",
+        "nuclear": "nuclear",
+        "fossil_gas": "gas",
+        "fossil_hard_coal": "gas",
+        "fossil_brown_coal_lignite": "gas",
+    }
+
+    work = df.copy()
+    work["date"] = work["datetime"].dt.strftime("%Y-%m-%d")
+    work["hour"] = work["datetime"].dt.hour
+
+    # Aggregate the raw generation columns into the simplified set.
+    for target_col in ["solar", "wind", "hydro", "nuclear", "gas"]:
+        source_cols = [k for k, v in GEN_MAP.items() if v == target_col and k in work.columns]
+        if source_cols:
+            work[f"gen_{target_col}"] = sum(work[c].fillna(0) for c in source_cols)
+        else:
+            work[f"gen_{target_col}"] = 0.0
+
+    dates = sorted(work["date"].unique())
+    days = []
+    for date in dates:
+        day_df = work[work["date"] == date]
+        record: dict[str, object] = {"date": date}
+        for code in FOCUS_ORDER:
+            cdf = day_df[day_df["country"] == code].sort_values("hour")
+            record[code] = {
+                "solar": [int(r[f"gen_solar"]) for _, r in cdf.iterrows()],
+                "wind": [int(r[f"gen_wind"]) for _, r in cdf.iterrows()],
+                "hydro": [int(r[f"gen_hydro"]) for _, r in cdf.iterrows()],
+                "nuclear": [int(r[f"gen_nuclear"]) for _, r in cdf.iterrows()],
+                "gas": [int(r[f"gen_gas"]) for _, r in cdf.iterrows()],
+            }
+        days.append(record)
+
+    payload = {
+        "start_date": dates[0],
+        "end_date": dates[-1],
+        "timezone": DISPLAY_TZ,
+        "countries": FOCUS_ORDER,
+        "days": days,
+    }
+    save_json(payload, "generation_stacks.json")
+
+    # Sanity checks.
+    assert len(days) > 500, f"expected 500+ days, got {len(days)}"
+    # Check showcase day (2024-05-12) DE solar at hour 13 is >40000.
+    showcase = next(d for d in days if d["date"] == SHOWCASE_DATE)
+    de_solar_13 = showcase["DE"]["solar"][13]
+    assert de_solar_13 > 40000, f"DE solar at showcase peak should be >40k, got {de_solar_13}"
+    print(f"  days: {len(days)}  DE solar at peak: {de_solar_13} MW")
+
+
 TARGETS: dict[str, Target] = {
     "showcase_day": Target(
         name="showcase_day",
@@ -481,12 +600,12 @@ TARGETS: dict[str, Target] = {
     "explorer_hourly": Target(
         name="explorer_hourly",
         description="Hourly prices + renewable share for 5 countries, full range (Explorer).",
-        builder=_not_implemented("explorer_hourly"),
+        builder=build_explorer_hourly,
     ),
     "generation_stacks": Target(
         name="generation_stacks",
         description="Hourly generation mix per country, full range (Step 5 + Explorer).",
-        builder=_not_implemented("generation_stacks"),
+        builder=build_generation_stacks,
     ),
     "summary_stats": Target(
         name="summary_stats",
