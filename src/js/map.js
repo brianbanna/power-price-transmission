@@ -452,6 +452,7 @@ export function createMap(selector, config) {
     const state = {
         hour: null,
         focusCountry: null,
+        highlightCountries: [],
     };
 
     // Populated on every resize; read by drawFlows().
@@ -736,7 +737,8 @@ export function createMap(selector, config) {
             countryPaths
                 .interrupt()
                 .attr("fill", null)
-                .classed("is-focus-country", false);
+                .classed("is-focus-country", false)
+                .classed("is-secondary-focus", false);
             labelGroups.classed("is-visible", false).classed("is-focus", false);
             gFlows.selectAll("path.flow").remove();
             // Tear the particle pools down — the rAF loop self-halts
@@ -749,10 +751,15 @@ export function createMap(selector, config) {
         // Highlight the focus country's own shape so the 3D-tilt CSS
         // layer can lift it forward. `is-focus-country` is also used
         // by the focus-target drop-shadow in the map CSS.
-        countryPaths.classed(
-            "is-focus-country",
-            (d) => d.id === state.focusCountry,
-        );
+        // Secondary highlights (comparison countries for the same beat)
+        // get a dimmer contour so both are visible but the hierarchy
+        // is clear.
+        const hl = new Set(state.highlightCountries || []);
+        countryPaths
+            .classed("is-focus-country", (d) => d.id === state.focusCountry)
+            .classed("is-secondary-focus", (d) =>
+                d.id !== state.focusCountry && hl.has(d.id),
+            );
 
         labelGroups.classed("is-visible", true);
 

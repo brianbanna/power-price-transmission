@@ -169,9 +169,14 @@ export function initNarrative(selector, config) {
             if (config.map && typeof config.map.update === "function") {
                 const hour = Number(element.dataset.hour);
                 const focusCountry = element.dataset.country || null;
+                const highlightRaw = element.dataset.highlight || "";
+                const highlightCountries = highlightRaw
+                    ? highlightRaw.split(",").map((s) => s.trim())
+                    : [];
                 config.map.update({
                     hour: Number.isFinite(hour) ? hour : null,
                     focusCountry,
+                    highlightCountries,
                 });
             }
         })
