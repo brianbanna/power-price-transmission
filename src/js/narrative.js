@@ -204,10 +204,15 @@ export function initNarrative(selector, config) {
             }
         })
         .onStepExit(({ element, direction }) => {
-            // When scrolling UP past the first step, hide the HUD + clock
-            // and reset the map to base state (no colors, no labels).
+            // Always deactivate the exiting step's card. The entering
+            // step's onStepEnter also does this, but for fast/jump
+            // scrolls the enter might not fire synchronously with
+            // the exit, leaving two cards visually "on" at once.
+            element.classList.remove("is-active");
+
+            // When scrolling UP past the first step, full cleanup —
+            // hide HUD, clock, leader, reset the map to dark base.
             if (direction === "up" && element === steps[0]) {
-                element.classList.remove("is-active");
                 document.body.classList.remove(NARRATIVE_ACTIVE_CLASS);
                 if (hud) hud.classList.remove("is-visible");
                 if (mapClock) {
@@ -216,7 +221,11 @@ export function initNarrative(selector, config) {
                 }
                 if (leaderCtl) leaderCtl.hide();
                 if (config.map && typeof config.map.update === "function") {
-                    config.map.update({ hour: null, focusCountry: null });
+                    config.map.update({
+                        hour: null,
+                        focusCountry: null,
+                        highlightCountries: [],
+                    });
                 }
             }
 
@@ -374,6 +383,13 @@ function createLeaderController(svgEl, mapCtl) {
         if (!dest) return false;
 
         const cardRect = activeStep.getBoundingClientRect();
+        const vh = window.innerHeight;
+        // Card has scrolled entirely off-viewport — don't update
+        // targets so the leader fades out gracefully rather than
+        // stretching to chase a card 2000px above or below.
+        if (cardRect.bottom < -30 || cardRect.top > vh + 30) {
+            return false;
+        }
 
         // Read the headline anchor first so we can derive startY even
         // when the card itself happens to be vertically clipped.
@@ -449,6 +465,8 @@ function createLeaderController(svgEl, mapCtl) {
         pulseEl.setAttribute("cy", dY);
     }
 
+    let wasOffscreen = false;
+
     /** The continuous loop. Runs while the leader is visible. */
     function tick(now) {
         rafHandle = null;
@@ -460,10 +478,16 @@ function createLeaderController(svgEl, mapCtl) {
         lastFrameTime = now;
 
         // Recompute targets (the card may have moved since last frame
-        // due to page scroll). If the step moved off-screen this will
-        // return false and the targets stay at the last valid values —
-        // the springs will simply settle in place, which is correct.
-        computeTargets();
+        // due to page scroll). If the step moved off-screen this
+        // returns false and we fade the leader out. When the card
+        // scrolls back into view it returns true and we restore it.
+        const onscreen = computeTargets();
+        if (onscreen !== !wasOffscreen) {
+            wasOffscreen = !onscreen;
+            line.classList.toggle("is-offscreen", wasOffscreen);
+            dotEl.classList.toggle("is-offscreen", wasOffscreen);
+            pulseEl.classList.toggle("is-offscreen", wasOffscreen);
+        }
 
         const moving = stepSprings(dt);
         paint();
@@ -517,9 +541,10 @@ function createLeaderController(svgEl, mapCtl) {
     function hide() {
         activeStep = null;
         visible = false;
-        line.classList.remove("is-visible");
-        dotEl.classList.remove("is-visible");
-        pulseEl.classList.remove("is-pulsing");
+        wasOffscreen = false;
+        line.classList.remove("is-visible", "is-offscreen");
+        dotEl.classList.remove("is-visible", "is-offscreen");
+        pulseEl.classList.remove("is-pulsing", "is-offscreen");
         stopLoop();
     }
 

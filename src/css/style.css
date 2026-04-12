@@ -1211,6 +1211,17 @@ body.is-iris-firing .scrollytelling__map::before {
     animation: leaderPulse 1800ms var(--ease-default) infinite;
 }
 
+/* When the card the leader is tracking scrolls off-viewport,
+ * fade everything out so the line doesn't stretch to chase it.
+ * !important beats .is-visible so we don't have to remove that
+ * class (which would break the show/hide lifecycle). */
+.leader-line.is-offscreen,
+.leader-target.is-offscreen,
+.leader-target-pulse.is-offscreen {
+    opacity: 0 !important;
+    transition: opacity var(--dur-fast) var(--ease-default) !important;
+}
+
 @keyframes leaderPulse {
     0%   { opacity: 0.8; r: 4; }
     100% { opacity: 0; r: 22; }
