@@ -62,7 +62,7 @@ export function renewableColor(share) {
         if (!scaleLinear) return "#10b981";
         _renewableScale = scaleLinear()
             .domain([0, 0.3, 0.6, 1.0])
-            .range(["#64748b", "#0e7490", "#34d399", "#a7f3d0"])
+            .range(["#1e293b", "#065f46", "#10b981", "#6ee7b7"])
             .interpolate(interpolateRgb)
             .clamp(true);
     }
