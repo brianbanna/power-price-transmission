@@ -126,19 +126,39 @@ function setupCircadianTint() {
         return stops[stops.length - 1].color;
     };
 
+    // scrollHeight triggers layout — cache it and invalidate only
+    // on resize. Without this, every scroll tick forces a reflow.
+    let maxScroll = Math.max(0,
+        document.documentElement.scrollHeight - window.innerHeight);
+    let lastTintBucket = -1;
+    const TINT_BUCKETS = 50;
+
     let ticking = false;
     const update = () => {
         if (ticking) return;
         ticking = true;
         requestAnimationFrame(() => {
-            const max = document.documentElement.scrollHeight - window.innerHeight;
-            const p = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
-            root.style.setProperty("--atmos-tint", sample(p));
+            const p = maxScroll > 0
+                ? Math.min(1, Math.max(0, window.scrollY / maxScroll))
+                : 0;
+            // Quantize to 50 buckets so successive near-identical
+            // scroll positions don't burn CPU resampling the gradient.
+            const bucket = Math.round(p * TINT_BUCKETS);
+            if (bucket !== lastTintBucket) {
+                lastTintBucket = bucket;
+                root.style.setProperty("--atmos-tint", sample(bucket / TINT_BUCKETS));
+            }
             ticking = false;
         });
     };
     update();
     window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", () => {
+        maxScroll = Math.max(0,
+            document.documentElement.scrollHeight - window.innerHeight);
+        lastTintBucket = -1;
+        update();
+    });
 }
 
 /**
@@ -296,6 +316,10 @@ function formatColdOpenValue(value) {
  */
 const MAP_TILT_MAX = 1;
 const MAP_TILT_EXPLORER = 0.42;
+// Tilt updates are quantized to 0.02 increments so scroll frames that
+// compute a near-identical value don't trigger a fresh CSS-variable
+// write (and the resulting GPU re-composite of the tilted SVG).
+const MAP_TILT_QUANTUM = 0.02;
 
 function setupMapTilt() {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -305,6 +329,7 @@ function setupMapTilt() {
     const root = document.documentElement;
 
     let ticking = false;
+    let lastTilt = -1;
     const update = () => {
         if (ticking) return;
         ticking = true;
@@ -315,34 +340,31 @@ function setupMapTilt() {
             // Scene hasn't entered the viewport — map is effectively
             // hidden behind the hero. Keep the tilt at 0 so the first
             // reveal lands on a flat plane.
+            let tilt;
             if (sceneRect.top > vh * 0.65) {
-                root.style.setProperty("--map-tilt", "0");
-                ticking = false;
-                return;
+                tilt = 0;
+            } else {
+                // Peak target — the tilt crescendoes when the peak
+                // card (Step 3) is centered in the viewport. That's
+                // the beat where CH drops below DE in the copy.
+                tilt = 0.2; // baseline entry tilt once scene is visible
+                if (peakCard) {
+                    const peakRect = peakCard.getBoundingClientRect();
+                    const peakCenter = peakRect.top + peakRect.height / 2;
+                    const distFromMid = Math.abs(peakCenter - vh * 0.5);
+                    const proximity = Math.max(0, 1 - distFromMid / (vh * 0.6));
+                    tilt = Math.max(tilt, proximity * MAP_TILT_MAX);
+                }
+                if (sceneRect.bottom < vh * 0.9 && sceneRect.bottom > 0) {
+                    tilt = Math.max(tilt, MAP_TILT_EXPLORER);
+                }
             }
 
-            // Peak target — the tilt crescendoes when the peak-moment
-            // card (Step 3) is centered in the viewport. That's the
-            // beat where CH drops below DE in the narrative copy.
-            let tilt = 0.2; // baseline entry tilt once scene is visible
-            if (peakCard) {
-                const peakRect = peakCard.getBoundingClientRect();
-                const peakCenter = peakRect.top + peakRect.height / 2;
-                const distFromMid = Math.abs(peakCenter - vh * 0.5);
-                // Gaussian-ish falloff: full tilt when card is centered,
-                // decaying to ~0.3 beyond ±60% of viewport height.
-                const proximity = Math.max(0, 1 - distFromMid / (vh * 0.6));
-                tilt = Math.max(tilt, proximity * MAP_TILT_MAX);
+            const quantized = Math.round(tilt / MAP_TILT_QUANTUM) * MAP_TILT_QUANTUM;
+            if (quantized !== lastTilt) {
+                lastTilt = quantized;
+                root.style.setProperty("--map-tilt", quantized.toFixed(2));
             }
-
-            // Past the narrative, the explorer wants a gentler persistent
-            // tilt so the scrubbing reader feels like they're looking
-            // "into" the map rather than straight at it.
-            if (sceneRect.bottom < vh * 0.9 && sceneRect.bottom > 0) {
-                tilt = Math.max(tilt, MAP_TILT_EXPLORER);
-            }
-
-            root.style.setProperty("--map-tilt", tilt.toFixed(3));
             ticking = false;
         });
     };
@@ -435,8 +457,9 @@ function setupHeroParallax() {
     const armTimer = setTimeout(() => { armed = true; onScroll(); }, HERO_REVEAL_DURATION_MS);
 
     let ticking = false;
+    let detached = false;
     const onScroll = () => {
-        if (!armed) return;
+        if (!armed || detached) return;
         if (ticking) return;
         ticking = true;
         requestAnimationFrame(() => {
@@ -465,6 +488,13 @@ function setupHeroParallax() {
             if (signature) {
                 signature.style.transform = `translate3d(0, ${-progress * 14}px, 0)`;
                 signature.style.opacity = `${Math.max(0, 1 - progress * 1.1)}`;
+            }
+            // Past the point where every hero element is already fully
+            // faded/translated, nothing will change visually — detach
+            // the listener entirely so scroll events stop firing it.
+            if (progress >= 1) {
+                detached = true;
+                window.removeEventListener("scroll", onScroll);
             }
             ticking = false;
         });
