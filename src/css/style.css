@@ -1555,8 +1555,9 @@ body.is-iris-firing .scrollytelling__map::before {
         0 4px 12px -2px rgba(0, 0, 0, 0.3),
         0 1px 0 0 rgba(255, 255, 255, 0.05) inset;
 
-    /* Inactive state — quieted, slightly shrunk */
-    opacity: 0.32;
+    /* Inactive state — dimmed but still readable so the reader can
+     * glance back at a previous card. Active card jumps to 1. */
+    opacity: 0.55;
     transform: translateY(16px) scale(0.985);
     transition:
         opacity var(--dur-default) var(--ease-default),
