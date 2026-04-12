@@ -513,14 +513,13 @@ function createLeaderController(svgEl, mapCtl) {
         }
     }
 
+    const prefersReducedMotion =
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
     function show(stepEl) {
         const firstShow = activeStep == null;
         activeStep = stepEl;
 
-        // Mark visible BEFORE computing targets so that even if the
-        // card's geometry is briefly unreadable (e.g. its centroid
-        // isn't projected yet on first paint), the rAF loop still
-        // starts and will pick up valid targets on the next frame.
         visible = true;
         line.classList.add("is-visible");
         dotEl.classList.add("is-visible");
@@ -528,14 +527,14 @@ function createLeaderController(svgEl, mapCtl) {
 
         const gotTargets = computeTargets();
 
-        // On the very first reveal, snap to the target so the line
-        // doesn't visibly draw itself from (0,0) → destination on the
-        // opening beat. On subsequent reveals keep the current
-        // position so the line glides across from the previous step.
-        if (firstShow && gotTargets) snapToTarget();
+        // When reduced motion is preferred, snap directly to the
+        // target on every step (no spring animation, no rAF loop).
+        if (prefersReducedMotion || (firstShow && gotTargets)) {
+            snapToTarget();
+        }
 
         paint();
-        startLoop();
+        if (!prefersReducedMotion) startLoop();
     }
 
     function hide() {

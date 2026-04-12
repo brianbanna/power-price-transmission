@@ -651,7 +651,13 @@ export function createMap(selector, config) {
         }
     }
 
+    const prefersReducedMotion =
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
     function ensureParticleLoop() {
+        // When the user prefers reduced motion, the static flow guide
+        // lines are sufficient — skip the animated particle stream.
+        if (prefersReducedMotion) return;
         if (particleRafId != null) return;
         particleLastTs = null;
         const tick = (ts) => {

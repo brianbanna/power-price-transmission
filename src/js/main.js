@@ -96,11 +96,11 @@ function setupIrisWipe() {
 function setupCircadianTint() {
     const root = document.documentElement;
     const stops = [
-        { at: 0.00, color: "rgba(14, 116, 144, 0.12)" },   // accent-dim
-        { at: 0.30, color: "rgba(71, 85, 105, 0.08)" },    // slate neutral
-        { at: 0.55, color: "rgba(251, 191, 36, 0.07)" },   // muted solar gold
-        { at: 0.80, color: "rgba(34, 211, 238, 0.10)" },   // cold cyan
-        { at: 1.00, color: "rgba(224, 247, 255, 0.06)" },  // ice-white shock
+        { at: 0.00, color: "rgba(14, 116, 144, 0.06)" },   // accent-dim — subtle dawn
+        { at: 0.30, color: "rgba(71, 85, 105, 0.04)" },    // slate neutral — calm
+        { at: 0.55, color: "rgba(251, 191, 36, 0.14)" },   // solar gold — warm peak (screen blend makes this visible)
+        { at: 0.80, color: "rgba(34, 211, 238, 0.08)" },   // cold cyan — shock approach
+        { at: 1.00, color: "rgba(224, 247, 255, 0.04)" },  // ice-white — exhale
     ];
 
     const parseRGBA = (s) => {

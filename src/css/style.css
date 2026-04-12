@@ -35,7 +35,7 @@
     /* Backgrounds — deep navy, not pure black, layered */
     --bg-base: #0a0e1a;
     --bg-surface: #131827;
-    --bg-elevated: #1c2235;
+    --bg-elevated: #232940;
     --bg-glass: rgba(19, 24, 39, 0.72);
     --border: #2a3145;
     --border-strong: #3f4659;
@@ -47,11 +47,18 @@
     --text-muted: #6b7280;
     --text-ghost: #2f3647;
 
-    /* Accent — electric cyan with an ice-white extreme */
+    /* Accent — electric cyan with an ice-white extreme. Reserved for
+     * price-negative encoding + interactive affordances (links, play,
+     * timeline, focus country). */
     --accent: #22d3ee;
     --accent-bright: #67e8f9;
     --accent-glow: #e0f7ff;
     --accent-dim: #0e7490;
+
+    /* Chrome — desaturated teal for decorative/structural elements
+     * (eyebrow dots, leader lines, compass, kickers, chart titles).
+     * Separated from accent so ornament doesn't compete with data. */
+    --chrome: #3b8ea5;
 
     /* Price diverging scale — inverted luminance at the extreme */
     --price-neg-extreme: #e0f7ff;
@@ -64,11 +71,11 @@
 
     /* Generation sources */
     --gen-solar: #fbbf24;
-    --gen-wind: #10b981;
+    --gen-wind: #34d399;
     --gen-nuclear: #a855f7;
     --gen-hydro: #6366f1;
     --gen-biomass: #84cc16;
-    --gen-gas: #f97316;
+    --gen-gas: #f59e0b;
     --gen-coal: #64748b;
 
     /* Motion */
@@ -570,7 +577,7 @@ strong {
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.16em;
-    color: var(--accent);
+    color: var(--chrome);
     margin-bottom: 48px;
     opacity: 0;
     animation: fadeUp 1000ms var(--ease-cinematic) 250ms forwards;
@@ -580,7 +587,7 @@ strong {
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: var(--accent);
+    background: var(--chrome);
     /* Glow modulates with the global heartbeat. The --beat var is
      * read from :root and used to compute box-shadow softness. */
     box-shadow:
@@ -1014,13 +1021,15 @@ strong {
     perspective-origin: 50% 38%;
 }
 
-/* Circadian tint layer — unchanged, sits above the map SVG. */
+/* Circadian tint layer — sits above the map SVG. Uses `screen`
+ * blend mode so the warm-solar midpoint actually registers against
+ * the dark navy base (soft-light at low alpha was imperceptible). */
 .scene__map .circadian,
 .scrollytelling__map .circadian {
     position: absolute;
     inset: 0;
     background: var(--atmos-tint, transparent);
-    mix-blend-mode: soft-light;
+    mix-blend-mode: screen;
     pointer-events: none;
     z-index: 3;
     transition: background 700ms var(--ease-default);
@@ -1167,7 +1176,7 @@ body.is-iris-firing .scrollytelling__map::before {
 
 .leader-line {
     fill: none;
-    stroke: var(--accent);
+    stroke: var(--chrome);
     stroke-width: 1;
     stroke-linecap: round;
     stroke-linejoin: round;
@@ -1181,7 +1190,7 @@ body.is-iris-firing .scrollytelling__map::before {
 }
 
 .leader-target {
-    fill: var(--accent);
+    fill: var(--chrome);
     stroke: var(--accent-glow);
     stroke-width: 1;
     filter: drop-shadow(0 0 8px var(--accent));
@@ -1196,7 +1205,7 @@ body.is-iris-firing .scrollytelling__map::before {
 
 .leader-target-pulse {
     fill: none;
-    stroke: var(--accent);
+    stroke: var(--chrome);
     stroke-width: 1.5;
     opacity: 0;
     transform-origin: center;
@@ -1622,6 +1631,17 @@ body.is-iris-firing .scrollytelling__map::before {
     max-width: 540px;
 }
 
+/* When the shock card activates, it physically crosses the golden
+ * rule line the reader internalized from the hero — the grid breaks
+ * when the price breaks. The left padding compensates so the inner
+ * content doesn't shift; only the card's outer edge crosses. */
+.step--shock.is-active {
+    margin-left: calc(var(--gutter) * -0.3);
+    padding-left: calc(40px + var(--gutter) * 0.3);
+    transition: margin-left 600ms var(--ease-cinematic),
+                padding-left 600ms var(--ease-cinematic);
+}
+
 /* Steps 4–5 match the shock card width so the progression
  * from 460→540→540 reads as intentional widening, not a regression. */
 .step--wide {
@@ -1950,7 +1970,7 @@ body.is-iris-firing .scrollytelling__map::before {
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.16em;
-    color: var(--accent);
+    color: var(--chrome);
     margin: 0 0 6px;
 }
 
@@ -2023,7 +2043,7 @@ body.is-iris-firing .scrollytelling__map::before {
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.16em;
-    color: var(--accent);
+    color: var(--chrome);
     margin: 0 0 6px;
 }
 
@@ -2673,7 +2693,7 @@ body.is-iris-firing .scrollytelling__map::before {
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.18em;
-    color: var(--accent);
+    color: var(--chrome);
     margin: 0;
 }
 
