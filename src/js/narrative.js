@@ -268,6 +268,12 @@ export function initNarrative(selector, config) {
             // the exit, leaving two cards visually "on" at once.
             element.classList.remove("is-active");
 
+            // Stop duck-curve animation when Step 6 exits to avoid
+            // the setInterval leaking while the reader scrolls away.
+            if (element.dataset.step === "6" && duckCtl) {
+                duckCtl.stopAnimation();
+            }
+
             // When scrolling UP past the first step, full cleanup —
             // hide HUD, clock, leader, reset the map to dark base.
             if (direction === "up" && element === steps[0]) {

@@ -148,6 +148,13 @@ export function initExplorer(config) {
 
     function play() {
         if (state.playing) return;
+        // If at the end, restart from midnight
+        if (state.hourFloat >= HOURS - 1) {
+            state.hourFloat = 0;
+            state.hour = 0;
+            pushMap(0);
+            renderUI();
+        }
         state.playing = true;
         timeline.classList.add("is-playing");
         playBtn?.setAttribute("aria-label", "Pause timeline");
@@ -455,6 +462,7 @@ export function initExplorer(config) {
             scrollPause.active = false;
             section.classList.remove("is-scroll-locked");
             section.classList.add("is-scroll-released");
+            document.removeEventListener("wheel", onWheel);
         };
 
         // Hook into markTouched so any timeline interaction releases.
@@ -589,12 +597,27 @@ export function initExplorer(config) {
             el.style.cursor = "pointer";
             el.addEventListener("click", () => {
                 const iso = el.getAttribute("data-iso");
-                if (iso) openSidebar(iso);
+                if (!iso) return;
+                if (sidebarActiveCountry === iso) {
+                    closeSidebar();
+                } else {
+                    openSidebar(iso);
+                }
             });
         });
         if (sidebarClose) {
             sidebarClose.addEventListener("click", closeSidebar);
         }
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape" && sidebar?.classList.contains("is-open")) {
+                closeSidebar();
+            }
+        });
+        document.addEventListener("click", (e) => {
+            if (!sidebar?.classList.contains("is-open")) return;
+            if (sidebar.contains(e.target) || e.target.closest(".country")) return;
+            closeSidebar();
+        });
     }
 
     // Paint the initial UI state (handle at INITIAL_HOUR, readout set)
