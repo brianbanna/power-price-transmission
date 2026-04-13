@@ -581,6 +581,8 @@ export function initExplorer(config) {
         }
 
         sidebar.classList.add("is-open");
+        const closeBtn = sidebar.querySelector("[data-sidebar-close]");
+        if (closeBtn) closeBtn.focus();
     }
 
     function closeSidebar() {

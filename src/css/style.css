@@ -115,6 +115,27 @@
     box-sizing: border-box;
 }
 
+/* ---------- Skip link (accessibility) ---------- */
+
+.skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 16px;
+    z-index: 999;
+    padding: 8px 16px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--bg-base);
+    background: var(--accent);
+    border-radius: 3px;
+    text-decoration: none;
+    border: none;
+}
+
+.skip-link:focus {
+    left: 16px;
+}
+
 html {
     scroll-behavior: auto;
     -webkit-text-size-adjust: 100%;
