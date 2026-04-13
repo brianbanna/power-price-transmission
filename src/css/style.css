@@ -3307,6 +3307,34 @@ body.is-iris-firing .scrollytelling__map::before {
     margin: 0;
 }
 
+/* Footer scroll-triggered reveal — staggered entrance */
+.site-footer__kicker,
+.site-footer__closing,
+.site-footer__columns,
+.site-footer__rule,
+.site-footer__coda {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity var(--dur-default) var(--ease-cinematic),
+                transform var(--dur-default) var(--ease-cinematic);
+}
+
+.site-footer.is-revealed .site-footer__kicker {
+    opacity: 1; transform: translateY(0); transition-delay: 0ms;
+}
+.site-footer.is-revealed .site-footer__closing {
+    opacity: 1; transform: translateY(0); transition-delay: 150ms;
+}
+.site-footer.is-revealed .site-footer__columns {
+    opacity: 1; transform: translateY(0); transition-delay: 350ms;
+}
+.site-footer.is-revealed .site-footer__rule {
+    opacity: 1; transform: translateY(0); transition-delay: 550ms;
+}
+.site-footer.is-revealed .site-footer__coda {
+    opacity: 1; transform: translateY(0); transition-delay: 700ms;
+}
+
 .site-footer__coda-dot {
     width: 3px;
     height: 3px;

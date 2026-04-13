@@ -42,9 +42,35 @@ async function init() {
     setupMapTilt();
     setupIrisWipe();
     setupFooterHide();
+    setupFooterReveal();
     setupHeartbeatScope();
 
     console.info("HSquareB initialized");
+}
+
+/**
+ * Staggered scroll-triggered reveal for the footer. An IntersectionObserver
+ * fires once when 15% of the footer is visible, adding `is-revealed` which
+ * CSS uses to cascade opacity/transform transitions with per-element delays.
+ * Fires once then disconnects — no continuous observation needed.
+ */
+function setupFooterReveal() {
+    const footer = document.querySelector(".site-footer");
+    if (!footer) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        footer.classList.add("is-revealed");
+        return;
+    }
+    const observer = new IntersectionObserver(
+        ([entry]) => {
+            if (entry.isIntersecting) {
+                footer.classList.add("is-revealed");
+                observer.disconnect();
+            }
+        },
+        { threshold: 0.15 },
+    );
+    observer.observe(footer);
 }
 
 /**
