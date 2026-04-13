@@ -42,6 +42,7 @@ async function init() {
     setupMapTilt();
     setupIrisWipe();
     setupFooterHide();
+    setupHeartbeatScope();
 
     console.info("HSquareB initialized");
 }
@@ -65,6 +66,20 @@ function setupFooterHide() {
         { threshold: 0 },
     );
     observer.observe(footer);
+}
+
+/**
+ * Pause the --beat CSS animation while the hero is off-screen so
+ * the 1Hz @property animation doesn't force style recalculations on
+ * all beat-reading elements throughout the rest of the session.
+ */
+function setupHeartbeatScope() {
+    const hero = document.querySelector(".hero");
+    if (!hero) return;
+    const observer = new IntersectionObserver(([entry]) => {
+        document.documentElement.classList.toggle("is-beat-paused", !entry.isIntersecting);
+    }, { threshold: 0 });
+    observer.observe(hero);
 }
 
 /**
@@ -109,6 +124,7 @@ function setupIrisWipe() {
  * the map. Uses a single rAF loop shared with other scroll hooks.
  */
 function setupCircadianTint() {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const root = document.documentElement;
     const stops = [
         { at: 0.00, color: "rgba(14, 116, 144, 0.06)" },   // accent-dim — subtle dawn
@@ -244,6 +260,14 @@ function setupHeroTitleReveal() {
         walk(line);
         line.classList.add("is-split");
     });
+
+    // Remove will-change after the reveal animation completes
+    // to free compositor layers that persist the entire session.
+    setTimeout(() => {
+        document.querySelectorAll(".hero__title-char").forEach((el) => {
+            el.style.willChange = "auto";
+        });
+    }, 3000);
 }
 
 /**
@@ -442,10 +466,24 @@ function setupSpotTape(showcase) {
 
     let idx = 0;
     renderHour(TAPE_HOURS[idx]);
-    setInterval(() => {
-        idx = (idx + 1) % TAPE_HOURS.length;
-        renderHour(TAPE_HOURS[idx]);
-    }, TAPE_INTERVAL_MS);
+
+    let tapeInterval = null;
+    const startTape = () => {
+        if (tapeInterval) return;
+        tapeInterval = setInterval(() => {
+            idx = (idx + 1) % TAPE_HOURS.length;
+            renderHour(TAPE_HOURS[idx]);
+        }, TAPE_INTERVAL_MS);
+    };
+    const stopTape = () => {
+        if (tapeInterval) { clearInterval(tapeInterval); tapeInterval = null; }
+    };
+    startTape();
+
+    const tapeObserver = new IntersectionObserver(([entry]) => {
+        entry.isIntersecting ? startTape() : stopTape();
+    }, { threshold: 0 });
+    tapeObserver.observe(tape);
 }
 
 function formatPrice(value) {
@@ -464,6 +502,7 @@ function formatPrice(value) {
 const HERO_REVEAL_DURATION_MS = 2400;
 
 function setupHeroParallax() {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const hero = document.querySelector(".hero");
     if (!hero) return;
     const titleLines = Array.from(hero.querySelectorAll(".hero__title-line"));

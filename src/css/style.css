@@ -29,6 +29,10 @@
     40%      { --beat: 1; }
 }
 
+:root.is-beat-paused {
+    animation-play-state: paused;
+}
+
 /* ---------- Tokens ---------- */
 
 :root {
