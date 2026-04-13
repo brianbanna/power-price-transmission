@@ -2150,6 +2150,36 @@ body.is-iris-firing .scrollytelling__map::before {
     font-variation-settings: normal;
 }
 
+.gen-stack__crosshair {
+    stroke: var(--text-muted);
+    stroke-width: 1;
+    stroke-dasharray: 2 2;
+    pointer-events: none;
+}
+
+.gen-stack__crosshair-dot {
+    fill: var(--accent-glow);
+    stroke: var(--bg-base);
+    stroke-width: 2;
+    pointer-events: none;
+}
+
+.gen-stack__tip {
+    position: absolute;
+    padding: 6px 10px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    line-height: 1.5;
+}
+
 /* ---------- Daily profile chart (Phase 6 — Steps 6-7) ---------- */
 
 .daily-profile {

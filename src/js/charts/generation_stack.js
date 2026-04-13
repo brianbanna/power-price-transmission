@@ -173,7 +173,7 @@ export function createGenerationStack(selector, config) {
         .call(
             d3.axisRight(yPrice)
                 .ticks(5)
-                .tickFormat((v) => `${v > 0 ? "" : "\u2212"}${Math.abs(v).toFixed(0)}`)
+                .tickFormat((v) => `${v >= 0 ? "" : "\u2212"}${Math.abs(v).toFixed(0)}`)
                 .tickSize(0)
                 .tickPadding(6),
         );
@@ -221,6 +221,62 @@ export function createGenerationStack(selector, config) {
         .attr("x", 15).attr("y", 7)
         .attr("class", "gen-stack__legend-text")
         .text("Price");
+
+    // Hover crosshair + tooltip
+    wrapper.style.position = "relative";
+
+    const hoverG = g.append("g").attr("class", "gen-stack__hover").style("display", "none");
+    hoverG.append("line")
+        .attr("class", "gen-stack__crosshair")
+        .attr("y1", 0).attr("y2", INNER_H);
+    hoverG.append("circle")
+        .attr("class", "gen-stack__crosshair-dot")
+        .attr("r", 3);
+
+    const tipEl = document.createElement("div");
+    tipEl.className = "gen-stack__tip mono";
+    tipEl.style.display = "none";
+    wrapper.appendChild(tipEl);
+
+    // Invisible overlay to capture mouse events across the full chart area
+    svg.append("rect")
+        .attr("class", "gen-stack__overlay")
+        .attr("x", MARGIN.left).attr("y", MARGIN.top)
+        .attr("width", INNER_W).attr("height", INNER_H)
+        .attr("fill", "none")
+        .attr("pointer-events", "all")
+        .on("pointermove", function (event) {
+            const [mx] = d3.pointer(event, this);
+            const hour = Math.round(x.invert(mx));
+            const clamped = Math.max(0, Math.min(23, hour));
+            const d = data[clamped];
+            if (!d) return;
+
+            hoverG.style("display", null);
+            const cx = x(clamped);
+            hoverG.select("line").attr("x1", cx).attr("x2", cx);
+            hoverG.select("circle").attr("cx", cx).attr("cy", yPrice(d.price));
+
+            const sign = d.price < 0 ? "−" : "";
+            const abs = Math.abs(d.price).toFixed(1);
+            const lines = [`${String(clamped).padStart(2, "0")}:00  ${sign}€${abs}/MWh`];
+            for (const k of STACK_KEYS) {
+                if (d[k] > 0) lines.push(`${SOURCE_LABELS[k]}: ${(d[k] / 1000).toFixed(1)} GW`);
+            }
+            tipEl.innerHTML = lines.join("<br>");
+            tipEl.style.display = "";
+
+            // Position tooltip near the crosshair, clamped to wrapper bounds
+            const svgRect = svg.node().getBoundingClientRect();
+            const wrapRect = wrapper.getBoundingClientRect();
+            const tipX = (cx + MARGIN.left) * (svgRect.width / WIDTH);
+            tipEl.style.left = `${Math.min(wrapRect.width - 160, Math.max(0, tipX - 60))}px`;
+            tipEl.style.top = `${MARGIN.top - 8}px`;
+        })
+        .on("pointerleave", function () {
+            hoverG.style("display", "none");
+            tipEl.style.display = "none";
+        });
 
     // Clip path for animated reveal — starts fully clipped and
     // reveal() transitions to full width over 1.2s.
