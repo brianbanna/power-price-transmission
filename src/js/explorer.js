@@ -594,7 +594,6 @@ export function initExplorer(config) {
     // Wire country clicks on the map.
     if (sidebar) {
         document.querySelectorAll(".country").forEach((el) => {
-            el.style.cursor = "pointer";
             el.addEventListener("click", () => {
                 const iso = el.getAttribute("data-iso");
                 if (!iso) return;
