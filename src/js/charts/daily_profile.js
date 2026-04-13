@@ -148,7 +148,7 @@ export function createDailyProfile(selector, config) {
             .call(
                 d3.axisLeft(y)
                     .ticks(4)
-                    .tickFormat((v) => `${v.toFixed(0)}`)
+                    .tickFormat((v) => `${v < 0 ? "\u2212" : ""}${Math.abs(v).toFixed(0)}`)
                     .tickSize(-innerW)
                     .tickPadding(4),
             );
@@ -172,6 +172,63 @@ export function createDailyProfile(selector, config) {
     }
 
     let currentMonth = null;
+
+    // Hover crosshair + tooltip (full mode only)
+    if (!compact) {
+        wrapper.style.position = "relative";
+
+        const hoverG = g.append("g").attr("class", "daily-profile__hover").style("display", "none");
+        hoverG.append("line")
+            .attr("class", "daily-profile__crosshair")
+            .attr("y1", 0).attr("y2", innerH);
+        hoverG.append("circle")
+            .attr("class", "daily-profile__crosshair-dot")
+            .attr("r", 3);
+
+        const tipEl = document.createElement("div");
+        tipEl.className = "daily-profile__tip mono";
+        tipEl.style.display = "none";
+        wrapper.appendChild(tipEl);
+
+        svg.append("rect")
+            .attr("class", "daily-profile__overlay")
+            .attr("x", margin.left).attr("y", margin.top)
+            .attr("width", innerW).attr("height", innerH)
+            .attr("fill", "none")
+            .attr("pointer-events", "all")
+            .on("pointermove", function (event) {
+                const [mx] = d3.pointer(event, this);
+                const hour = Math.round(x.invert(mx));
+                const clamped = Math.max(0, Math.min(23, hour));
+
+                const currentData = currentMonth
+                    ? (profiles.monthly[currentMonth] || profiles.annual_average)
+                    : profiles.annual_average;
+                const price = currentData[clamped];
+                if (price == null) return;
+
+                hoverG.style("display", null);
+                const cx = x(clamped);
+                hoverG.select("line").attr("x1", cx).attr("x2", cx);
+                hoverG.select("circle").attr("cx", cx).attr("cy", y(price));
+
+                const sign = price < 0 ? "\u2212" : "";
+                const abs = Math.abs(price).toFixed(1);
+                tipEl.textContent = `${String(clamped).padStart(2, "0")}:00  ${sign}\u20AC${abs}/MWh`;
+                tipEl.style.display = "";
+
+                const svgRect = svg.node().getBoundingClientRect();
+                const wrapRect = wrapper.getBoundingClientRect();
+                const tipX = (cx + margin.left) * (svgRect.width / width);
+                tipEl.style.left = `${Math.min(wrapRect.width - 120, Math.max(0, tipX - 50))}px`;
+                tipEl.style.top = `${margin.top - 8}px`;
+            })
+            .on("pointerleave", function () {
+                hoverG.style("display", "none");
+                tipEl.style.display = "none";
+            });
+    }
+
     let animTimer = null;
 
     function setMonth(monthKey) {

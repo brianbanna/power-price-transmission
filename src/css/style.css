@@ -2293,6 +2293,35 @@ body.is-iris-firing .scrollytelling__map::before {
     font-variation-settings: normal;
 }
 
+.daily-profile__crosshair {
+    stroke: var(--text-muted);
+    stroke-width: 1;
+    stroke-dasharray: 2 2;
+    pointer-events: none;
+}
+
+.daily-profile__crosshair-dot {
+    fill: var(--accent-glow);
+    stroke: var(--bg-base);
+    stroke-width: 2;
+    pointer-events: none;
+}
+
+.daily-profile__tip {
+    position: absolute;
+    padding: 5px 10px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
 /* ---------- Explorer (Phase 7) ----------
  *
  * A "steer the grid" mode. The map stays FULLY visible in the fixed
