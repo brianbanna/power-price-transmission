@@ -71,10 +71,10 @@ export function renewableColor(share) {
 
 export const GENERATION_COLORS = {
     solar:   "#fbbf24",
-    wind:    "#34d399",   // emerald — shifted from #10b981 to avoid accent-cyan confusion under desaturation
+    wind:    "#10b981",
     nuclear: "#a855f7",
     hydro:   "#6366f1",
     biomass: "#84cc16",
-    gas:     "#f59e0b",   // amber — shifted from #f97316 to separate from price-positive orange
+    gas:     "#f97316",
     coal:    "#64748b",
 };

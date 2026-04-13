@@ -35,7 +35,7 @@
     /* Backgrounds — deep navy, not pure black, layered */
     --bg-base: #0a0e1a;
     --bg-surface: #131827;
-    --bg-elevated: #232940;
+    --bg-elevated: #1c2235;
     --bg-glass: rgba(19, 24, 39, 0.72);
     --border: #2a3145;
     --border-strong: #3f4659;
@@ -44,7 +44,7 @@
     /* Text — warm whites, muted blue-greys */
     --text-primary: #f5f7fa;
     --text-secondary: #8b95a7;
-    --text-muted: #6b7280;
+    --text-muted: #525a6b;
     --text-ghost: #2f3647;
 
     /* Accent — electric cyan with an ice-white extreme. Reserved for
@@ -71,19 +71,19 @@
 
     /* Generation sources */
     --gen-solar: #fbbf24;
-    --gen-wind: #34d399;
+    --gen-wind: #10b981;
     --gen-nuclear: #a855f7;
     --gen-hydro: #6366f1;
     --gen-biomass: #84cc16;
-    --gen-gas: #f59e0b;
+    --gen-gas: #f97316;
     --gen-coal: #64748b;
 
     /* Motion */
     --ease-default: cubic-bezier(0.22, 0.61, 0.36, 1);
     --ease-overshoot: cubic-bezier(0.34, 1.56, 0.64, 1);
     --ease-cinematic: cubic-bezier(0.65, 0, 0.35, 1);
-    --dur-fast: 180ms;
-    --dur-medium: 400ms;
+    --dur-fast: 150ms;
+    --dur-medium: 300ms;
     --dur-default: 800ms;
     --dur-slow: 1400ms;
 

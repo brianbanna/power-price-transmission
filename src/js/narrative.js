@@ -746,10 +746,10 @@ function renderGenDonut(stepEl, showcase, country, hour) {
 
     const SOURCES = [
         { key: "solar", label: "Solar", color: "#fbbf24" },
-        { key: "wind", label: "Wind", color: "#34d399" },
+        { key: "wind", label: "Wind", color: "#10b981" },
         { key: "hydro", label: "Hydro", color: "#6366f1" },
         { key: "nuclear", label: "Nuclear", color: "#a855f7" },
-        { key: "gas", label: "Gas", color: "#f59e0b" },
+        { key: "gas", label: "Gas", color: "#f97316" },
     ];
 
     const slices = SOURCES
