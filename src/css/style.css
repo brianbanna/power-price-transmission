@@ -136,6 +136,11 @@ h1, h2, h3, p {
     margin: 0;
 }
 
+svg text {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
 ::selection {
     background: var(--accent);
     color: var(--bg-base);
@@ -932,7 +937,6 @@ strong {
     display: inline-flex;
     align-items: baseline;
     gap: 10px;
-    font-family: var(--font-display);
     font-style: italic;
     font-variation-settings: "opsz" 144, "SOFT" 40;
     color: var(--accent-glow);
@@ -946,9 +950,9 @@ strong {
     font-weight: 400;
     letter-spacing: -0.02em;
     line-height: 0.9;
-    font-variation-settings: "opsz" 144, "SOFT" 30;
     font-style: normal;
-    font-family: var(--font-display);
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
     /* The value tween rewrites the text every frame — min-width keeps
      * the surrounding geometry from jittering as digits switch. */
     min-width: 8ch;
@@ -1356,6 +1360,7 @@ body.is-iris-firing .scrollytelling__map::before {
     font-size: 8px;
     fill: color-mix(in srgb, var(--text-secondary) 60%, transparent);
     text-anchor: middle;
+    font-variant-numeric: tabular-nums;
 }
 
 .cartouche__edge-label {
@@ -1364,6 +1369,7 @@ body.is-iris-firing .scrollytelling__map::before {
     font-weight: 500;
     letter-spacing: 0.12em;
     fill: color-mix(in srgb, var(--text-secondary) 45%, transparent);
+    font-variant-numeric: tabular-nums;
 }
 
 .cartouche__edge-lon {
@@ -1510,7 +1516,7 @@ body.is-iris-firing .scrollytelling__map::before {
     font-variant-numeric: tabular-nums;
     font-feature-settings: "zero", "ss02";
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 500;
     fill: var(--text-primary);
     paint-order: stroke;
     stroke: var(--bg-base);
@@ -1812,7 +1818,7 @@ body.is-iris-firing .scrollytelling__map::before {
     font-family: var(--font-display);
     font-size: 34px;
     font-weight: 400;
-    font-variation-settings: "opsz" 72, "SOFT" 10;
+    font-variation-settings: "opsz" 48, "SOFT" 10;
     letter-spacing: -0.02em;
     line-height: 1.08;
     margin-bottom: 18px;
@@ -1827,8 +1833,8 @@ body.is-iris-firing .scrollytelling__map::before {
 }
 
 .step__body {
-    font-size: 16px;
-    line-height: 1.6;
+    font-size: 17px;
+    line-height: 1.55;
     color: var(--text-secondary);
     font-variation-settings: "opsz" 18, "SOFT" 25;
     text-wrap: pretty;
@@ -1923,7 +1929,7 @@ body.is-iris-firing .scrollytelling__map::before {
     font-size: 8px;
     font-weight: 500;
     fill: var(--text-muted);
-    letter-spacing: 0.08em;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
     font-variation-settings: normal;
 }
@@ -1940,6 +1946,7 @@ body.is-iris-firing .scrollytelling__map::before {
     font-size: 11px;
     font-weight: 700;
     fill: var(--text-primary);
+    font-variant-numeric: tabular-nums;
     font-variation-settings: normal;
 }
 
@@ -2023,7 +2030,7 @@ body.is-iris-firing .scrollytelling__map::before {
     transform: translateX(-50%);
     font-size: 8px;
     color: var(--text-muted);
-    letter-spacing: 0.08em;
+    letter-spacing: 0.05em;
 }
 
 .cal-heatmap__months {
@@ -2038,7 +2045,7 @@ body.is-iris-firing .scrollytelling__map::before {
     right: 4px;
     font-size: 8px;
     color: var(--text-muted);
-    letter-spacing: 0.10em;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
     line-height: 1;
 }
@@ -2112,7 +2119,7 @@ body.is-iris-firing .scrollytelling__map::before {
     font-family: var(--font-mono);
     font-size: 8px;
     fill: var(--text-muted);
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
     font-variation-settings: normal;
 }
 
@@ -2124,7 +2131,7 @@ body.is-iris-firing .scrollytelling__map::before {
     font-family: var(--font-mono);
     font-size: 8px;
     fill: var(--text-muted);
-    letter-spacing: 0.1em;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
     font-variation-settings: normal;
 }
@@ -2137,7 +2144,7 @@ body.is-iris-firing .scrollytelling__map::before {
     font-family: var(--font-mono);
     font-size: 8px;
     fill: var(--text-muted);
-    letter-spacing: 0.06em;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
     dominant-baseline: middle;
     font-variation-settings: normal;
@@ -2205,7 +2212,7 @@ body.is-iris-firing .scrollytelling__map::before {
     font-family: var(--font-mono);
     font-size: 8px;
     fill: var(--text-muted);
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
     font-variation-settings: normal;
 }
 
@@ -2213,7 +2220,7 @@ body.is-iris-firing .scrollytelling__map::before {
     font-family: var(--font-mono);
     font-size: 8px;
     fill: var(--text-muted);
-    letter-spacing: 0.1em;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
     font-variation-settings: normal;
 }
@@ -2596,6 +2603,7 @@ body.is-iris-firing .scrollytelling__map::before {
     font-size: 16px;
     font-weight: 600;
     color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
 }
 
 .sidebar__charts {
@@ -2796,6 +2804,7 @@ body.is-iris-firing .scrollytelling__map::before {
     font-size: 10px;
     font-weight: 600;
     letter-spacing: 0.06em;
+    font-variant-numeric: tabular-nums;
     color: var(--text-muted);
     background: transparent;
     border: none;
