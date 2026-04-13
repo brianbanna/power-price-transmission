@@ -2064,6 +2064,35 @@ body.is-iris-firing .scrollytelling__map::before {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
+.cal-heatmap__legend {
+    margin-top: 8px;
+    width: 100%;
+    max-width: 240px;
+}
+
+.cal-heatmap__legend-bar {
+    height: 6px;
+    border-radius: 3px;
+    background: linear-gradient(
+        90deg,
+        #e0f7ff 0%,
+        #67e8f9 20%,
+        #0e7490 40%,
+        #e8a460 65%,
+        #ef4444 85%,
+        #991b1b 100%
+    );
+}
+
+.cal-heatmap__legend-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 3px;
+    font-size: 8px;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+}
+
 /* ---------- Generation stack chart (Phase 5 — Step 5) ----------
  *
  * Stacked area of hourly generation by source for Germany on the

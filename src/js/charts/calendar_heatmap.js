@@ -220,6 +220,29 @@ function renderChart(holder, chartData, country) {
     canvas.addEventListener("pointermove", onMove);
     canvas.addEventListener("pointerleave", () => { tip.style.display = "none"; });
 
+    // Color legend — horizontal gradient bar explaining the price scale
+    const legendEl = document.createElement("div");
+    legendEl.className = "cal-heatmap__legend mono";
+    const gradientBar = document.createElement("div");
+    gradientBar.className = "cal-heatmap__legend-bar";
+    legendEl.appendChild(gradientBar);
+    const labelsRow = document.createElement("div");
+    labelsRow.className = "cal-heatmap__legend-labels";
+    const stops = [
+        { label: "\u2212200" },
+        { label: "\u2212100" },
+        { label: "0" },
+        { label: "75" },
+        { label: "150+" },
+    ];
+    stops.forEach((s) => {
+        const span = document.createElement("span");
+        span.textContent = s.label;
+        labelsRow.appendChild(span);
+    });
+    legendEl.appendChild(labelsRow);
+    holder.appendChild(legendEl);
+
     function teardown() {
         canvas.removeEventListener("pointermove", onMove);
         while (holder.firstChild) holder.removeChild(holder.firstChild);
