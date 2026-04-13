@@ -552,7 +552,7 @@ export function createMap(selector, config) {
         // Transition duration matches the country fill transition so
         // colors, labels, and arrows all land together as one beat.
         const DUR = 800;
-        const EASE = d3.easeCubicInOut;
+        const EASE = d3.easeCubicOut;
 
         // Exit — collapse the arrow back to a degenerate dot at its
         // origin point, fading stroke-opacity over the same beat.

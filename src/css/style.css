@@ -97,6 +97,10 @@
     --narrative-col: 460px;
     --gutter: clamp(24px, 4vw, 80px);
     --gutter-sm: clamp(16px, 3vw, 40px);
+
+    /* Vignette + film grain — modulated during iris wipe animation */
+    --vignette-size: 80%;
+    --grain-intensity: 0.035;
 }
 
 /* ---------- Reset ---------- */
@@ -108,7 +112,7 @@
 }
 
 html {
-    scroll-behavior: smooth;
+    scroll-behavior: auto;
     -webkit-text-size-adjust: 100%;
     background: var(--bg-base);
 }
@@ -254,12 +258,16 @@ strong {
     right: 32px;
     z-index: 90;
     background: var(--bg-glass);
-    backdrop-filter: blur(20px) saturate(1.4);
-    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    backdrop-filter: blur(28px) saturate(1.6);
+    -webkit-backdrop-filter: blur(28px) saturate(1.6);
     border: 1px solid var(--border-glass);
-    border-radius: 2px;
+    border-radius: 3px;
     padding: 14px 18px;
     min-width: 220px;
+    box-shadow:
+        0 32px 64px -24px rgba(0, 0, 0, 0.7),
+        0 4px 12px -2px rgba(0, 0, 0, 0.3),
+        0 1px 0 0 rgba(255, 255, 255, 0.05) inset;
     opacity: 0;
     transform: translateY(-8px);
     transition: opacity var(--dur-medium) var(--ease-default),
@@ -1035,7 +1043,7 @@ strong {
     mix-blend-mode: screen;
     pointer-events: none;
     z-index: 3;
-    transition: background 700ms var(--ease-default);
+    transition: background var(--dur-default) var(--ease-default);
 }
 
 .scene__map svg,
@@ -1095,10 +1103,6 @@ body.is-narrative-active .scrollytelling__map svg {
  * to the center where the action happens. The --vignette-size
  * and --grain-intensity variables are modulated during the iris
  * wipe animation that fires once on hero exit. */
-:root {
-    --vignette-size: 80%;
-    --grain-intensity: 0.035;
-}
 
 .scene__map::before,
 .scrollytelling__map::before {
@@ -1396,14 +1400,13 @@ body.is-iris-firing .scrollytelling__map::before {
     transform-box: fill-box;
     transform-origin: center;
     /* All animated properties share the same curve so fill, stroke,
-     * and glow arrive together as one beat. 500ms with ease-default
-     * (fast start) matches FT/Bloomberg scroll-synced transitions. */
+     * and glow arrive together as one beat. */
     transition:
-        fill 500ms var(--ease-default),
-        transform 500ms var(--ease-default),
-        filter 500ms var(--ease-default),
-        stroke 500ms var(--ease-default),
-        stroke-width 500ms var(--ease-default);
+        fill var(--dur-default) var(--ease-default),
+        transform var(--dur-default) var(--ease-default),
+        filter var(--dur-default) var(--ease-default),
+        stroke var(--dur-default) var(--ease-default),
+        stroke-width var(--dur-default) var(--ease-default);
 }
 
 .country.is-highlight {
@@ -1415,11 +1418,11 @@ body.is-iris-firing .scrollytelling__map::before {
 .map-tip {
     position: absolute;
     padding: 5px 10px;
-    font-size: 11px;
+    font-size: 13px;
     color: var(--text-primary);
     background: var(--bg-elevated);
     border: 1px solid var(--border);
-    border-radius: 4px;
+    border-radius: 3px;
     pointer-events: none;
     white-space: nowrap;
     z-index: 10;
@@ -1576,13 +1579,18 @@ body.is-iris-firing .scrollytelling__map::before {
 
     /* Inactive state — dimmed but still readable so the reader can
      * glance back at a previous card. Active card jumps to 1. */
-    opacity: 0.55;
+    opacity: 0.65;
     transform: translateY(16px) scale(0.985);
     transition:
         opacity var(--dur-default) var(--ease-default) 600ms,
         transform var(--dur-default) var(--ease-default),
         border-color var(--dur-default) var(--ease-default),
         box-shadow var(--dur-default) var(--ease-default);
+}
+
+.step:not(.is-active) {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
 }
 
 /* Radial scrim under the active card only — guarantees legibility
@@ -1971,7 +1979,8 @@ body.is-iris-firing .scrollytelling__map::before {
     border: none;
     border-radius: 3px;
     cursor: pointer;
-    transition: color var(--dur-fast), background var(--dur-fast);
+    transition: color var(--dur-fast) var(--ease-default),
+                background var(--dur-fast) var(--ease-default);
 }
 
 .cal-heatmap__tab:hover {
@@ -2037,15 +2046,15 @@ body.is-iris-firing .scrollytelling__map::before {
 .cal-heatmap__tip {
     position: absolute;
     padding: 4px 8px;
-    font-size: 10px;
+    font-size: 13px;
     color: var(--text-primary);
     background: var(--bg-elevated);
     border: 1px solid var(--border);
-    border-radius: 4px;
+    border-radius: 3px;
     pointer-events: none;
     white-space: nowrap;
     z-index: 10;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
 /* ---------- Generation stack chart (Phase 5 — Step 5) ----------
@@ -2343,8 +2352,8 @@ body.is-iris-firing .scrollytelling__map::before {
      * .explorer__headline element. */
     opacity: 0;
     transform: translateY(20px);
-    transition: opacity 900ms var(--ease-cinematic),
-                transform 900ms var(--ease-cinematic);
+    transition: opacity var(--dur-default) var(--ease-cinematic),
+                transform var(--dur-default) var(--ease-cinematic);
     pointer-events: none;
 }
 
@@ -2613,7 +2622,7 @@ body.is-iris-firing .scrollytelling__map::before {
     -webkit-backdrop-filter: blur(28px) saturate(1.6);
     border: 1px solid var(--border-glass);
     border-top: 1px solid rgba(255, 255, 255, 0.09);
-    border-radius: 4px;
+    border-radius: 3px;
     padding: 28px 32px 32px;
     box-shadow:
         0 32px 64px -24px rgba(0, 0, 0, 0.7),
@@ -2753,7 +2762,8 @@ body.is-iris-firing .scrollytelling__map::before {
     border: none;
     border-radius: 3px;
     cursor: pointer;
-    transition: color var(--dur-fast), background var(--dur-fast);
+    transition: color var(--dur-fast) var(--ease-default),
+                background var(--dur-fast) var(--ease-default);
 }
 
 .timeline__mode-btn:hover {
@@ -2791,7 +2801,8 @@ body.is-iris-firing .scrollytelling__map::before {
     border: none;
     border-radius: 3px;
     cursor: pointer;
-    transition: color var(--dur-fast), background var(--dur-fast);
+    transition: color var(--dur-fast) var(--ease-default),
+                background var(--dur-fast) var(--ease-default);
 }
 
 .timeline__speed-btn:hover {
