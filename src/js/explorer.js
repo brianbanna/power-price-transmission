@@ -581,6 +581,8 @@ export function initExplorer(config) {
         }
 
         sidebar.classList.add("is-open");
+        const mapClock = document.querySelector("[data-map-clock]");
+        if (mapClock) mapClock.classList.add("is-hidden-by-sidebar");
         const closeBtn = sidebar.querySelector("[data-sidebar-close]");
         if (closeBtn) closeBtn.focus();
     }
@@ -588,6 +590,8 @@ export function initExplorer(config) {
     function closeSidebar() {
         if (!sidebar) return;
         sidebar.classList.remove("is-open");
+        const mapClock = document.querySelector("[data-map-clock]");
+        if (mapClock) mapClock.classList.remove("is-hidden-by-sidebar");
         sidebarActiveCountry = null;
         // Reset focus to the default protagonist.
         pushMap(state.hour);
