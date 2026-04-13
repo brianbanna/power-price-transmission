@@ -2711,6 +2711,15 @@ body.is-iris-firing .scrollytelling__map::before {
 
 .timeline__play-shape {
     fill: var(--accent);
+    transition: d var(--dur-medium) var(--ease-default);
+}
+
+.timeline.is-playing .timeline__play-shape--left {
+    d: path("M6 4 L6 20 L10 20 L10 4 Z");
+}
+
+.timeline.is-playing .timeline__play-shape--right {
+    d: path("M14 4 L14 20 L18 20 L18 4 Z");
 }
 
 .timeline__readout {
