@@ -78,5 +78,11 @@ HSquareB/
 ## Milestones
 
 - **Milestone 1** — problem definition, dataset description, preliminary exploratory analysis and related work. See [`milestone_1/milestone1.pdf`](milestone_1/milestone1.pdf).
-- **Milestone 2** — functional prototype and two-page design document. Due 1 May 2026.
+- **Milestone 2** — functional prototype and design document. Due 1 May 2026. See [`milestone_2/milestone2.pdf`](milestone_2/milestone2.pdf). Live prototype at [https://com-480-data-visualization.github.io/HSquareB/](https://com-480-data-visualization.github.io/HSquareB/).
 - **Milestone 3** — full website, two-minute screencast and process book. Due 28 May 2026.
+
+## Milestone 2 — functional prototype
+
+The site runs end-to-end. The narrative scroll covers all seven steps on a single sticky-map canvas: midnight baseline, dawn solar ramp, the 13:00 peak moment where Switzerland crosses below Germany at −€145.12/MWh, the year-in-one-view calendar heatmap, the generation-stack merit-order collapse, Germany's duck-curve evolution 2024→2025, and the five-country small-multiples comparison. The scroll then releases into an interactive explorer with a timeline scrubber, click-to-inspect country sidebar, play/pause with 1×/2×/4× speed control, and a price / renewable-share colour toggle.
+
+The two-page design document under [`milestone_2/`](milestone_2/) describes the project goal, the exploratory-analysis findings that motivated the narrative, sketches for each scroll step, the MVP / stretch-ideas split, and the tools and course lectures that support each visualisation component.
