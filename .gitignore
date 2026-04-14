@@ -37,3 +37,4 @@ Screenshot*.jpeg
 .env
 .env.local
 .DS_Store
+dataviz/
