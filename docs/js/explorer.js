@@ -215,7 +215,7 @@ export function initExplorer(config) {
     // plays three times and then stops via a CSS `animation-iteration-count`
     // of 3. The is-touched class kills it permanently the first time
     // the reader actually interacts with the timeline.
-    const markTouched = () => {
+    let markTouched = () => {
         timeline.classList.add("is-touched");
         timeline.classList.remove("is-hinting");
         // Also cancel any pending hint-delay timer so a late touch
