@@ -61,7 +61,7 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent
 RAW_CSV = ROOT / "data" / "entsoe_data_2024_2025.csv"
-OUTPUT_DIR = ROOT / "src" / "data" / "processed"
+OUTPUT_DIR = ROOT / "docs" / "data" / "processed"
 
 DISPLAY_TZ = "Europe/Berlin"
 

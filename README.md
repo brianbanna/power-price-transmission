@@ -48,7 +48,7 @@ python3 -m venv .venv
 
 # Serve the site from the repo root
 python3 -m http.server 8000
-# open http://localhost:8000/src/
+# open http://localhost:8000/docs/
 ```
 
 ## Project structure
@@ -61,7 +61,7 @@ HSquareB/
 │   ├── explore.py                  # one-shot dataset diagnostic
 │   ├── preprocess.py               # CSV to JSON pipeline
 │   └── build_topojson.py           # map geometry builder
-├── src/
+├── docs/                           # the site itself, served by GitHub Pages
 │   ├── index.html
 │   ├── data/processed/             # JSON artefacts served alongside the site
 │   ├── css/style.css
