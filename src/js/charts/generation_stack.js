@@ -40,7 +40,13 @@ export function createGenerationStack(selector, config) {
     if (!container) return null;
 
     const { series, label } = config;
-    if (!series?.length) return null;
+    if (!series?.length) {
+        const empty = document.createElement("p");
+        empty.className = "chart-empty mono";
+        empty.textContent = "No data available";
+        container.appendChild(empty);
+        return { el: empty, reveal: () => {}, destroy: () => empty.remove() };
+    }
 
     // Prepare the data for d3.stack — each record needs all keys,
     // defaulting to 0 for missing fields.

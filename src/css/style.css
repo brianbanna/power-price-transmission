@@ -1999,6 +1999,15 @@ body.is-iris-firing .scrollytelling__map::before {
     margin-bottom: 16px;
 }
 
+.chart-empty {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 24px 0;
+    text-align: center;
+}
+
 /* DE / CH toggle tabs above the heatmap grid. */
 .cal-heatmap__tabs {
     display: inline-flex;

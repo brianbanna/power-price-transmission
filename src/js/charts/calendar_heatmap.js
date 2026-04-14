@@ -33,7 +33,13 @@ export function createCalendarHeatmap(selector, config) {
     if (!container) return null;
 
     const { data, countries } = config;
-    if (!data?.days?.length || !countries?.length) return null;
+    if (!data?.days?.length || !countries?.length) {
+        const empty = document.createElement("p");
+        empty.className = "chart-empty mono";
+        empty.textContent = "No data available";
+        container.appendChild(empty);
+        return { el: empty, switchTo: () => {}, destroy: () => empty.remove() };
+    }
 
     // Wrapper div for the whole component (tabs + chart).
     const wrapper = document.createElement("div");

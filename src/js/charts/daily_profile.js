@@ -38,7 +38,19 @@ export function createDailyProfile(selector, config) {
         height = compact ? 100 : 200,
     } = config;
 
-    if (!profiles?.annual_average) return null;
+    if (!profiles?.annual_average) {
+        const empty = document.createElement("p");
+        empty.className = "chart-empty mono";
+        empty.textContent = "No data available";
+        container.appendChild(empty);
+        return {
+            el: empty,
+            setMonth: () => {},
+            animateMonths: () => {},
+            stopAnimation: () => {},
+            destroy: () => empty.remove(),
+        };
+    }
 
     const margin = compact ? COMPACT_MARGIN : FULL_MARGIN;
     const innerW = width - margin.left - margin.right;
