@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import Any
 
 SOURCE_URL = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json"
-OUTPUT_PATH = Path("data/processed/map.topojson")
+OUTPUT_PATH = Path("src/data/processed/map.topojson")
 
 # Bounding box used to strip overseas territories out of MultiPolygon
 # geometries (notably France's DOM-TOMs). A polygon is kept if its centroid

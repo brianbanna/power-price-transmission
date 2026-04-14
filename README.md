@@ -56,16 +56,20 @@ python3 -m http.server 8000
 ```text
 HSquareB/
 ├── data/
-│   ├── entsoe_data_2024_2025.csv   # raw dataset (immutable)
-│   └── processed/
-│       └── map.topojson            # five-country geometry
+│   └── entsoe_data_2024_2025.csv   # raw dataset (immutable)
 ├── scripts/
 │   ├── explore.py                  # one-shot dataset diagnostic
+│   ├── preprocess.py               # CSV to JSON pipeline
 │   └── build_topojson.py           # map geometry builder
 ├── src/
 │   ├── index.html
+│   ├── data/processed/             # JSON artefacts served alongside the site
+│   ├── css/style.css
 │   └── js/
-│       └── main.js                 # entry point
+│       ├── main.js                 # entry point
+│       ├── map.js, narrative.js, explorer.js
+│       ├── charts/                 # chart factories
+│       └── utils/
 ├── milestone_1/milestone1.pdf
 ├── milestone_2/milestone2.pdf
 ├── requirements.txt

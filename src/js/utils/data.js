@@ -1,9 +1,9 @@
 // Fetches a preprocessed JSON artefact from `data/processed/`.
 //
-// The page is served from `src/`, so processed data is one directory up.
-// Using a relative URL keeps the site portable across deployment roots.
+// Processed JSON lives alongside the site at `src/data/processed/` so that
+// GitHub Pages can serve everything from a single root folder.
 
-const BASE_PATH = "../data/processed/";
+const BASE_PATH = "data/processed/";
 
 export async function loadJSON(filename) {
     const url = BASE_PATH + filename;
