@@ -49,28 +49,44 @@ async function init() {
 }
 
 /**
- * Staggered scroll-triggered reveal for the footer. An IntersectionObserver
- * fires once when 15% of the footer is visible, adding `is-revealed` which
- * CSS uses to cascade opacity/transform transitions with per-element delays.
- * Fires once then disconnects — no continuous observation needed.
+ * Staggered scroll-triggered reveal for the footer. Fires as soon as the
+ * footer starts entering the viewport (top edge within 120px of the viewport
+ * bottom), adding `is-revealed` so the CSS cascade plays the staggered
+ * entrance. A scroll-based fallback guarantees the content is never stuck
+ * invisible if IntersectionObserver mis-fires on a given layout.
  */
 function setupFooterReveal() {
     const footer = document.querySelector(".site-footer");
     if (!footer) return;
+
+    const reveal = () => footer.classList.add("is-revealed");
+
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        footer.classList.add("is-revealed");
+        reveal();
         return;
     }
+
     const observer = new IntersectionObserver(
         ([entry]) => {
             if (entry.isIntersecting) {
-                footer.classList.add("is-revealed");
+                reveal();
                 observer.disconnect();
+                window.removeEventListener("scroll", fallback);
             }
         },
-        { threshold: 0.15 },
+        { threshold: 0, rootMargin: "0px 0px -120px 0px" },
     );
     observer.observe(footer);
+
+    const fallback = () => {
+        const top = footer.getBoundingClientRect().top;
+        if (top < window.innerHeight + 200) {
+            reveal();
+            observer.disconnect();
+            window.removeEventListener("scroll", fallback);
+        }
+    };
+    window.addEventListener("scroll", fallback, { passive: true });
 }
 
 /**
