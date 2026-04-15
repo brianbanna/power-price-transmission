@@ -100,7 +100,6 @@
     --content-max: 1440px;
     --narrative-col: 460px;
     --gutter: clamp(24px, 4vw, 80px);
-    --gutter-sm: clamp(16px, 3vw, 40px);
 
     /* Vignette + film grain — modulated during iris wipe animation */
     --vignette-size: 80%;
@@ -720,22 +719,6 @@ strong {
     text-shadow: 0 0 20px color-mix(in srgb, var(--accent) 35%, transparent);
 }
 
-/* Decorative terminal mark at the end of the title. Replaces the bare
- * full stop with a small accent-colored point — an editorial flourish
- * borrowed from FT and economist long-form headlines. Glow phases
- * with the global heartbeat. */
-.hero__title-mark {
-    display: inline-block;
-    margin-left: 0.08em;
-    color: var(--accent);
-    font-size: 0.55em;
-    vertical-align: 0.55em;
-    font-variation-settings: "opsz" 144, "wght" 700;
-    transform: translateY(0);
-    text-shadow:
-        0 0 calc(12px + var(--beat) * 14px) color-mix(in srgb, var(--accent) calc(35% + var(--beat) * 35%), transparent);
-}
-
 .hero__lede {
     font-size: clamp(18px, 1.5vw, 22px);
     line-height: 1.5;
@@ -842,10 +825,6 @@ strong {
     letter-spacing: 0.08em;
     color: var(--text-muted);
     text-transform: uppercase;
-}
-
-.hero__date {
-    color: var(--text-muted);
 }
 
 .hero__scroll-hint {
@@ -1031,10 +1010,6 @@ strong {
  * pinned as the reader scrolls the narrative cards and the explorer
  * intro, and naturally releases when the scene ends and the footer
  * begins. No JS tricks, no opacity hacks, no fixed-vs-flow conflicts.
- *
- * Legacy class names `.scrollytelling` and `.scrollytelling__map` are
- * aliased to `.scene` and `.scene__map` below for backward-compat with
- * any JS selectors still referencing them.
  */
 
 .scene {
@@ -1042,8 +1017,7 @@ strong {
     width: 100%;
 }
 
-.scene__map,
-.scrollytelling__map {
+.scene__map {
     position: sticky;
     top: 0;
     height: 100vh;
@@ -1067,8 +1041,7 @@ strong {
 /* Circadian tint layer — sits above the map SVG. Uses `screen`
  * blend mode so the warm-solar midpoint actually registers against
  * the dark navy base (soft-light at low alpha was imperceptible). */
-.scene__map .circadian,
-.scrollytelling__map .circadian {
+.scene__map .circadian {
     position: absolute;
     inset: 0;
     background: var(--atmos-tint, transparent);
@@ -1078,8 +1051,7 @@ strong {
     transition: background var(--dur-default) var(--ease-default);
 }
 
-.scene__map svg,
-.scrollytelling__map svg {
+.scene__map svg {
     display: block;
     width: 100%;
     height: 100%;
@@ -1126,8 +1098,7 @@ strong {
     filter: drop-shadow(0 0 14px color-mix(in srgb, var(--accent) 35%, transparent));
 }
 
-body.is-narrative-active .scene__map svg,
-body.is-narrative-active .scrollytelling__map svg {
+body.is-narrative-active .scene__map svg {
     filter: saturate(0.55) brightness(0.82);
 }
 
@@ -1136,8 +1107,7 @@ body.is-narrative-active .scrollytelling__map svg {
  * and --grain-intensity variables are modulated during the iris
  * wipe animation that fires once on hero exit. */
 
-.scene__map::before,
-.scrollytelling__map::before {
+.scene__map::before {
     content: "";
     position: absolute;
     inset: 0;
@@ -1159,8 +1129,7 @@ body.is-iris-firing {
     --grain-intensity: 0.09;
 }
 
-body.is-iris-firing .scene__map::before,
-body.is-iris-firing .scrollytelling__map::before {
+body.is-iris-firing .scene__map::before {
     transition: background 700ms cubic-bezier(0.65, 0, 0.35, 1);
 }
 
@@ -1184,8 +1153,7 @@ body.is-iris-firing .scrollytelling__map::before {
 }
 
 /* Grain overlay on the map for atmosphere */
-.scene__map::after,
-.scrollytelling__map::after {
+.scene__map::after {
     content: "";
     position: absolute;
     inset: 0;
@@ -1451,10 +1419,6 @@ body.is-iris-firing .scrollytelling__map::before {
     cursor: pointer;
 }
 
-.country.is-highlight {
-    fill: var(--bg-elevated);
-}
-
 /* ---------- Map — country hover tooltip ---------- */
 
 .map-tip {
@@ -1585,8 +1549,7 @@ body.is-iris-firing .scrollytelling__map::before {
  * scroll. The scrubber is the reveal's proof; don't make them wait.
  */
 
-.scene__narrative,
-.scrollytelling__narrative {
+.scene__narrative {
     position: relative;
     z-index: 3;
     pointer-events: none;
@@ -2406,24 +2369,6 @@ body.is-iris-firing .scrollytelling__map::before {
  * itself adds nothing between them and the map.
  */
 
-/* ---------- Explorer layout ----------
- *
- * The explorer has two structural parts:
- *
- *   .explorer__stage   — exactly one viewport tall. Flex column with
- *                        the intro at the top and the timeline at
- *                        the bottom (pushed there by margin-top:auto).
- *                        When the reader scrolls the stage into view,
- *                        intro and timeline are visible SIMULTANEOUSLY,
- *                        one at the top of the viewport and one at
- *                        the bottom. As the reader continues scrolling,
- *                        the whole stage drifts upward as a single
- *                        cohesive block.
- *
- *   .explorer__outro   — empty 70vh scroll track between the stage
- *                        and the footer so the hand-off isn't abrupt.
- */
-
 /* ---------- Explorer (inside the scene) ----------
  *
  * The explorer is a 100vh section that sits below the narrative
@@ -2460,15 +2405,6 @@ body.is-iris-firing .scrollytelling__map::before {
     /* Legibility on bare map — tight dark halo under the text. */
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7),
                  0 0 12px rgba(10, 14, 26, 0.9);
-}
-
-/* Legacy classes that are no longer in the HTML — kept as zero-sized
- * no-ops so stray references don't break. */
-.explorer__trail,
-.explorer__outro,
-.explorer__stage,
-.explorer__spacer {
-    display: none;
 }
 
 /* Timeline wrap — sticky to the explorer section's bottom edge.
@@ -2629,10 +2565,6 @@ body.is-iris-firing .scrollytelling__map::before {
 @keyframes scrollPromptBounce {
     0%, 100% { transform: translateY(0); }
     50%      { transform: translateY(4px); }
-}
-
-.explorer__scroll-done {
-    display: none;
 }
 
 /* Show prompt during the scroll pause */
@@ -3377,8 +3309,7 @@ body.is-iris-firing .scrollytelling__map::before {
         font-size: clamp(48px, 12vw, 88px);
     }
 
-    .scene__narrative,
-    .scrollytelling__narrative {
+    .scene__narrative {
         margin-inline: 16px;
         padding-block: 30vh 60vh;
         gap: 55vh;

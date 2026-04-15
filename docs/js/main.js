@@ -291,9 +291,6 @@ function setupHeroTitleReveal() {
             // Element node — recurse into children (clone array since
             // the mutation swaps children as we go).
             if (node.nodeType === Node.ELEMENT_NODE) {
-                // Skip the decorative terminal mark — it already has
-                // its own treatment and doesn't need to be split.
-                if (node.classList?.contains("hero__title-mark")) return;
                 const children = Array.from(node.childNodes);
                 for (const child of children) walk(child);
             }
