@@ -29,7 +29,7 @@ Renewable integration is usually told as a domestic success story: capacity inst
 
 ### 1.4 Audience
 
-Energy-literate general readers, undergraduate economics and energy students, and anyone following the European power-market news cycle. The piece assumes no meteorology and no electricity-market background beyond "wholesale prices exist." All technical terms are introduced inline when first used.
+Energy-literate general readers, undergraduate economics and energy students, and anyone following the European power-market news cycle. The piece assumes no meteorology and no electricity-market background beyond "wholesale prices exist." Technical terms — bidding zone, merit-order stack, duck curve, Dunkelflaute — are introduced inline the first time they appear, so the reader can follow the argument without a glossary.
 
 ![The hero frame of the live prototype. At 13:00 on 12 May 2024, Switzerland clears at -€145.12 per MWh, deeper in the red than Germany. Flow arrows show the physical path of the shock.](figures/fig_02_step3_peak.png)
 
@@ -37,7 +37,7 @@ Energy-literate general readers, undergraduate economics and energy students, an
 
 ## 2. Exploratory data analysis
 
-The raw data is the ENTSO-E Transparency Platform download covering 1 January 2024 through 30 June 2025: 301,391 hourly observations across 23 bidding zones with day-ahead prices and generation split by fuel. We filter to the five coupled central-European zones at the heart of our story: Switzerland (CH), Germany and Luxembourg (DE_LU), France (FR), Northern Italy (IT_NORD), and Austria (AT).
+The raw data is the ENTSO-E Transparency Platform download covering 1 January 2024 through 30 June 2025: 301,391 hourly observations across 23 bidding zones with day-ahead prices and generation split by fuel. A *bidding zone* is the geographic area within which the wholesale electricity price is the same at any given hour; most countries are a single zone, Italy is split into six, and Germany shares one with Luxembourg. We filter to the five zones that share physical interconnectors across the Alps and Rhine and which are the natural scope for a Swiss-centric story: Switzerland (CH), Germany-Luxembourg (DE_LU), France (FR), Northern Italy (IT_NORD), and Austria (AT). Belgium and the Netherlands also border Germany and see significant negative prices, but they are two interconnectors removed from Switzerland and fall outside our CH-anchored narrative.
 
 ### 2.1 Distribution of negative-price hours
 
@@ -45,21 +45,25 @@ The simplest signal is how often each market clears below zero. Over eighteen mo
 
 | Country | Negative-price hours | Share of total |
 |---|---:|---:|
-| Germany (DE_LU) | 846 | 6.4% |
+| Germany (DE_LU) | 846 | 6.5% |
+| France (FR) | 715 | 5.5% |
+| Austria (AT) | 584 | 4.5% |
 | Switzerland (CH) | 529 | 4.0% |
-| Austria (AT) | 471 | 3.6% |
-| France (FR) | 123 | 0.9% |
-| Italy (IT_NORD) | 4 | 0.03% |
+| Italy (IT_NORD) | 0 | 0.0% |
 
-The ordering is not random. It tracks interconnection capacity to Germany and proximity to German solar. Italy, separated from the German-Austrian block by the Alps and with more gas in the mix, barely sees zero. Switzerland has almost no solar of its own but absorbs 529 hours of negative prices, more than half of Germany's count.
+The ordering surfaces two different mechanisms. France's 715 hours are largely domestically produced: an inflexible nuclear fleet plus wind surges on top push prices below zero even without imported pressure. Austria is structurally coupled to Germany — the two ran as a single bidding zone until 2018 and still sit inside the same synchronous area, so negative hours in one almost always show up in the other. Switzerland is the case worth staring at. It has almost no solar, no wind surplus, and a flexible hydro fleet; nothing about its own fundamentals should push its clearing price below zero. Yet it goes negative 529 times in eighteen months. Italy, behind the Alps and with a gas-heavy generation mix, never crosses zero at all.
 
 ![Step 4 of the narrative: calendar heatmap with DE / CH tab toggle. Each cell is one hour across eighteen months. The DE panel shows dense summer-midday clusters of negative prices; the CH panel shows a sparser but recognisably similar pattern. The density difference between the two tabs is the visual form of Section 2.1.](figures/fig_03_heatmap.png)
 
-### 2.2 Correlation between the Swiss and German price
+### 2.2 Coincidence with German negative hours
 
-On 88.8% of the hours where Switzerland went negative, Germany was also negative in the same hour. The two markets move together at the bottom of the price distribution. This is the statistical spine of the project: Switzerland is not producing its own negative-price hours, it is importing them through the physical grid.
+For each neighbouring country we counted how many of its own negative-price hours fell in the same hour as a German negative. Austria leads at 89.7% (524 of 584), Switzerland follows almost immediately at 88.8% (470 of 529), and France trails at 80.6% (576 of 715). Austria's high coincidence is expected — the country sits inside the same synchronous area as Germany and shared a single bidding zone with it until 2018, so the two essentially clear as one market at the bottom. France produces a large share of its own negative hours locally from nuclear-plus-wind oversupply, which is why its coincidence rate is lower despite a larger absolute count.
+
+Switzerland is the statistical spine of the project. It has no structural reason to co-move with Germany that way: it is outside the EU internal market, not in the same bidding zone, and physically connected only through the HVDC and AC lines across the Rhine and the Alps. Yet on 88.8% of the hours its price goes below zero, Germany is already below zero too. Switzerland is not producing those negative-price hours; it is importing them through the physical grid.
 
 ### 2.3 The duck curve is widening, fast
+
+The *duck curve* is the silhouette that appears when you plot a typical day's electricity price (or net load) by hour and solar dominates the middle of the day: the price drops through the morning, forms a deep midday trough — the duck's belly — as cheap solar floods the system, then ramps steeply back up in the evening — the duck's head — when the sun sets and demand peaks. The shape is a fingerprint of solar penetration.
 
 We computed the monthly average price profile for each country across all eighteen months. Germany's average midday price (hour 13) fell from +€21.42 per MWh in May 2024 to -€3.86 per MWh in May 2025. Year on year, the duck's belly has dropped below zero on a monthly-average basis. That happened in one year.
 
@@ -87,9 +91,11 @@ Each of the three shows up explicitly in one of the seven narrative steps.
 
 The piece runs as a single scrollytelling page with a sticky map underneath. The five-country map is the shared canvas. The reader scrolls through seven editorial cards, each of which changes the map's state: time of day, price colouring, flow arrows, annotations. After the seventh card, the scroll releases into an interactive explorer where the reader can drive the same map directly.
 
-Because the prototype is already functional end to end, we include screenshots of the live build rather than the sketches named in the brief. The artefact itself is the most faithful representation of what we intend to ship.
+Because the prototype is already functional end to end, we include screenshots of the live build rather than the sketches named in the brief. Screenshots of the actual build communicate the visual intent, the colour scale, and the typographic hierarchy more precisely than a hand sketch could at this stage, and we would rather the reader of this document see what we are actually shipping.
 
 ### 3.2 The seven narrative steps
+
+A note on two terms used below. A *mix donut* is a small donut chart showing the share of each fuel in the current generation mix (solar, wind, nuclear, gas, hydro). A *merit-order stack* is how electricity markets clear: generators are ordered from cheapest marginal cost (nuclear, renewables) to most expensive (gas peakers), stacked up until supply meets demand, and the last unit needed sets the clearing price for the whole market — so when cheap renewables alone can cover all demand, the price collapses, and when they exceed demand, it goes negative.
 
 | Step | Beat | Key visual |
 |---|---|---|
@@ -134,7 +140,7 @@ Ranked by how much they would add if we have time before Milestone 3, each of wh
 - **Keyboard accessibility on the map** so every country can be reached with Tab and opened with Enter.
 - **Graceful empty states and error messaging** across all charts.
 - **Colour-vision-deficient audit** of the generation-stack palette (solar and gas currently sit close in CVD space).
-- **Annotation layer** for named events: German holidays, negative-price records, winter Dunkelflaute hours.
+- **Annotation layer** for named events: German holidays, negative-price records, and winter *Dunkelflaute* hours (German for "dark doldrums" — stretches of low sun and low wind when renewables under-produce and prices spike).
 - **Sonification of one day's price curve** as an optional audio track, grounded in Lecture 11.2.
 
 The first three are already in progress. The remaining three are honest stretch.
@@ -148,7 +154,7 @@ The first three are already in progress. The remaining three are honest stretch.
 | Rendering | D3 v7 (SVG and Canvas), vanilla ES modules |
 | Scroll orchestration | Scrollama |
 | Typography | Fraunces (variable serif), JetBrains Mono |
-| Hosting | GitHub Pages (static, `/src` folder, `.nojekyll`) |
+| Hosting | GitHub Pages (static, `/docs` folder, `.nojekyll`) |
 
 No framework, no build step. The whole site is served from static files on GitHub Pages.
 
@@ -176,7 +182,7 @@ Future lectures we expect to lean on for Milestone 3:
 
 ### 4.5 Prototype status
 
-The end-to-end prototype is live at [https://com-480-data-visualization.github.io/HSquareB/](https://com-480-data-visualization.github.io/HSquareB/). All seven narrative steps are wired, the explorer is interactive, and the Python pipeline regenerates every JSON artefact from the raw CSV in under a minute. The current phase is polish and accessibility (13 of 17 tasks done), which will continue through to Milestone 3 alongside the screencast and the process book.
+The end-to-end prototype is live at [https://com-480-data-visualization.github.io/HSquareB/](https://com-480-data-visualization.github.io/HSquareB/). All seven narrative steps are wired, the explorer is interactive, and the Python pipeline regenerates every JSON artefact from the raw CSV in under a minute. The current phase is polish, accessibility, and mobile responsiveness, and it will continue through to Milestone 3 alongside the screencast and the process book.
 
 ### 4.6 Division of labour
 
