@@ -12,13 +12,13 @@
 
 ### 1.1 Thesis
 
-Germany's renewable build-out is no longer a German story. On a sunny Sunday in May 2024, German solar farms pushed so much power onto the continental grid that Switzerland's wholesale electricity price crashed to -€145.12 per MWh at 1 pm, deeper into the red than Germany itself at the same hour. Switzerland barely produces solar. Italy, two interconnectors away, was still paying positive prices. One country's energy transition is setting the clearing price for five.
+On Sunday 12 May 2024, German solar output was high enough that Switzerland's wholesale electricity price dropped to -€145.12 per MWh at 13:00, below Germany's own price at the same hour. Switzerland has almost no solar capacity of its own. Italy, two interconnectors further south, was still trading at positive prices. Germany's renewable build-out has now reached the point where its weekend solar production sets the clearing price across five central European markets at once.
 
-We want the reader to feel that transmission of shock, not just read about it.
+The goal of the visualisation is to make that price transmission visible, not just describe it in text.
 
 ### 1.2 Motivation
 
-Renewable integration is usually told as a domestic success story: capacity installed, emissions avoided, bills saved. The cross-border side of the story is quieter and harder to show. Interconnectors turn national energy policy into a continental externality. When they work well, they smooth out weather. When supply overshoots demand, they broadcast a price shock across the network in minutes. Policy-makers, grid operators and energy-literate readers all benefit from seeing that mechanism explicitly, and seeing how it has deepened between 2024 and 2025.
+Renewable integration is usually framed as a domestic story: capacity installed, emissions avoided, bills reduced. The cross-border side gets less attention because it is harder to show. Interconnectors turn national energy policy into a regional effect. Most of the time they just smooth out weather variation. When supply overshoots demand, they propagate the price drop across the network within the hour. Anyone following European power markets benefits from seeing that mechanism directly, and from seeing how much it has intensified between 2024 and 2025.
 
 ### 1.3 Questions we want a reader to walk away able to answer
 
@@ -29,21 +29,21 @@ Renewable integration is usually told as a domestic success story: capacity inst
 
 ### 1.4 Audience
 
-Energy-literate general readers, undergraduate economics and energy students, and anyone following the European power-market news cycle. The piece assumes no meteorology and no electricity-market background beyond "wholesale prices exist." Technical terms — bidding zone, merit-order stack, duck curve, Dunkelflaute — are introduced inline the first time they appear, so the reader can follow the argument without a glossary.
+Energy-literate general readers, undergraduate economics and energy students, and anyone following the European power-market news cycle. The site assumes no meteorology and no electricity-market background beyond "wholesale prices exist." Technical terms (bidding zone, merit-order stack, duck curve, Dunkelflaute) are introduced inline the first time they appear, so the reader can follow the argument without a glossary.
 
-![The hero frame of the live prototype. At 13:00 on 12 May 2024, Switzerland clears at -€145.12 per MWh, deeper in the red than Germany. Flow arrows show the physical path of the shock.](figures/fig_02_step3_peak.png)
+![The hero frame of the live prototype. At 13:00 on 12 May 2024, Switzerland clears at -€145.12 per MWh, lower than Germany at the same hour. Flow arrows show the inferred direction of cross-border power flows.](figures/fig_02_step3_peak.png)
 
 ---
 
 ## 2. Exploratory data analysis
 
-The raw data is the ENTSO-E Transparency Platform download covering 1 January 2024 through 30 June 2025: 301,391 hourly observations across 23 bidding zones with day-ahead prices and generation split by fuel. A *bidding zone* is the geographic area within which the wholesale electricity price is the same at any given hour; most countries are a single zone, Italy is split into six, and Germany shares one with Luxembourg. We filter to the five zones that share physical interconnectors across the Alps and Rhine and which are the natural scope for a Swiss-centric story: Switzerland (CH), Germany-Luxembourg (DE_LU), France (FR), Northern Italy (IT_NORD), and Austria (AT). Belgium and the Netherlands also border Germany and see significant negative prices, but they are two interconnectors removed from Switzerland and fall outside our CH-anchored narrative.
+We use the ENTSO-E Transparency Platform download covering 1 January 2024 through 30 June 2025: 301,391 hourly observations across 23 bidding zones, with day-ahead prices and generation broken down by fuel. A *bidding zone* is the area within which the wholesale electricity price is the same at any given hour. Most countries are a single zone, Italy is split into six, and Germany shares one with Luxembourg. We filter to five zones that share physical interconnectors across the Alps and the Rhine: Switzerland (CH), Germany-Luxembourg (DE_LU), France (FR), Northern Italy (IT_NORD), and Austria (AT). Belgium and the Netherlands also border Germany and see a lot of negative prices, but they are two interconnectors removed from Switzerland and sit outside the scope we care about here.
 
-Within that five-country frame, Germany is the source of the price signal and the other four are where it lands. Three facts put it at the centre of the story. First, Germany has roughly an order of magnitude more installed solar and wind capacity than any focus neighbour — around 90 GW of solar and 70 GW of wind in 2024 against Switzerland's 7 GW combined — which gives it the scale to swing continental prices on its own. Second, Germany sits at the physical centre of the synchronous area and shares direct interconnectors with four of the other five focus zones, so a shock in Germany has to pass through the rest of the grid. Third, the causality only runs one way: when the German market goes negative, the neighbouring markets almost always go negative with it (Section 2.2 quantifies this); when Germany is positive, everyone else is positive too. Germany's *Energiewende* is the policy driving the externality we are measuring, and the rest of the analysis treats the four neighbours as the places that catch the signal rather than the places that produce it.
+Germany is at the centre of this story for three concrete reasons. It has roughly ten times the installed solar and wind capacity of any focus neighbour (around 90 GW of solar and 70 GW of wind in 2024, against Switzerland's combined 7 GW), which gives it the scale to move continental prices on its own. It sits at the physical centre of the synchronous area and shares direct interconnectors with four of the other five focus zones, so a price shock on its grid travels outward through the rest. And the causality only runs one way: when the German market clears below zero, the neighbours almost always clear below zero too (Section 2.2 gives the numbers), while positive German hours line up with positive hours everywhere else. The German *Energiewende* is the policy driving the effect we are measuring, so the rest of the analysis treats the other four countries as the places that catch the signal rather than the places that produce it.
 
 ### 2.1 Distribution of negative-price hours
 
-The simplest signal is how often each market clears below zero. Over eighteen months:
+We start by counting how often each market clears below zero. Over eighteen months:
 
 | Country | Negative-price hours | Share of total |
 |---|---:|---:|
@@ -53,27 +53,27 @@ The simplest signal is how often each market clears below zero. Over eighteen mo
 | Switzerland (CH) | 529 | 4.0% |
 | Italy (IT_NORD) | 0 | 0.0% |
 
-The ordering surfaces two different mechanisms. France's 715 hours are largely domestically produced: an inflexible nuclear fleet plus wind surges on top push prices below zero even without imported pressure. Austria is structurally coupled to Germany — the two ran as a single bidding zone until 2018 and still sit inside the same synchronous area, so negative hours in one almost always show up in the other. Switzerland is the case worth staring at. It has almost no solar, no wind surplus, and a flexible hydro fleet; nothing about its own fundamentals should push its clearing price below zero. Yet it goes negative 529 times in eighteen months. Italy, behind the Alps and with a gas-heavy generation mix, never crosses zero at all.
+The ordering points to two different dynamics behind the numbers. France's 715 hours are mostly produced at home: its nuclear fleet is slow to ramp down, so when wind output is high the combined supply overshoots demand even without imports from Germany. Austria's count comes from a different place. Austria and Germany ran as a single bidding zone until 2018 and are still inside the same synchronous area, so negative hours in one almost always show up in the other. Switzerland is the interesting case. It has almost no solar, no wind surplus, and a flexible hydro fleet. On its own fundamentals nothing should push its clearing price below zero. It still went negative 529 times. Italy, on the other side of the Alps with a gas-heavy generation mix, never crossed zero at all.
 
-![Step 4 of the narrative: calendar heatmap with DE / CH tab toggle. Each cell is one hour across eighteen months. The DE panel shows dense summer-midday clusters of negative prices; the CH panel shows a sparser but recognisably similar pattern. The density difference between the two tabs is the visual form of Section 2.1.](figures/fig_03_heatmap.png)
+![Step 4 of the narrative: calendar heatmap with a DE / CH tab toggle. Each cell is one hour across eighteen months. The DE panel shows dense clusters of negative prices on summer midday hours; the CH panel shows a sparser version of the same pattern. The density difference between the two tabs is the visual form of Section 2.1.](figures/fig_03_heatmap.png)
 
 ### 2.2 Coincidence with German negative hours
 
-For each neighbouring country we counted how many of its own negative-price hours fell in the same hour as a German negative. Austria leads at 89.7% (524 of 584), Switzerland follows almost immediately at 88.8% (470 of 529), and France trails at 80.6% (576 of 715). Austria's high coincidence is expected — the country sits inside the same synchronous area as Germany and shared a single bidding zone with it until 2018, so the two essentially clear as one market at the bottom. France produces a large share of its own negative hours locally from nuclear-plus-wind oversupply, which is why its coincidence rate is lower despite a larger absolute count.
+For each neighbouring country we counted how many of its own negative-price hours fell inside the same hour as a German negative. Austria sits at 89.7% (524 of 584), Switzerland at 88.8% (470 of 529), and France at 80.6% (576 of 715). Austria's high number is not surprising. It shared a single bidding zone with Germany until 2018 and is still inside the same synchronous area, so the two markets clear together at the bottom. France has a larger absolute count but a lower coincidence rate, because a lot of its negative hours come from its own nuclear-plus-wind supply stack rather than from imports.
 
-Switzerland is the statistical spine of the project. It has no structural reason to co-move with Germany that way: it is outside the EU internal market, not in the same bidding zone, and physically connected only through the HVDC and AC lines across the Rhine and the Alps. Yet on 88.8% of the hours its price goes below zero, Germany is already below zero too. Switzerland is not producing those negative-price hours; it is importing them through the physical grid.
+Switzerland is the finding that drives the rest of the project. It has no structural reason to track Germany like that. It is outside the EU internal market, not in the same bidding zone, and only physically connected through the HVDC and AC lines across the Rhine and the Alps. And yet, on 88.8% of the hours its price drops below zero, Germany is already there. Switzerland is not producing those hours. It is importing them through the grid.
 
 ### 2.3 The duck curve is widening, fast
 
-The *duck curve* is the silhouette that appears when you plot a typical day's electricity price (or net load) by hour and solar dominates the middle of the day: the price drops through the morning, forms a deep midday trough — the duck's belly — as cheap solar floods the system, then ramps steeply back up in the evening — the duck's head — when the sun sets and demand peaks. The shape is a fingerprint of solar penetration.
+The *duck curve* is the shape you get when you plot a typical day's electricity price (or net load) hour by hour and solar dominates the middle of the day. Prices drop through the morning, hit a deep midday trough (the duck's belly) as cheap solar floods the system, and then climb steeply in the evening (the duck's head) when the sun sets and demand peaks. The deeper the belly, the more solar is in the mix.
 
-We computed the monthly average price profile for each country across all eighteen months. Germany's average midday price (hour 13) fell from +€21.42 per MWh in May 2024 to -€3.86 per MWh in May 2025. Year on year, the duck's belly has dropped below zero on a monthly-average basis. That happened in one year.
+We computed the monthly average price profile for each country across all eighteen months. Germany's average midday price at hour 13 fell from +€21.42 per MWh in May 2024 to -€3.86 per MWh in May 2025. In one year, on a monthly-average basis, the duck's belly crossed below zero.
 
-All five countries share the same daily shape: a midday trough at hour 13 or 14, an evening peak at hour 19. What differs is absolute level and how deep the trough goes. The story Step 7 tells is "same rhythm, five different intensities", which we only noticed after running the EDA and seeing that peak hours lined up across the board.
+All five countries have the same daily shape: a midday trough at hour 13 or 14, an evening peak at hour 19. What differs is the absolute level and the depth of the trough. That is what Step 7 of the visualisation communicates. The daily rhythm is shared, the intensity is not. We only noticed this after running the EDA and seeing the peak hours line up across all five.
 
 ### 2.4 Seasonality of renewable share
 
-Germany's monthly renewable share (solar + wind + hydro as a fraction of total generation) peaks above 70% in the summer months of 2024 and rises higher in 2025. Italy stays heavily gas-dependent throughout. Austria runs near 80% year-round, mostly hydro. France sits at a stable 20 to 30%, nuclear-dominated, with fossil fuels as a buffer. These five mixes produce five different price personalities, which is what the narrative has to surface.
+Germany's monthly renewable share (solar + wind + hydro as a fraction of total generation) peaks above 70% in the summer months of 2024 and runs higher in 2025. Italy stays heavily gas-dependent throughout. Austria sits near 80% year-round, almost all of it hydro. France runs at a stable 20 to 30%, dominated by nuclear with fossil fuels as a buffer. Each country's mix produces a distinct price profile, and the narrative has to make those differences visible.
 
 ![Step 7 of the narrative: five-country small multiples of the average 24-hour price profile. The same trough-and-peak daily shape appears in all five, but at different levels. Italy holds a positive midday average; Germany's trough sits near zero; Switzerland and Austria track Germany closely.](figures/fig_05_smallmults.png)
 
@@ -91,13 +91,13 @@ Each of the three shows up explicitly in one of the seven narrative steps.
 
 ### 3.1 Architecture
 
-The piece runs as a single scrollytelling page with a sticky map underneath. The five-country map is the shared canvas. The reader scrolls through seven editorial cards, each of which changes the map's state: time of day, price colouring, flow arrows, annotations. After the seventh card, the scroll releases into an interactive explorer where the reader can drive the same map directly.
+The site is a single scrollytelling page with a sticky map underneath. The five-country map stays on screen throughout, and the reader scrolls through seven editorial cards that change its state (time of day, price colouring, flow arrows, annotations). After the last card, the scroll opens into an interactive explorer where the reader can drive the same map themselves.
 
-Because the prototype is already functional end to end, we include screenshots of the live build rather than the sketches named in the brief. Screenshots of the actual build communicate the visual intent, the colour scale, and the typographic hierarchy more precisely than a hand sketch could at this stage, and we would rather the reader of this document see what we are actually shipping.
+The prototype is already functional end to end, so we include screenshots of the live build rather than the sketches the brief asked for. Screenshots of the actual build give a more accurate picture of the visual system, the colour scale, and the type hierarchy than sketches would at this stage, and we would rather the reader of this document see what we are actually shipping.
 
 ### 3.2 The seven narrative steps
 
-A note on two terms used below. A *mix donut* is a small donut chart showing the share of each fuel in the current generation mix (solar, wind, nuclear, gas, hydro). A *merit-order stack* is how electricity markets clear: generators are ordered from cheapest marginal cost (nuclear, renewables) to most expensive (gas peakers), stacked up until supply meets demand, and the last unit needed sets the clearing price for the whole market — so when cheap renewables alone can cover all demand, the price collapses, and when they exceed demand, it goes negative.
+Two terms used in the table below. A *mix donut* is a small donut chart showing the share of each fuel in the current generation mix (solar, wind, nuclear, gas, hydro). A *merit-order stack* is the mechanism the market uses to set a price: generators are lined up from cheapest marginal cost (nuclear, renewables) to most expensive (gas peakers), stacked up until supply meets demand, and the last unit needed sets the clearing price for the whole market. When cheap renewables alone can cover demand, the price collapses. When they overshoot demand, it goes negative.
 
 | Step | Beat | Key visual |
 |---|---|---|
@@ -117,7 +117,7 @@ After the guided story, the reader can drive the map themselves. A timeline scru
 
 ### 3.4 Visual language
 
-The piece runs dark-only. The background is a three-level navy ramp; the price scale is a diverging sequential from ice-white (deep negative, where it matters most) through the navy baseline to warm orange and red for positive peaks. Ice-white for the extreme negatives is a deliberate inversion of the usual "darker equals more extreme" convention: the point is that negative prices are unnatural, and we want them to glow. Typography pairs Fraunces (variable serif, used at display sizes for the hero numbers and editorial copy) with JetBrains Mono (for every data value, timestamp, country code, and legend). Numbers never appear in the serif. The choice is grounded in Lecture 6.1 (perception and colour) for the palette reasoning and Lecture 7.1 (designing visualisations) for the typographic hierarchy.
+The site runs dark-only. The background is a three-level navy ramp. The price scale is a diverging sequential from ice-white for deep negatives (where the drama lives), through the navy baseline, to warm orange and red for positive peaks. Using ice-white for extreme negatives is a deliberate inversion of the usual "darker equals more extreme" convention: negative prices are the thing we want the reader to notice, so they get the brightest treatment. Typography pairs Fraunces (variable serif, used at display sizes for the hero numbers and editorial copy) with JetBrains Mono (for every data value, timestamp, country code, and legend). Numbers are never set in the serif. The palette choice draws on Lecture 6.1 (perception and colour) and the typographic hierarchy on Lecture 7.1 (designing visualisations).
 
 ---
 
@@ -138,11 +138,11 @@ All of the following are already working in the live prototype:
 
 Ranked by how much they would add if we have time before Milestone 3, each of which can be dropped without breaking the core argument:
 
-- **Guided-tour auto-play** that scrolls the piece itself with subtitles, for the screencast and for non-scrolling viewers.
+- **Guided-tour auto-play** that scrolls the site itself with subtitles, for the screencast and for non-scrolling viewers.
 - **Keyboard accessibility on the map** so every country can be reached with Tab and opened with Enter.
 - **Graceful empty states and error messaging** across all charts.
 - **Colour-vision-deficient audit** of the generation-stack palette (solar and gas currently sit close in CVD space).
-- **Annotation layer** for named events: German holidays, negative-price records, and winter *Dunkelflaute* hours (German for "dark doldrums" — stretches of low sun and low wind when renewables under-produce and prices spike).
+- **Annotation layer** for named events: German holidays, negative-price records, and winter *Dunkelflaute* hours (German for "dark doldrums", meaning stretches of low sun and low wind when renewables under-produce and prices spike).
 - **Sonification of one day's price curve** as an optional audio track, grounded in Lecture 11.2.
 
 The first three are already in progress. The remaining three are honest stretch.
