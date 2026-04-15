@@ -1957,7 +1957,7 @@ body.is-iris-firing .scene__map::before {
     font-variation-settings: normal;
 }
 
-/* ---------- Calendar heatmap (Phase 5 — Step 4) ----------
+/* ---------- Calendar heatmap ----------
  *
  * A dense hour × day grid rendered to <canvas> and wrapped in a thin
  * DOM structure for axis labels and tooltip. Sits inside a narrative
@@ -2109,7 +2109,7 @@ body.is-iris-firing .scene__map::before {
     letter-spacing: 0.05em;
 }
 
-/* ---------- Generation stack chart (Phase 5 — Step 5) ----------
+/* ---------- Generation stack chart ----------
  *
  * Stacked area of hourly generation by source for Germany on the
  * showcase day, with a price line on a secondary right-hand axis
@@ -2225,7 +2225,7 @@ body.is-iris-firing .scene__map::before {
     line-height: 1.5;
 }
 
-/* ---------- Daily profile chart (Phase 6 — Steps 6-7) ---------- */
+/* ---------- Daily profile chart ---------- */
 
 .daily-profile {
     display: inline-block;
@@ -2367,7 +2367,7 @@ body.is-iris-firing .scene__map::before {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
-/* ---------- Explorer (Phase 7) ----------
+/* ---------- Explorer ----------
  *
  * A "steer the grid" mode. The map stays FULLY visible in the fixed
  * background — the explorer section is completely transparent so the

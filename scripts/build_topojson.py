@@ -3,7 +3,7 @@ Build the 5-country map geometry used by the scrollytelling visualisation.
 
 Source:   Mike Bostock's `world-atlas` package (Natural Earth 1:50m,
           already simplified and quantised). Pulled once from jsdelivr.
-Output:   data/processed/map.topojson — only CH, DE, FR, IT, AT, with
+Output:   docs/data/processed/map.topojson — only CH, DE, FR, IT, AT, with
           only the arcs those five countries reference.
 
 The script is pure stdlib so it does not depend on geopandas, shapely, or

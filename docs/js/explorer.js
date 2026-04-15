@@ -1,4 +1,4 @@
-// Interactive explorer — Phase 7.
+// Interactive explorer.
 //
 // Binds the timeline scrubber to the map controller so the reader can
 // drag through the 24 hours of the showcase day and see the map update

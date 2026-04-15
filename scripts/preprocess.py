@@ -3,7 +3,7 @@ Preprocessing pipeline: ENTSO-E raw CSV → focused JSON files.
 
 The raw CSV is 301,391 rows across 23 bidding zones and is too large to
 ship to the browser. This script produces six small, purpose-built JSON
-artefacts under `data/processed/`, one per scroll step or explorer view.
+artefacts under `docs/data/processed/`, one per scroll step or explorer view.
 
 Usage
 -----
@@ -110,8 +110,9 @@ RENEWABLE_COLUMNS = ["solar", "wind_onshore", "wind_offshore", "hydro_total"]
 #   IT: wind_offshore=0
 #   FR: (all columns populated)
 
-# The date the Step 1-3 scroll animation plays on. See design_spec.md §2
-# for why this Sunday in particular (CH hits -145 EUR/MWh deeper than DE).
+# The showcase day the opening scroll animation plays on: a sunny Sunday
+# when Switzerland hit -€145.12 per MWh at 13:00 CET, deeper in the red
+# than Germany at the same hour.
 SHOWCASE_DATE = "2024-05-12"
 SHOWCASE_PEAK_HOUR = 13  # CET, when CH reaches its -145.12 trough.
 
@@ -200,7 +201,7 @@ def standard_prep() -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 
 def save_json(obj: object, filename: str, *, minified: bool = True) -> Path:
-    """Write an object to `data/processed/<filename>` and report size."""
+    """Write an object to `docs/data/processed/<filename>` and report size."""
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     path = OUTPUT_DIR / filename
     with path.open("w") as f:
@@ -288,7 +289,9 @@ def build_showcase_day(df: pd.DataFrame) -> None:
     }
     save_json(payload, "showcase_day.json")
 
-    # Sanity check — the spec fact we validated in Task 0.4 must hold.
+    # Sanity check — CH's -145.12 peak at hour 13 is the headline fact
+    # the whole opening scroll animation is built around, so fail loudly
+    # if a reprocessing run ever drifts off it.
     ch_peak = countries["CH"][SHOWCASE_PEAK_HOUR]["price"]
     if abs(ch_peak - (-145.12)) > 0.5:
         raise RuntimeError(

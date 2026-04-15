@@ -1,19 +1,15 @@
 // Map module — renders the five-country topology and exposes a tiny
 // controller surface (`update`, `destroy`) the rest of the app uses to
-// drive state changes during scroll.
-//
-// Task 2.2 pivot: this pulls forward the basic topology render from
-// Task 3.1 so the map-dominant layout does not expose a full-viewport
-// black rectangle. Colors, arrows, and labels land in Tasks 3.3–3.9.
+// drive state changes during scroll. Colors, flow arrows, price labels,
+// and the big on-map clock all live here.
 
 import * as d3 from "d3";
 import * as topojson from "topojson-client";
 
 import { priceContinuous, renewableColor } from "./utils/colors.js";
 
-// Conic conformal centered on central Europe (see design_system.md §Map
-// projection). Tuned so the five focus countries fill the viewport with
-// Switzerland slightly above visual center.
+// Conic conformal centered on central Europe. Tuned so the five focus
+// countries fill the viewport with Switzerland slightly above visual center.
 const PROJECTION_CONFIG = {
     center: [10, 48],
     rotate: [-10, 0, 0],
@@ -55,7 +51,8 @@ const LABEL_NUDGE_PX = {
 
 // Interconnector pairs — the 8 connected markets where a price gradient
 // implies cross-border electricity flow. Direction is inferred from the
-// price differential (low → high); see PROJECT_TRACKER.md Decision 3.
+// price differential (low → high): money follows the gradient, so flow
+// does too.
 const INTERCONNECTORS = [
     ["CH", "DE"],
     ["CH", "FR"],

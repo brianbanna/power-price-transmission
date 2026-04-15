@@ -1,5 +1,5 @@
-// Color tokens from the locked design system.
-// Any change here must also update `src/css/style.css` `:root` variables
+// Color tokens from the design system.
+// Any change here must also update `docs/css/style.css` `:root` variables
 // and vice versa — keep the two in sync.
 
 export const PRICE_STOPS = [
