@@ -1412,11 +1412,19 @@ body.is-iris-firing .scene__map::before {
         stroke-width var(--dur-default) var(--ease-default);
 }
 
-.country:hover {
+.country:hover,
+.country:focus-visible {
     stroke: var(--accent);
     stroke-width: 1.2;
     filter: drop-shadow(0 0 8px color-mix(in srgb, var(--accent) 30%, transparent));
     cursor: pointer;
+}
+
+/* Keyboard focus uses the same halo as hover instead of the global
+ * outline rule — outline rendering on SVG paths is inconsistent across
+ * browsers, and the stroke/filter pair matches the hover affordance. */
+.country:focus-visible {
+    outline: none;
 }
 
 /* ---------- Map — country hover tooltip ---------- */

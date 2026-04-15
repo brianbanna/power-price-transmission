@@ -597,16 +597,25 @@ export function initExplorer(config) {
         pushMap(state.hour);
     }
 
-    // Wire country clicks on the map.
+    // Wire country clicks + keyboard on the map. Paths carry
+    // tabindex=0 and role=button (set in map.js) so keyboard users
+    // reach them via Tab; Enter/Space mirror the click toggle.
     if (sidebar) {
         document.querySelectorAll(".country").forEach((el) => {
-            el.addEventListener("click", () => {
+            const toggle = () => {
                 const iso = el.getAttribute("data-iso");
                 if (!iso) return;
                 if (sidebarActiveCountry === iso) {
                     closeSidebar();
                 } else {
                     openSidebar(iso);
+                }
+            };
+            el.addEventListener("click", toggle);
+            el.addEventListener("keydown", (e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    toggle();
                 }
             });
         });

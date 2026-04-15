@@ -287,12 +287,22 @@ export function createMap(selector, config) {
     crosshair.append("line").attr("class", "graticule__crosshair-line");
     crosshair.append("line").attr("class", "graticule__crosshair-line");
 
+    const COUNTRY_NAMES = {
+        CH: "Switzerland", DE: "Germany", FR: "France",
+        IT: "Italy", AT: "Austria",
+    };
+
     const countryPaths = gCountries
         .selectAll("path")
         .data(countries.features)
         .join("path")
         .attr("class", "country")
-        .attr("data-iso", (d) => d.id);
+        .attr("data-iso", (d) => d.id)
+        // Keyboard + assistive-tech affordances. The click wiring in
+        // explorer.js mirrors Enter/Space to the same toggle handler.
+        .attr("tabindex", 0)
+        .attr("role", "button")
+        .attr("aria-label", (d) => `Show details for ${COUNTRY_NAMES[d.id] || d.id}`);
 
     // Country hover tooltip — shows price, renewable share, and
     // country name on mouseover. Positioned near the cursor via
@@ -302,11 +312,6 @@ export function createMap(selector, config) {
     tipEl.className = "map-tip mono";
     tipEl.style.display = "none";
     container.appendChild(tipEl);
-
-    const COUNTRY_NAMES = {
-        CH: "Switzerland", DE: "Germany", FR: "France",
-        IT: "Italy", AT: "Austria",
-    };
 
     countryPaths
         .on("pointerenter", function (event, d) {
