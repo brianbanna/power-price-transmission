@@ -58,6 +58,14 @@ async function init() {
     setupFooterReveal();
     setupHeartbeatScope();
 
+    // Orientation change: dispatch a resize event after the viewport
+    // settles so all modules (narrative, explorer, map) recompute.
+    window.addEventListener("orientationchange", () => {
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            window.dispatchEvent(new Event("resize"));
+        }));
+    });
+
     console.info("HSquareB initialized");
 }
 
