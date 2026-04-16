@@ -279,79 +279,6 @@ strong {
     transform: translateY(0);
 }
 
-/* ---------- HUD (time / position indicator) ---------- */
-
-.hud {
-    position: fixed;
-    top: 32px;
-    right: 32px;
-    z-index: 90;
-    background: var(--bg-glass);
-    backdrop-filter: blur(28px) saturate(1.6);
-    -webkit-backdrop-filter: blur(28px) saturate(1.6);
-    border: 1px solid var(--border-glass);
-    border-radius: 3px;
-    padding: 14px 18px;
-    min-width: 220px;
-    box-shadow:
-        0 32px 64px -24px rgba(0, 0, 0, 0.7),
-        0 4px 12px -2px rgba(0, 0, 0, 0.3),
-        0 1px 0 0 rgba(255, 255, 255, 0.05) inset;
-    opacity: 0;
-    transform: translateY(-8px);
-    transition: opacity var(--dur-medium) var(--ease-default),
-                transform var(--dur-medium) var(--ease-default);
-    pointer-events: none;
-}
-
-.hud.is-visible {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-.hud.is-hidden-by-footer,
-.hud.is-hidden-by-explorer {
-    opacity: 0 !important;
-    transform: translateY(-8px) !important;
-    pointer-events: none;
-}
-
-.hud__label {
-    font-family: var(--font-mono);
-    font-size: 9px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.14em;
-    color: var(--text-muted);
-    margin-bottom: 6px;
-}
-
-.hud__value {
-    font-size: 15px;
-    font-weight: 500;
-    color: var(--text-primary);
-    letter-spacing: 0.01em;
-    margin-bottom: 4px;
-}
-
-.hud__meta {
-    font-size: 11px;
-    font-weight: 400;
-    color: var(--accent);
-    letter-spacing: 0.05em;
-}
-
-@media (max-width: 900px) {
-    .hud {
-        top: 16px;
-        right: 16px;
-        padding: 10px 14px;
-        min-width: 180px;
-    }
-    .hud__value { font-size: 13px; }
-    .hud__meta { font-size: 10px; }
-}
-
 /* ---------- Big on-map clock ----------
  * Display-sized clock showing the hour of the currently active
  * narrative step, pinned to the lower-right of the viewport. The
@@ -3420,7 +3347,6 @@ body.is-iris-firing .scene__map::before {
     body { font-size: 19px; }
 
     /* Small mono UI text — floor at 11px so nothing is microscopic */
-    .hud__label, .hud__meta,
     .map-clock__label, .map-clock__date,
     .hero__masthead-item, .hero__tape-label, .hero__tape-quote,
     .hero__byline, .hero__date, .hero__scroll-hint,
@@ -3455,7 +3381,6 @@ body.is-iris-firing .scene__map::before {
 
     .map-clock__hour { font-size: clamp(80px, 11vw, 160px); }
     .timeline__readout-value { font-size: 24px; }
-    .hud__value { font-size: 14px; }
 
     .map-tip { font-size: 12px; padding: 6px 12px; }
     .cal-heatmap__tip { font-size: 11px; }
