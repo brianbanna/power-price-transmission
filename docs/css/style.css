@@ -2272,6 +2272,22 @@ body.is-iris-firing .scene__map::before {
     filter: drop-shadow(0 0 4px color-mix(in srgb, var(--accent) 40%, transparent));
 }
 
+/* Duck chart (Step 6) gets heavier lines so the monthly morph is
+ * clearly visible against the glass card background. */
+.step__chart--duck .daily-profile__line {
+    stroke-width: 2.6;
+    filter: drop-shadow(0 0 8px color-mix(in srgb, var(--accent) 55%, transparent));
+}
+
+.step__chart--duck .daily-profile__ghost {
+    stroke: color-mix(in srgb, var(--text-muted) 60%, transparent);
+    stroke-width: 1.4;
+}
+
+.step__chart--duck .daily-profile__area {
+    fill: color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
 .daily-profile__month-label {
     font-family: var(--font-mono);
     font-size: 9px;

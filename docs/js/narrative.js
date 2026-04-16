@@ -120,6 +120,8 @@ export function initNarrative(selector, config) {
                 profiles: config.profilesData.countries.DE,
                 country: "DE",
                 label: "Germany — monthly price profile",
+                width: 460,
+                height: 280,
             });
         }
     }
