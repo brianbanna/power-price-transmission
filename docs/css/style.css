@@ -2721,6 +2721,14 @@ body.is-iris-firing .scene__map::before {
 @media (max-width: 900px) {
     .explorer__sidebar {
         width: 100vw;
+        z-index: 110;
+        height: 100dvh;
+        min-height: -webkit-fill-available;
+    }
+    .sidebar__close {
+        position: absolute;
+        top: 16px;
+        right: 16px;
     }
 }
 

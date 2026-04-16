@@ -509,6 +509,11 @@ export function initExplorer(config) {
     // hour on the showcase day. The sidebar updates when the timeline
     // moves and when the reader clicks a different country.
     const sidebar = document.querySelector("[data-sidebar]");
+    if (sidebar) {
+        sidebar.setAttribute("role", "dialog");
+        sidebar.setAttribute("aria-modal", "true");
+        sidebar.setAttribute("aria-label", "Country details");
+    }
     const sidebarClose = document.querySelector("[data-sidebar-close]");
     const sidebarCountry = document.querySelector("[data-sidebar-country]");
     const sidebarPrice = document.querySelector("[data-sidebar-price]");
@@ -584,6 +589,11 @@ export function initExplorer(config) {
         sidebar.classList.add("is-open");
         const mapClock = document.querySelector("[data-map-clock]");
         if (mapClock) mapClock.classList.add("is-hidden-by-sidebar");
+        // On mobile, mark background elements inert so focus stays in the sidebar
+        if (window.innerWidth <= 900) {
+            document.querySelectorAll(".scene__map, .scene__narrative, .explorer__intro, .explorer__timeline-wrap")
+                .forEach((el) => el.setAttribute("inert", ""));
+        }
         const closeBtn = sidebar.querySelector("[data-sidebar-close]");
         if (closeBtn) closeBtn.focus();
     }
@@ -593,6 +603,8 @@ export function initExplorer(config) {
         sidebar.classList.remove("is-open");
         const mapClock = document.querySelector("[data-map-clock]");
         if (mapClock) mapClock.classList.remove("is-hidden-by-sidebar");
+        // Remove inert from background elements
+        document.querySelectorAll("[inert]").forEach((el) => el.removeAttribute("inert"));
         sidebarActiveCountry = null;
         // Reset focus to the default protagonist.
         pushMap(state.hour);
