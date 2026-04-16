@@ -55,6 +55,8 @@ We start by counting how often each market clears below zero. Over eighteen mont
 
 The ordering points to two different dynamics behind the numbers. France's 715 hours are mostly produced at home: its nuclear fleet is slow to ramp down, so when wind output is high the combined supply overshoots demand even without imports from Germany. Austria's count comes from a different place. Austria and Germany ran as a single bidding zone until 2018 and are still inside the same synchronous area, so negative hours in one almost always show up in the other. Switzerland is the interesting case. It has some solar but not nearly enough to oversupply its own market, no wind to speak of, and a flexible hydro fleet. On its own fundamentals nothing should push its clearing price below zero. It still went negative 529 times. Italy, on the other side of the Alps with a gas-heavy generation mix, never went negative.
 
+![Negative-price hours by country. Germany leads with 846, followed by France (715), Austria (584), and Switzerland (529). Italy recorded zero negative-price hours across the entire eighteen-month window.](figures/eda_neg_hours.png)
+
 ![Step 4 of the narrative: calendar heatmap with a DE / CH tab toggle. Each cell is one hour across eighteen months. The DE panel shows dense clusters of negative prices on summer midday hours; the CH panel shows a sparser version of the same pattern. The density difference between the two tabs is the visual form of Section 2.1.](figures/fig_03_heatmap.png)
 
 ### 2.2 Coincidence with German negative hours
@@ -62,6 +64,8 @@ The ordering points to two different dynamics behind the numbers. France's 715 h
 For each neighbouring country we counted how many of its own negative-price hours fell inside the same hour as a German negative. Austria sits at 89.7% (524 of 584), Switzerland at 88.8% (470 of 529), and France at 80.6% (576 of 715). Austria's high number is not surprising. It shared a single bidding zone with Germany until 2018 and is still inside the same synchronous area, so the two markets clear together at the bottom. France has a larger absolute count but a lower coincidence rate, because a lot of its negative hours come from its own nuclear-plus-wind supply stack rather than from imports.
 
 Switzerland is the finding that drives the rest of the project. It has no structural reason to track Germany like that. It is outside the EU internal market, not in the same bidding zone, and only physically connected through AC lines across the Rhine and the Alps. And yet, on 88.8% of the hours its price drops below zero, Germany is already there. Switzerland is not producing those hours. It is importing them through the grid.
+
+![Hourly price scatter: Switzerland vs Germany. Each dot is one hour, coloured by time of day. The tight clustering around the diagonal (r = 0.755) shows that Swiss prices track German prices closely, especially during midday hours when solar is strongest.](figures/eda_scatter.png)
 
 ### 2.3 The duck curve is widening, fast
 
@@ -71,9 +75,13 @@ We computed the monthly average price profile for each country across all eighte
 
 All five countries have the same daily shape: a midday trough at hour 13 or 14, an evening peak at hour 19. What differs is the absolute level and the depth of the trough. That is what Step 7 of the visualisation communicates. The daily rhythm is shared, the intensity is not. We only noticed this after running the EDA and seeing the peak hours line up across all five.
 
+![Germany's duck curve is deepening. Monthly average price profiles from May 2024 through May 2025 show the midday trough dropping further below zero with each passing quarter, while the evening peak sharpens.](figures/eda_duck_curve.png)
+
 ### 2.4 Seasonality of renewable share
 
 Germany's monthly renewable share (solar + wind + hydro as a fraction of total generation) approaches 70% in the summer months of 2024 and exceeds it in 2025. Italy stays heavily gas-dependent throughout. Austria sits near 84% year-round, mostly hydro with a growing share of wind and solar. France runs at a stable 20 to 30%, dominated by nuclear with fossil fuels as a buffer. Each country's mix produces a distinct price profile, and the narrative has to make those differences visible.
+
+![Monthly renewable generation share by country. Austria and Switzerland lead (mostly hydro), Germany's share peaks in summer (solar-driven), France stays low and flat (nuclear-dominated), and Italy hovers around 40 to 50%.](figures/eda_renewable_share.png)
 
 ![Step 7 of the narrative: five-country small multiples of the average 24-hour price profile. The same trough-and-peak daily shape appears in all five, but at different levels. Italy holds a positive midday average; Germany's trough sits near zero; Switzerland and Austria track Germany closely.](figures/fig_05_smallmults.png)
 
