@@ -75,6 +75,6 @@ export const GENERATION_COLORS = {
     nuclear: "#a855f7",
     hydro:   "#6366f1",
     biomass: "#84cc16",
-    gas:     "#f97316",
+    gas:     "#fb7185",
     coal:    "#64748b",
 };

@@ -757,7 +757,7 @@ function renderGenDonut(stepEl, showcase, country, hour) {
         { key: "wind", label: "Wind", color: "#10b981" },
         { key: "hydro", label: "Hydro", color: "#6366f1" },
         { key: "nuclear", label: "Nuclear", color: "#a855f7" },
-        { key: "gas", label: "Gas", color: "#f97316" },
+        { key: "gas", label: "Gas", color: "#fb7185" },
     ];
 
     const slices = SOURCES
