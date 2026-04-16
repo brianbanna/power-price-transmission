@@ -1424,7 +1424,14 @@ body.is-iris-firing .scene__map::before {
         stroke-width var(--dur-default) var(--ease-default);
 }
 
-.country:hover,
+@media (hover: hover) and (pointer: fine) {
+    .country:hover {
+        stroke: var(--accent);
+        stroke-width: 1.2;
+        filter: drop-shadow(0 0 8px color-mix(in srgb, var(--accent) 30%, transparent));
+        cursor: pointer;
+    }
+}
 .country:focus-visible {
     stroke: var(--accent);
     stroke-width: 1.2;
@@ -3410,6 +3417,12 @@ body.is-iris-firing .scene__map::before {
 
 @media (hover: none) {
     .timeline__handle-dot { width: 20px; height: 20px; }
+}
+
+@media (max-width: 600px) {
+    .label__code { font-size: 8px; }
+    .label__price { font-size: 11px; }
+    .label.is-focus .label__price { font-size: 14px; }
 }
 
 /* ---------- Wide viewport / zoomed-out scaling ----------
