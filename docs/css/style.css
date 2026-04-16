@@ -184,6 +184,30 @@ button, .country, .timeline__track {
     color: var(--bg-base);
 }
 
+.app-loading {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-base);
+}
+.app-loading__text {
+    font-size: 14px;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+}
+.app-loading__dots::after {
+    content: "";
+    animation: loadingDots 1.2s steps(4, end) infinite;
+}
+@keyframes loadingDots {
+    0%, 25% { content: "\00B7"; }
+    50% { content: "\00B7\00B7"; }
+    75% { content: "\00B7\00B7\00B7"; }
+}
+
 a {
     color: var(--accent);
     text-decoration: none;

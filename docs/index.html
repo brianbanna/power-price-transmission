@@ -6,12 +6,20 @@
     <meta name="description" content="How Germany's renewable revolution is reshaping electricity prices across Switzerland and its neighbours. An interactive scrollytelling visualization of European power markets, 2024-2025.">
     <title>The Price of Wind and Sun</title>
 
+    <meta name="theme-color" content="#0a1024">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
     <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Crect%20width%3D%2232%22%20height%3D%2232%22%20fill%3D%22%230a1024%22%2F%3E%3Ccircle%20cx%3D%2216%22%20cy%3D%2216%22%20r%3D%226%22%20fill%3D%22%23e6f1ff%22%2F%3E%3C%2Fsvg%3E">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="css/style.css">
+
+    <link rel="preload" href="data/processed/map.topojson" as="fetch" crossorigin>
+    <link rel="preload" href="data/processed/showcase_day.json" as="fetch" crossorigin>
+    <link rel="preload" href="data/processed/daily_profiles.json" as="fetch" crossorigin>
 
     <script type="importmap">
     {
@@ -42,6 +50,10 @@
             <span class="map-clock__hour" data-clock-hour>00</span><span class="map-clock__colon">:</span><span class="map-clock__minute mono">00</span>
         </div>
         <p class="map-clock__date mono" data-clock-date>2024 · 05 · 12</p>
+    </div>
+
+    <div class="app-loading" aria-live="polite">
+        <p class="app-loading__text mono">Loading data<span class="app-loading__dots" aria-hidden="true"></span></p>
     </div>
 
     <header class="hero">

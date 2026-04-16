@@ -11,11 +11,24 @@ async function init() {
     // Core data loads eagerly — needed for the hero tape and the first
     // scroll beat. Calendar heatmap (182KB) is deferred until the
     // narrative has initialized so it doesn't block first paint.
-    const [topology, showcase, profilesData] = await Promise.all([
-        loadJSON("map.topojson"),
-        loadJSON("showcase_day.json"),
-        loadJSON("daily_profiles.json"),
-    ]);
+    let topology, showcase, profilesData;
+    try {
+        [topology, showcase, profilesData] = await Promise.all([
+            loadJSON("map.topojson"),
+            loadJSON("showcase_day.json"),
+            loadJSON("daily_profiles.json"),
+        ]);
+    } catch (err) {
+        const loader = document.querySelector(".app-loading");
+        if (loader) {
+            const msg = loader.querySelector(".app-loading__text");
+            if (msg) msg.textContent = "Failed to load data. Please refresh.";
+            const dots = loader.querySelector(".app-loading__dots");
+            if (dots) dots.remove();
+        }
+        return;
+    }
+    document.querySelector(".app-loading")?.remove();
 
     const map = createMap("#map-container", { topology, showcase });
 
