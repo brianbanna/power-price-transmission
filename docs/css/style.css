@@ -139,6 +139,12 @@ html {
     scroll-behavior: auto;
     -webkit-text-size-adjust: 100%;
     background: var(--bg-base);
+    -webkit-tap-highlight-color: transparent;
+    overflow-x: clip;
+}
+
+html, body {
+    overscroll-behavior-y: contain;
 }
 
 body {
@@ -148,12 +154,11 @@ body {
     font-family: var(--font-body);
     font-size: 17px;
     line-height: 1.55;
-    /* Fraunces at small optical-size + slightly softer feel for body. */
     font-variation-settings: "opsz" 14, "SOFT" 30;
     font-feature-settings: "ss01", "cv11", "calt";
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    overflow-x: hidden;
+    overflow-x: clip;
 }
 
 h1, h2, h3, p {
@@ -163,6 +168,15 @@ h1, h2, h3, p {
 svg text {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+}
+
+.country, .map-clock, .hero__title em, svg text {
+    -webkit-touch-callout: none;
+    user-select: none;
+}
+
+button, .country, .timeline__track {
+    -webkit-tap-highlight-color: transparent;
 }
 
 ::selection {
@@ -405,7 +419,7 @@ strong {
     position: relative;
     z-index: 2;
     min-height: 100svh;
-    padding: clamp(72px, 10vh, 140px) var(--gutter) 64px;
+    padding: clamp(72px, 10svh, 140px) var(--gutter) 64px;
     background: var(--bg-base);
     display: flex;
     flex-direction: column;
@@ -2413,7 +2427,7 @@ body.is-iris-firing .scene__map::before {
 .explorer {
     position: relative;
     z-index: 4;
-    min-height: 100vh;
+    min-height: 100dvh;
     padding: 0;
     background: transparent;
     border-top: 1px solid color-mix(in srgb, var(--accent) 20%, var(--border));
@@ -3121,7 +3135,7 @@ body.is-iris-firing .scene__map::before {
         padding: 0;
     }
     .explorer__intro {
-        padding: 10vh 16px 0;
+        padding: 10dvh 16px 0;
     }
     .explorer__headline {
         font-size: clamp(28px, 8vw, 40px);
@@ -3333,8 +3347,8 @@ body.is-iris-firing .scene__map::before {
 
     .scene__narrative {
         margin-inline: 16px;
-        padding-block: 30vh 60vh;
-        gap: 55vh;
+        padding-block: 30dvh 60dvh;
+        gap: 55dvh;
     }
 
     .step {
