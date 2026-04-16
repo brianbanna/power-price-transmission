@@ -3396,6 +3396,13 @@ body.is-iris-firing .scene__map::before {
         font-size: 11px;
     }
 
+    /* T28: Drop backdrop-filter on mobile for scroll performance */
+    .step.is-active {
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        background: color-mix(in srgb, var(--bg-surface) 94%, transparent);
+    }
+
     /* T23: Timeline mobile chrome */
     .timeline__chrome { gap: 10px; row-gap: 10px; }
     .timeline__mode-group, .timeline__speed-group {
