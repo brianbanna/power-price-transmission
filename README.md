@@ -102,4 +102,6 @@ HSquareB/
 | Lê Thào Huyèn  | 355566  |
 | Hajj Hannah    | 346545  |
 
+For simplicity and to avoid merge conflicts, most commits were pushed from a single account. The division of work is documented in the milestone 2 report.
+
 Built for COM-480 Data Visualization, EPFL, Spring 2026.
