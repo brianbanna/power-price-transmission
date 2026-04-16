@@ -3427,6 +3427,18 @@ body.is-iris-firing .scene__map::before {
     .label.is-focus .label__price { font-size: 14px; }
 }
 
+@media (max-width: 480px) {
+    .small-multiples { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 900px) and (orientation: landscape) {
+    .map-clock { display: none; }
+}
+
+@media (hover: none) {
+    button:focus-visible { outline: none; }
+}
+
 /* ---------- Wide viewport / zoomed-out scaling ----------
  *
  * At browser zoom < 100% or on ultrawide monitors (>1800px effective

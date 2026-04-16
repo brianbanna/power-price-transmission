@@ -634,6 +634,13 @@ function setupCursorLight() {
     hero.addEventListener("pointermove", update);
 }
 
+// Suppress iOS long-press context menu on charts and map
+document.addEventListener("contextmenu", (e) => {
+    if (e.target.closest("#map-container, .gen-stack, .daily-profile, .cal-heatmap")) {
+        e.preventDefault();
+    }
+});
+
 if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);
 } else {

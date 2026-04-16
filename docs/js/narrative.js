@@ -18,7 +18,7 @@ import { createCalendarHeatmap } from "./charts/calendar_heatmap.js";
 import { createGenerationStack } from "./charts/generation_stack.js";
 import { createDailyProfile } from "./charts/daily_profile.js";
 
-const ACTIVE_OFFSET = 0.80;
+const ACTIVE_OFFSET = window.innerHeight < 700 ? 0.6 : 0.80;
 const HUD_PROGRESS_SELECTOR = "[data-hud-timestamp]";
 const HUD_META_SELECTOR = "[data-hud-meta]";
 const PROGRESS_BAR_SELECTOR = ".scroll-progress__bar";
