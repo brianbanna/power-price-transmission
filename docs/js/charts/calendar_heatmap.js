@@ -15,7 +15,8 @@
 
 import { priceContinuous } from "../utils/colors.js";
 
-const CELL_W = 13;
+const CELL_W_DEFAULT = 13;
+const CELL_W_NARROW = 11;
 const CELL_H = 2.0;
 const MONTH_GAP = 5;
 const MARGIN = { top: 32, right: 8, bottom: 20, left: 44 };
@@ -40,6 +41,10 @@ export function createCalendarHeatmap(selector, config) {
         container.appendChild(empty);
         return { el: empty, switchTo: () => {}, destroy: () => empty.remove() };
     }
+
+    // Responsive cell width: use narrower cells on small containers
+    const containerWidth = container.getBoundingClientRect?.().width || 400;
+    const CELL_W = containerWidth < 360 ? CELL_W_NARROW : CELL_W_DEFAULT;
 
     // Wrapper div for the whole component (tabs + chart).
     const wrapper = document.createElement("div");
@@ -218,7 +223,9 @@ function renderChart(holder, chartData, country) {
         const abs = Math.abs(price).toFixed(1);
         tip.textContent = `${day.date} ${String(hour).padStart(2, "0")}:00  ${sign}\u20AC${abs}`;
         tip.style.display = "";
-        const tx = Math.min(totalW - 140, Math.max(0, mx + MARGIN.left - 60));
+        const canvasRect = canvas.getBoundingClientRect();
+        const maxTipX = Math.min(totalW - 140, window.innerWidth - canvasRect.left - 140);
+        const tx = Math.min(maxTipX, Math.max(0, mx + MARGIN.left - 60));
         const ty = Math.max(0, my + MARGIN.top - 24);
         tip.style.left = `${tx}px`;
         tip.style.top = `${ty}px`;

@@ -1702,7 +1702,9 @@ body.is-iris-firing .scene__map::before {
 
 .step__chart--heatmap {
     overflow-x: auto;
-    overflow-y: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
 }
 
 .step__hero-number {
