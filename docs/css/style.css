@@ -3381,6 +3381,15 @@ body.is-iris-firing .scene__map::before {
         min-height: 44px;
         font-size: 11px;
     }
+
+    /* T22: Narrative card density + hero number reflow */
+    .step { padding: 20px 18px 22px; }
+    .step::after { inset: -40px -40px; }
+    .step--shock, .step--wide { max-width: 100%; }
+    .step__hero-number { flex-wrap: wrap; }
+    .step__hero-value { font-size: clamp(56px, 16vw, 80px); }
+    .step__headline { font-size: clamp(22px, 6.2vw, 28px); line-height: 1.14; }
+    .step__eyebrow, .step__number { font-size: 11px; }
 }
 
 @media (hover: none) {
