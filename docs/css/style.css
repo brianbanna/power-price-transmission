@@ -2816,6 +2816,11 @@ body.is-iris-firing .scene__map::before {
     }
 }
 
+.timeline.is-waiting .timeline__play:active {
+    animation: none;
+    transform: scale(0.96);
+}
+
 .timeline__play-icon {
     width: 18px;
     height: 18px;
@@ -3381,6 +3386,17 @@ body.is-iris-firing .scene__map::before {
         min-height: 44px;
         font-size: 11px;
     }
+
+    /* T23: Timeline mobile chrome */
+    .timeline__chrome { gap: 10px; row-gap: 10px; }
+    .timeline__mode-group, .timeline__speed-group {
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
+    }
+    .timeline__mode-label, .timeline__speed-label { display: none; }
+    .timeline__readout-label { font-size: 10px; }
+    .timeline__hours { font-size: 10px; }
 
     /* T22: Narrative card density + hero number reflow */
     .step { padding: 20px 18px 22px; }
