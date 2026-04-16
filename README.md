@@ -1,107 +1,94 @@
-# The Price of Wind and Sun
+# Cross-Border Price Transmission in the European Power Market
 
-An interactive scrollytelling visualisation of how Germany's renewable build-out is reshaping wholesale electricity prices across Switzerland, France, Italy and Austria.
+> An interactive data story about how renewable supply shocks in one bidding zone propagate through the Central European grid and drag neighbouring markets into coincident negative-price episodes.
 
-**[→ View the live site](https://com-480-data-visualization.github.io/HSquareB/)**
+## Context
 
-![Switzerland clears below Germany at 13:00 on 12 May 2024](milestone_2/figures/fig_02_step3_peak.png)
+Between January 2024 and June 2025 the day-ahead electricity price in Germany went negative for 846 hours, more than 35 full days in which producers were paying consumers to take their power. Switzerland, which produces almost no solar of its own, spent 529 hours below zero in the same window. Roughly 89 per cent of those Swiss negative hours occurred during German negative hours. This project quantifies and visualises that coupling.
 
-## About
+The central case study is a single Sunday, 12 May 2024, when at 13:00 CET Switzerland printed a day-ahead price of minus 145.12 euros per megawatt-hour, ten euros deeper than Germany, while Italy stayed at plus 5. The spread between the Swiss and Italian markets that hour, 150 euros per megawatt-hour, is the visual anchor of the piece.
 
-On a sunny Sunday in May 2024, German solar farms pushed so much power onto the continental grid that Switzerland's wholesale electricity price crashed to **−€145.12 per MWh at 13:00**, deeper in the red than Germany itself at the same hour. Switzerland barely produces solar. Italy, two interconnectors away, was still paying positive prices.
+## Data
 
-The piece walks the reader through that afternoon on a shared dark-themed map, explains the mechanism (merit-order pricing, interconnector flow, duck curve dynamics), and then releases them into an interactive explorer that covers the full eighteen months of hourly data.
+Source: ENTSO-E Transparency Platform, day-ahead prices and generation by source, hourly frequency, January 2024 through June 2025. Five bidding zones are in scope:
 
-## Highlights
+| Zone | Code | Role in the story |
+|------|------|--------------------|
+| Switzerland | CH | Hydro-backed shock absorber |
+| Germany / Luxembourg | DE_LU | Solar- and wind-dominant, source of the shocks |
+| France | FR | Nuclear baseload |
+| Italy (North) | IT_NORD | Gas-dependent, still insulated |
+| Austria | AT | Coupled to Germany through shared bidding |
 
-- Seven-step scroll narrative on a sticky five-country map (CH, DE-LU, FR, IT-NORD, AT)
-- Interactive explorer: timeline scrubber, play / pause, click-to-inspect country sidebar, price-vs-renewable-share colour toggle
-- Four chart modules: calendar heatmap, generation stack, daily price profile, small multiples
-- Reproducible Python pipeline: raw CSV → six JSON aggregates in under a minute
-- Dark-mode-only visual system with diverging ice-white price scale, Fraunces × JetBrains Mono typography
+The raw CSV is 301,392 rows across 23 European markets. `scripts/preprocess.py` filters to the five focus zones, forward-fills the small amount of missing data, computes a renewable share column, and emits six focused JSON aggregates under `data/processed/` that the frontend loads on demand.
 
-## Tech stack
+## Method
 
-| Layer | Tool |
-|---|---|
-| Rendering | D3 v7 (SVG + Canvas), vanilla ES modules |
-| Scroll | Scrollama v3 |
-| Map | `world-atlas` TopoJSON, filtered to five countries (17 KB) |
-| Preprocessing | Python 3.9, pandas, pyarrow |
-| Hosting | GitHub Pages (static, `docs/` folder) |
+The analysis is empirical rather than model-based. Four techniques thread through the piece:
 
-No framework, no build step. The site is served as plain static files.
+1. Cross-market correlation of negative-price hours, quantifying the co-movement between German and Swiss day-ahead prices.
+2. Price-gradient inference of cross-border flow direction and magnitude. The dataset has no physical flow data, so flow arrows are drawn from low-price to high-price markets with thickness proportional to the absolute price spread. This is how traders think about arbitrage across interconnectors.
+3. Merit-order visualisation of the German generation stack on the showcase day, overlaid with the day-ahead price line to make the causal link between zero-marginal-cost renewables and negative prices concrete.
+4. A year-over-year comparison of the 12 May 2024 shock against 11 May 2025, showing that the same kind of Sunday pushed Swiss prices to minus 262 euros per megawatt-hour a year later, nearly doubling the magnitude of the 2024 event.
 
-## Dataset
+## Visualisation
 
-[European Electricity Price and Generation, 2024–2025](https://transparency.entsoe.eu/) — the ENTSO-E Transparency Platform. 301,391 hourly rows across 23 European bidding zones, day-ahead prices and generation by fuel. The raw CSV is committed once and treated as immutable:
+The frontend is a single static page, dark-themed, built on vanilla JavaScript, D3, TopoJSON and Scrollama with no framework and no build step. The map of the five countries is always visible. Narrative cards overlay the left side during the scrollytelling sequence and dissolve into an interactive explorer at the bottom, where the reader can scrub through 24 hours of the showcase day and watch the map react in real time.
 
-```text
-data/entsoe_data_2024_2025.csv
-```
+Implementation highlights:
 
-Every derived artefact under `docs/data/processed/` is regenerated by the scripts in `scripts/`.
+- Pre-sampled particle streams along inferred flow paths, cached in typed arrays for per-frame lookup.
+- Sticky scene container so the map stays pinned through the narrative and the explorer without fixed-positioning workarounds.
+- Scroll-driven 3D perspective tilt on the map SVG, quantised to elide redundant GPU re-composites.
+- Cartographic cartouche with compass rose, scale bar and degree edge labels rendered inside the SVG.
+- Hero cold-open teaser that tweens from plus 45 euros to minus 145.12 euros on page load and then pins.
 
 ## Running locally
 
-Python 3.9 or newer is the only hard prerequisite. Everything else is served by CDN.
-
 ```bash
-# Python environment
+git clone git@github.com:brianbanna/power-price-transmission.git
+cd power-price-transmission
+
+# Optional: regenerate the JSON aggregates from the raw CSV
 python3 -m venv .venv
-.venv/bin/pip install -r requirements.txt
+source .venv/bin/activate
+pip install -r requirements.txt
+python scripts/preprocess.py
 
-# Rebuild the five-country TopoJSON (optional, already committed)
-.venv/bin/python scripts/build_topojson.py
-
-# Run the dataset diagnostic — prints distribution, correlations, headline figures
-.venv/bin/python scripts/explore.py
-
-# Regenerate every JSON artefact under docs/data/processed/
-.venv/bin/python scripts/preprocess.py
-
-# Serve the site from the repo root
+# Serve the frontend
 python3 -m http.server 8000
-# then open http://localhost:8000/docs/
 ```
 
-## Project structure
+Then open `http://localhost:8000/docs/`. The preprocessed JSON files are already committed under `docs/data/processed/`, so the `scripts/preprocess.py` step is only needed if you want to rebuild them from the raw ENTSO-E CSV.
 
-```text
-HSquareB/
+## Repository layout
+
+```
+power-price-transmission/
 ├── data/
-│   └── entsoe_data_2024_2025.csv     raw ENTSO-E download (immutable)
+│   └── entsoe_data_2024_2025.csv    Raw ENTSO-E dataset (immutable)
 ├── scripts/
-│   ├── build_topojson.py             five-country map geometry builder
-│   ├── explore.py                    dataset diagnostic
-│   └── preprocess.py                 CSV → JSON pipeline
-├── docs/                             the site itself, served by GitHub Pages
-│   ├── index.html
-│   ├── data/processed/               committed JSON artefacts
-│   ├── css/style.css
-│   └── js/
-│       ├── main.js                   entry point, scroll orchestration
-│       ├── map.js                    D3 map module
-│       ├── narrative.js              per-step handlers
-│       ├── explorer.js               interactive explorer
-│       ├── charts/                   chart factories
-│       └── utils/                    colour scale, data loaders
-├── milestone_1/milestone1.pdf
-├── milestone_2/
-│   ├── milestone2.md                 design document
-│   └── figures/                      prototype screenshots
-├── requirements.txt
-└── README.md
+│   ├── preprocess.py                 CSV to JSON pipeline
+│   ├── explore.py                    Headline-fact validation
+│   └── build_topojson.py             Five-country map geometry
+└── docs/
+    ├── index.html
+    ├── css/style.css
+    ├── data/processed/               JSON aggregates for the frontend
+    └── js/
+        ├── main.js
+        ├── map.js
+        ├── narrative.js
+        ├── explorer.js
+        ├── charts/
+        └── utils/
 ```
 
-## Team
+## Credits
 
-| Name           | SCIPER  |
-|----------------|---------|
-| Brian Banna    | 356437  |
-| Lê Thào Huyèn  | 355566  |
-| Hajj Hannah    | 346545  |
+Day-ahead price and generation data: [ENTSO-E Transparency Platform](https://transparency.entsoe.eu/).
+Map geometry: Natural Earth 1:50m via [world-atlas](https://github.com/topojson/world-atlas).
 
-For simplicity and to avoid merge conflicts, most commits were pushed from a single account. The division of work is documented in the milestone 2 report.
+## License
 
-Built for COM-480 Data Visualization, EPFL, Spring 2026.
+MIT

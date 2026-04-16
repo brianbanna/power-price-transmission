@@ -483,9 +483,9 @@ def build_explorer_hourly(df: pd.DataFrame) -> None:
     is date-major: each date key maps to a dict of country arrays so the
     frontend can load one day at a time if needed.
 
-    For the Milestone 2 prototype the explorer uses showcase_day.json
-    (single day). This full-range file is built for completeness and
-    future explorer expansion.
+    The explorer currently uses showcase_day.json (single day). This
+    full-range file is built for completeness and future explorer
+    expansion.
     """
     work = df.copy()
     work["date"] = work["datetime"].dt.strftime("%Y-%m-%d")
@@ -531,9 +531,9 @@ def build_generation_stacks(df: pd.DataFrame) -> None:
     nuclear, gas} values. The frontend can use this to show the generation
     stack for any day the explorer timeline lands on.
 
-    For the Milestone 2 prototype the sidebar generation stack uses
-    showcase_day.json (single day). This full-range file is built for
-    completeness and future expansion.
+    The sidebar generation stack currently uses showcase_day.json
+    (single day). This full-range file is built for completeness and
+    future expansion.
     """
     # Simplified generation columns for the frontend.
     GEN_MAP = {

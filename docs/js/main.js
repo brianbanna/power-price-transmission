@@ -66,7 +66,7 @@ async function init() {
         }));
     });
 
-    console.info("HSquareB initialized");
+    console.info("power-price-transmission initialized");
 }
 
 /**
