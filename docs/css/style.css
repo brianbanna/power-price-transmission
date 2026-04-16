@@ -3358,6 +3358,25 @@ body.is-iris-firing .scene__map::before {
     .step__headline {
         font-size: 26px;
     }
+
+    /* Tap targets ≥ 44px for touch devices */
+    .timeline__track { height: 56px; }
+    .sidebar__close { width: 44px; height: 44px; padding: 10px; }
+    .timeline__mode-btn, .timeline__speed-btn {
+        padding: 10px 14px;
+        font-size: 12px;
+        min-height: 44px;
+    }
+    .timeline__mode-group, .timeline__speed-group { gap: 6px; }
+    .cal-heatmap__tab {
+        padding: 10px 16px;
+        min-height: 44px;
+        font-size: 11px;
+    }
+}
+
+@media (hover: none) {
+    .timeline__handle-dot { width: 20px; height: 20px; }
 }
 
 /* ---------- Wide viewport / zoomed-out scaling ----------
