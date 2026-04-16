@@ -301,8 +301,8 @@ strong {
 
 .map-clock {
     position: fixed;
-    right: clamp(20px, 3vw, 48px);
-    bottom: clamp(24px, 4vh, 56px);
+    right: calc(clamp(20px, 3vw, 48px) + env(safe-area-inset-right, 0px));
+    bottom: calc(clamp(24px, 4vh, 56px) + env(safe-area-inset-bottom, 0px));
     z-index: 85;
     text-align: right;
     pointer-events: none;
@@ -2454,9 +2454,9 @@ body.is-iris-firing .scene__map::before {
  * section. `bottom: clamp(...)` applies the sticky offset. */
 .explorer__timeline-wrap {
     position: sticky;
-    bottom: clamp(24px, 4vh, 56px);
+    bottom: calc(clamp(24px, 4vh, 56px) + env(safe-area-inset-bottom, 0px));
     margin-top: auto;
-    padding: 0 var(--gutter) 0;
+    padding: 0 max(var(--gutter), env(safe-area-inset-right, 0px)) 0 max(var(--gutter), env(safe-area-inset-left, 0px));
     z-index: 6;
     /* Fades in synced with the explorer headline becoming visible.
      * Default state is invisible; the .is-visible class is toggled
@@ -3171,7 +3171,7 @@ body.is-iris-firing .scene__map::before {
 .site-footer {
     position: relative;
     z-index: 4;
-    padding: 120px var(--gutter) 64px;
+    padding: 120px var(--gutter) calc(64px + env(safe-area-inset-bottom, 0px));
     background: var(--bg-base);
     border-top: 1px solid var(--border);
     font-size: 14px;
