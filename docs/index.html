@@ -128,6 +128,23 @@
         <aside class="scene__map" id="map-container" aria-label="Map of central European electricity prices">
             <!-- Map canvas. Populated by js/map.js. -->
             <div class="circadian" aria-hidden="true"></div>
+
+            <!-- Price color legend — gradient bar + tick labels. Hidden
+                 until the map has active price colors (hour != null). -->
+            <div class="map-legend" aria-label="Price colour scale">
+                <canvas class="map-legend__bar" width="200" height="12"></canvas>
+                <div class="map-legend__ticks mono"></div>
+                <p class="map-legend__caption mono">EUR / MWh</p>
+            </div>
+
+            <!-- Arrow legend — explains flow direction. -->
+            <div class="arrow-legend mono" aria-label="Flow arrow legend">
+                <svg width="32" height="10" viewBox="0 0 32 10" aria-hidden="true">
+                    <defs><marker id="arrow-legend-head" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="var(--accent)"/></marker></defs>
+                    <line x1="2" y1="5" x2="26" y2="5" stroke="var(--accent)" stroke-width="1.5" marker-end="url(#arrow-legend-head)"/>
+                </svg>
+                <span>Electricity flows from cheap to expensive</span>
+            </div>
         </aside>
 
         <!-- Leader-line overlay — sits above the map, below the cards.

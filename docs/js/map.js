@@ -331,6 +331,37 @@ export function createMap(selector, config) {
             tipEl.style.display = "none";
         });
 
+    // ---- Price legend (gradient bar + ticks) ----
+    const legendEl = container.querySelector(".map-legend");
+    const arrowLegendEl = container.querySelector(".arrow-legend");
+    if (legendEl) {
+        const canvas = legendEl.querySelector(".map-legend__bar");
+        const ticksEl = legendEl.querySelector(".map-legend__ticks");
+        if (canvas && ticksEl) {
+            const ctx = canvas.getContext("2d");
+            const w = canvas.width;
+            const grad = ctx.createLinearGradient(0, 0, w, 0);
+            // Map the priceContinuous domain [-200..300] onto [0..1].
+            const domain = [-200, -100, -50, 0, 40, 75, 150, 300];
+            const colors = [
+                "#e0f7ff", "#67e8f9", "#22d3ee", "#0e7490",
+                "#78716c", "#e8a460", "#ef4444", "#991b1b",
+            ];
+            const range = domain[domain.length - 1] - domain[0]; // 500
+            for (let i = 0; i < domain.length; i++) {
+                grad.addColorStop((domain[i] - domain[0]) / range, colors[i]);
+            }
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, w, canvas.height);
+            // Tick labels at key price points.
+            [-100, 0, 100, 200].forEach((p) => {
+                const span = document.createElement("span");
+                span.textContent = p < 0 ? `\u2212${Math.abs(p)}` : String(p);
+                ticksEl.appendChild(span);
+            });
+        }
+    }
+
     // Label groups — one per country. Each group holds two <text> nodes
     // (ISO code above, price below) plus an invisible halo rect that we
     // can show behind the label on the peak moment.
@@ -776,6 +807,10 @@ export function createMap(selector, config) {
         Object.assign(state, next);
 
         // Fill each country with its price color at the current hour.
+        // Toggle legend visibility with the map's active state.
+        if (legendEl) legendEl.classList.toggle("is-visible", state.hour != null && !!showcase);
+        if (arrowLegendEl) arrowLegendEl.classList.toggle("is-visible", state.hour != null && !!showcase);
+
         if (state.hour == null || !showcase) {
             // Reset — base state, no colors, no labels, no flows.
             countryPaths
@@ -785,8 +820,6 @@ export function createMap(selector, config) {
                 .each(function () { this.style.fill = ""; });
             labelGroups.classed("is-visible", false).classed("is-focus", false);
             gFlows.selectAll("path.flow").remove();
-            // Tear the particle pools down — the rAF loop self-halts
-            // when the pool map is empty.
             for (const pool of particlePools.values()) pool.groupNode.remove();
             particlePools.clear();
             return;
