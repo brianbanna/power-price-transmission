@@ -276,8 +276,10 @@ export function createGenerationStack(selector, config) {
             const svgRect = svg.node().getBoundingClientRect();
             const wrapRect = wrapper.getBoundingClientRect();
             const tipX = (cx + MARGIN.left) * (svgRect.width / WIDTH);
-            tipEl.style.left = `${Math.min(wrapRect.width - 160, Math.max(0, tipX - 60))}px`;
-            tipEl.style.top = `${MARGIN.top - 8}px`;
+            const maxRight = Math.min(wrapRect.width, window.innerWidth - wrapRect.left) - 160;
+            tipEl.style.left = `${Math.min(maxRight, Math.max(0, tipX - 60))}px`;
+            const isTouch = d3.select(this).node()?.closest && (event?.pointerType === "touch");
+            tipEl.style.top = isTouch ? "0px" : `${MARGIN.top - 8}px`;
         })
         .on("pointerleave", function () {
             hoverG.style("display", "none");

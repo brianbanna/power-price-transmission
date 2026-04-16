@@ -2174,7 +2174,7 @@ body.is-iris-firing .scene__map::before {
 
 .gen-stack__axis text {
     font-family: var(--font-mono);
-    font-size: 8px;
+    font-size: 12px;
     fill: var(--text-muted);
     letter-spacing: 0.05em;
     font-variation-settings: normal;
@@ -2186,7 +2186,7 @@ body.is-iris-firing .scene__map::before {
 
 .gen-stack__axis-label {
     font-family: var(--font-mono);
-    font-size: 8px;
+    font-size: 12px;
     fill: var(--text-muted);
     letter-spacing: 0.05em;
     text-transform: uppercase;
@@ -2199,7 +2199,7 @@ body.is-iris-firing .scene__map::before {
 
 .gen-stack__legend-text {
     font-family: var(--font-mono);
-    font-size: 8px;
+    font-size: 12px;
     fill: var(--text-muted);
     letter-spacing: 0.05em;
     text-transform: uppercase;
@@ -2304,7 +2304,7 @@ body.is-iris-firing .scene__map::before {
 
 .daily-profile__month-label {
     font-family: var(--font-mono);
-    font-size: 9px;
+    font-size: 12px;
     font-weight: 600;
     fill: var(--accent);
     letter-spacing: 0.08em;
@@ -2313,7 +2313,7 @@ body.is-iris-firing .scene__map::before {
 
 .daily-profile__axis text {
     font-family: var(--font-mono);
-    font-size: 8px;
+    font-size: 12px;
     fill: var(--text-muted);
     letter-spacing: 0.05em;
     font-variation-settings: normal;
@@ -2321,7 +2321,7 @@ body.is-iris-firing .scene__map::before {
 
 .daily-profile__axis-label {
     font-family: var(--font-mono);
-    font-size: 8px;
+    font-size: 12px;
     fill: var(--text-muted);
     letter-spacing: 0.05em;
     text-transform: uppercase;
