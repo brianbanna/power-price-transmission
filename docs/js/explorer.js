@@ -42,6 +42,7 @@ export function initExplorer(config) {
     const section = document.querySelector(SELECTORS.section);
     if (!section) return null;
 
+    const { showcase } = config;
     const timelineWrap = document.querySelector(SELECTORS.timelineWrap);
     const timeline = section.querySelector(SELECTORS.timeline);
     const playBtn = section.querySelector(SELECTORS.play);
