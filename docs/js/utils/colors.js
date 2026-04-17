@@ -2,6 +2,8 @@
 // Any change here must also update `docs/css/style.css` `:root` variables
 // and vice versa — keep the two in sync.
 
+import * as d3 from "d3";
+
 export const PRICE_STOPS = [
     { max: -100, color: "#e0f7ff" },   // ice-white glow — peak drama
     { max: -50,  color: "#67e8f9" },   // bright cyan
@@ -32,7 +34,7 @@ export function priceContinuous(price) {
     if (!_continuousScale) {
         // Defer d3 import until first call — avoids import-order
         // issues with the static ESM import map.
-        const { scaleLinear, interpolateRgb } = window.d3 || {};
+        const { scaleLinear, interpolateRgb } = d3;
         if (!scaleLinear) return priceColor(price); // fallback
         _continuousScale = scaleLinear()
             .domain([-200, -100, -50, 0, 40, 75, 150, 300])
@@ -58,7 +60,7 @@ let _renewableScale = null;
 export function renewableColor(share) {
     if (share == null || Number.isNaN(share)) return "#1c2235";
     if (!_renewableScale) {
-        const { scaleLinear, interpolateRgb } = window.d3 || {};
+        const { scaleLinear, interpolateRgb } = d3;
         if (!scaleLinear) return "#10b981";
         _renewableScale = scaleLinear()
             .domain([0, 0.3, 0.6, 1.0])
@@ -78,7 +80,7 @@ let _renewableAmountScale = null;
 export function renewableAmountColor(mw) {
     if (mw == null || Number.isNaN(mw)) return "#1c2235";
     if (!_renewableAmountScale) {
-        const { scaleLinear, interpolateRgb } = window.d3 || {};
+        const { scaleLinear, interpolateRgb } = d3;
         if (!scaleLinear) return "#10b981";
         _renewableAmountScale = scaleLinear()
             .domain([0, 5000, 15000, 30000, 50000])
