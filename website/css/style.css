@@ -36,33 +36,32 @@
 /* ---------- Tokens ---------- */
 
 :root {
-    /* Backgrounds — deep navy, not pure black, layered */
-    --bg-base: #0a0e1a;
-    --bg-surface: #131827;
-    --bg-elevated: #1c2235;
-    --bg-glass: rgba(19, 24, 39, 0.72);
-    --border: #2a3145;
-    --border-strong: #3f4659;
-    --border-glass: rgba(255, 255, 255, 0.06);
+    /* Backgrounds — warm graphite, layered */
+    --bg-base: #0a0b0d;
+    --bg-surface: #121214;
+    --bg-elevated: #1c1c1e;
+    --bg-glass: rgba(18, 18, 20, 0.72);
+    --border: #2a2a2e;
+    --border-strong: #3f3f44;
+    --border-glass: rgba(234, 230, 222, 0.06);
 
-    /* Text — warm whites, muted blue-greys */
-    --text-primary: #f5f7fa;
-    --text-secondary: #8b95a7;
-    --text-muted: #525a6b;
-    --text-ghost: #2f3647;
+    /* Text — warm bone, muted stone */
+    --text-primary: #eae6de;
+    --text-secondary: #8b8880;
+    --text-muted: #5a5752;
+    --text-ghost: #2f2e2b;
 
-    /* Accent — electric cyan with an ice-white extreme. Reserved for
-     * price-negative encoding + interactive affordances (links, play,
+    /* Accent — warm stone for interactive affordances (links, play,
      * timeline, focus country). */
-    --accent: #22d3ee;
-    --accent-bright: #67e8f9;
-    --accent-glow: #e0f7ff;
-    --accent-dim: #0e7490;
+    --accent: #d4cec0;
+    --accent-bright: #eae6de;
+    --accent-glow: #f5f2ed;
+    --accent-dim: #8b8880;
 
-    /* Chrome — desaturated teal for decorative/structural elements
+    /* Chrome — warm stone for decorative/structural elements
      * (eyebrow dots, leader lines, compass, kickers, chart titles).
      * Separated from accent so ornament doesn't compete with data. */
-    --chrome: #3b8ea5;
+    --chrome: #a09a8e;
 
     /* Price diverging scale — inverted luminance at the extreme */
     --price-neg-extreme: #e0f7ff;
@@ -92,8 +91,8 @@
     --dur-slow: 1400ms;
 
     /* Type */
-    --font-display: 'Fraunces', 'Iowan Old Style', 'Georgia', serif;
-    --font-body: 'Fraunces', 'Iowan Old Style', 'Georgia', serif;
+    --font-display: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+    --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
     --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
 
     /* Layout */
@@ -152,10 +151,9 @@ body {
     background: var(--bg-base);
     color: var(--text-primary);
     font-family: var(--font-body);
-    font-size: 17px;
+    font-size: 15px;
     line-height: 1.55;
-    font-variation-settings: "opsz" 14, "SOFT" 30;
-    font-feature-settings: "ss01", "cv11", "calt";
+    font-feature-settings: "cv11", "calt";
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: clip;
@@ -365,7 +363,7 @@ strong {
     gap: 2px;
     color: var(--text-primary);
     line-height: 0.82;
-    text-shadow: 0 0 40px rgba(10, 14, 26, 0.9),
+    text-shadow: 0 0 40px rgba(10, 11, 13, 0.9),
                  0 0 20px color-mix(in srgb, var(--bg-base) 85%, transparent);
 }
 
@@ -385,7 +383,7 @@ strong {
 .map-clock.is-peak .map-clock__hour {
     color: var(--accent-glow);
     text-shadow:
-        0 0 40px rgba(10, 14, 26, 0.9),
+        0 0 40px rgba(10, 11, 13, 0.9),
         0 0 28px color-mix(in srgb, var(--accent) 60%, transparent),
         0 0 2px var(--accent-glow);
 }
@@ -2473,7 +2471,7 @@ body.is-iris-firing .scene__map::before {
     max-width: calc(520px + var(--gutter) * 2);
     /* Legibility on bare map — tight dark halo under the text. */
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7),
-                 0 0 12px rgba(10, 14, 26, 0.9);
+                 0 0 12px rgba(10, 11, 13, 0.9);
 }
 
 /* Timeline wrap — sticky to the explorer section's bottom edge.
