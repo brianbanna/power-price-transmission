@@ -69,6 +69,26 @@ export function renewableColor(share) {
     return _renewableScale(share);
 }
 
+// Renewable amount scale — absolute MW, so the map shows WHO produces
+// the most renewables rather than what fraction of their own mix it is.
+// Germany at ~45 GW dwarfs Switzerland at ~4 GW even though both have
+// high renewable shares.
+let _renewableAmountScale = null;
+
+export function renewableAmountColor(mw) {
+    if (mw == null || Number.isNaN(mw)) return "#1c2235";
+    if (!_renewableAmountScale) {
+        const { scaleLinear, interpolateRgb } = window.d3 || {};
+        if (!scaleLinear) return "#10b981";
+        _renewableAmountScale = scaleLinear()
+            .domain([0, 5000, 15000, 30000, 50000])
+            .range(["#1e293b", "#065f46", "#10b981", "#34d399", "#6ee7b7"])
+            .interpolate(interpolateRgb)
+            .clamp(true);
+    }
+    return _renewableAmountScale(mw);
+}
+
 export const GENERATION_COLORS = {
     solar:   "#fbbf24",
     wind:    "#10b981",

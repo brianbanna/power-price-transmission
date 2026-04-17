@@ -6,7 +6,7 @@
 import * as d3 from "d3";
 import * as topojson from "topojson-client";
 
-import { priceContinuous, renewableColor } from "./utils/colors.js";
+import { priceContinuous, renewableAmountColor } from "./utils/colors.js";
 
 // Conic conformal centered on central Europe. Tuned so the five focus
 // countries fill the viewport with Switzerland slightly above visual center.
@@ -317,9 +317,10 @@ export function createMap(selector, config) {
             if (!entry) return;
             const sign = entry.price < 0 ? "\u2212" : "";
             const abs = Math.abs(entry.price).toFixed(1);
-            const ren = (entry.renewable_share * 100).toFixed(0);
+            const renMW = (entry.solar || 0) + (entry.wind || 0) + (entry.hydro || 0);
+            const renGW = (renMW / 1000).toFixed(1);
             tipEl.textContent =
-                `${COUNTRY_NAMES[d.id] || d.id}  ${sign}\u20AC${abs}/MWh  ${ren}% renewable`;
+                `${COUNTRY_NAMES[d.id] || d.id}  ${sign}\u20AC${abs}/MWh  ${renGW} GW renewable`;
             tipEl.style.display = "";
         })
         .on("pointermove", function (event) {
@@ -855,11 +856,10 @@ export function createMap(selector, config) {
         // one frame later than the CSS-driven stroke transition.
         countryPaths.each(function (d) {
             const entry = showcase.countries?.[d.id]?.[state.hour];
-            const color = entry
-                ? (state.colorMode === "renewable"
-                    ? renewableColor(entry.renewable_share)
-                    : priceContinuous(entry.price))
-                : null;
+            if (!entry) { this.style.fill = ""; return; }
+            const color = state.colorMode === "renewable"
+                ? renewableAmountColor((entry.solar || 0) + (entry.wind || 0) + (entry.hydro || 0))
+                : priceContinuous(entry.price);
             this.style.fill = color || "";
         });
 
@@ -873,11 +873,12 @@ export function createMap(selector, config) {
                 g.select(".label__price").text("—");
                 return;
             }
-            g.select(".label__price").text(
-                state.colorMode === "renewable"
-                    ? `${(entry.renewable_share * 100).toFixed(0)}%`
-                    : formatPrice(entry.price),
-            );
+            if (state.colorMode === "renewable") {
+                const mw = (entry.solar || 0) + (entry.wind || 0) + (entry.hydro || 0);
+                g.select(".label__price").text(`${(mw / 1000).toFixed(1)} GW`);
+            } else {
+                g.select(".label__price").text(formatPrice(entry.price));
+            }
         });
 
         drawFlows();
