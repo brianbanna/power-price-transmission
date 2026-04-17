@@ -332,8 +332,8 @@ function setupHeroTitleReveal() {
 
 /**
  * Hero cold-open teaser — after the title has fully landed (~2.3s in),
- * a single large price materializes, counts the reader from €45
- * (the midnight baseline) down to −€145.12 (the Sunday trough), holds
+ * a single large price materializes, counts the reader from €57.93
+ * (the CH midnight baseline) down to −€145.12 (the Sunday trough), holds
  * briefly, then fades out. The whole sequence is ~2.2s and plays once
  * per page load.
  *
@@ -355,7 +355,7 @@ function setupHeroColdOpen() {
     const valueEl = el.querySelector("[data-coldopen-value]");
     if (!valueEl) return;
 
-    // Start at €45 so the first frame the reader sees matches the
+    // Start at €57.93 so the first frame matches the CH midnight
     // baseline. The tween kicks in COLDOPEN_TWEEN_DELAY_MS after the
     // element has appeared.
     valueEl.textContent = formatColdOpenValue(COLDOPEN_START_VALUE);

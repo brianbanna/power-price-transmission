@@ -37,7 +37,7 @@ Seven-step scroll narrative on a sticky five-country map, followed by an interac
 - Scroll-driven 3D perspective tilt, quantised to reduce GPU recomposites
 - Calendar heatmap of negative-price coincidence across all five zones
 - Merit-order generation stack for the showcase day
-- Cold-open price tween from +45 to -145.12 EUR/MWh
+- Cold-open price tween from +57.93 to -145.12 EUR/MWh
 
 ## Quick start
 
