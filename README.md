@@ -11,9 +11,9 @@ An interactive data story showing how Germany's renewable surplus crashes day-ah
 | German negative-price hours (Jan 2024 - Jun 2025) | 846 |
 | Swiss negative-price hours | 529 |
 | Coincidence rate (CH negative during DE negative) | 89% |
-| Deepest Swiss price (12 May 2024, 13:00 CET) | -145.12 EUR/MWh |
+| Swiss price on showcase day (12 May 2024, 13:00 CET) | -145.12 EUR/MWh |
 | CH-IT spread at that hour | 150 EUR/MWh |
-| Deepest Swiss price (11 May 2025) | -262 EUR/MWh |
+| Swiss price one year later (11 May 2025, 13:00 CET) | -262 EUR/MWh |
 
 ## How it works
 
@@ -58,7 +58,7 @@ make rebuild
 
 ```
 data/
-  entsoe_data_2024_2025.csv         301k rows, 23 European markets
+  entsoe_data_2024_2025.csv         301,391 rows, 23 European markets
 scripts/
   preprocess.py                     CSV -> 6 JSON aggregates
   explore.py                        Headline-fact validation
